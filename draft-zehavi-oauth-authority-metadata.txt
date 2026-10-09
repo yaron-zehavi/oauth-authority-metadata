@@ -2,7 +2,7 @@
 
 
 
-OAuth                                                          Y. Zehavi
+Web Authorization Protocol                                     Y. Zehavi
 Internet-Draft                             Raiffeisen Bank International
 Intended status: Standards Track                          9 October 2026
 Expires: 12 April 2027
@@ -13,22 +13,35 @@ Expires: 12 April 2027
 
 Abstract
 
-   OAuth metadata advertises supported scopes and authorization details
-   types, but does not provide a common metadata structure for
-   describing the authority those values represent.
+   While OAuth metadata advertises supported scopes and authorization
+   details types, no metadata describes the *authority* those values
+   represent.
 
    This specification defines authority metadata extensions for OAuth
    2.0 Protected Resource Metadata and OAuth 2.0 Authorization Server
-   Metadata.  A protected resource can describe the authority it
-   associates with scopes and Rich Authorization Requests types,
-   reusable access requirement profiles, and relationships identifying
-   lower-authority alternatives.  An authorization server can publish a
-   simpler description of its local authority vocabulary.
+   Metadata.
 
-   This metadata can inform authorization requests, token issuance,
-   token exchange, policy evaluation, consent rendering, and least-
-   privilege selection.  It does not prescribe an authorization server
-   decision algorithm or require automatic attenuation.
+   A protected resource can describe the authority it associates with
+   scopes and RAR types, reusable access requirements profiles, and
+   relationships identifying lower-authority alternatives.
+
+   An authorization server can publish a simpler description of its
+   local authority vocabulary.
+
+   This metadata can inform authentication and authorization decisions
+   before token issuance and exchange, as well as support authority
+   attenuation.
+
+Discussion Venues
+
+   This note is to be removed before publishing as an RFC.
+
+   Discussion of this document takes place on the Web Authorization
+   Protocol Working Group mailing list (oauth@ietf.org), which is
+   archived at https://mailarchive.ietf.org/arch/browse/oauth/.
+
+   Source for this draft and an issue tracker can be found at
+   https://github.com/yaron-zehavi/oauth-authority-metadata.
 
 Status of This Memo
 
@@ -73,24 +86,22 @@ Table of Contents
      2.2.  Authorization Server Metadata
      2.3.  Common Requirements
    3.  Authority Entries
-     3.1.  Common Members
+     3.1.  Common attributes
        3.1.1.  kind
        3.1.2.  value
        3.1.3.  description
        3.1.4.  family
        3.1.5.  rank
        3.1.6.  authority
-     3.2.  Protected Resource Members
-     3.3.  Authorization Server Members
+     3.2.  Protected Resource attributes
+     3.3.  Authorization Server attributes
    4.  Structured Authority Descriptions
      4.1.  Completeness and Interpretation
      4.2.  RAR Interpretation
    5.  Access Requirement Profiles
      5.1.  Profile Structure
      5.2.  Token Requirements
-       5.2.1.  Token Freshness and Lifetime
-       5.2.2.  Single-Use Semantics
-       5.2.3.  Sender-Constraining
+       5.2.1.  Sender-Constraining
      5.3.  Authentication Requirements
      5.4.  Default Resource Policy
      5.5.  Multiple Authorities in a Token
@@ -112,21 +123,21 @@ Table of Contents
      10.2.  Untrusted Resource Locations
      10.3.  Semantic Misrepresentation
      10.4.  Stale Metadata
-     10.5.  Unknown Semantic Values
-     10.6.  Scope Combinations
-     10.7.  RAR Parameter Restrictions
-     10.8.  Requirements Are Not Enforcement
-     10.9.  Relationship Processing
-     10.10. Consent Rendering
+     10.5.  Malicious Resource Metadata and Policy Downgrade
+     10.6.  Requests Naming Multiple Resources
+     10.7.  Scope Combinations
+     10.8.  RAR Parameter Restrictions
+     10.9.  Requirements Are Not Enforcement
+     10.10. Relationship Processing
+     10.11. Consent Rendering
    11. Privacy Considerations
    12. IANA Considerations
      12.1.  OAuth Authorization Server Metadata Registration
      12.2.  OAuth Protected Resource Metadata Registration
-   13. Implementation Status
-   14. Acknowledgments
-   15. References
-     15.1.  Normative References
-     15.2.  Informative References
+   13. Acknowledgments
+   14. References
+     14.1.  Normative References
+     14.2.  Informative References
    Appendix A.  Editorial Issues
    Appendix B.  Document History
    Author's Address
@@ -135,31 +146,22 @@ Table of Contents
 
    OAuth 2.0 [RFC6749] uses scope values to express requested and
    granted access.  OAuth 2.0 Rich Authorization Requests (RAR)
-   [RFC9396] provides the authorization_details parameter for more
-   structured authorization requests.
+   [RFC9396] provides the authorization_details parameter for structured
+   authorization requests.
 
    OAuth 2.0 Authorization Server Metadata [RFC8414] and OAuth 2.0
    Protected Resource Metadata [RFC9728] enable discovery of information
    about authorization servers and protected resources.  Supported scope
-   values can be advertised using scopes_supported.  RAR defines
-   authorization server metadata for supported authorization details
-   types.
+   values and RAR types can be advertised using scopes_supported and
+   authorization_details_types_supported.
 
-   A supported scope value does not, by itself, describe the operations,
-   resources, or effects that the scope authorizes.  Similarly, an
-   authorization details type identifies a type-specific authorization
-   structure, but discovering its name does not necessarily provide a
-   consumer with a machine-processable description of its authority.
+   Supported scope values and RAR types are only identifiers, which do
+   not provide a description of their authority: the operations,
+   resources, or effects they authorizes.
 
    For example, a scope named payments.manage might permit reading,
    creating, executing, or deleting payment instructions.  Its name
    alone does not establish which operations are permitted.
-
-   RAR addresses request structure and type-specific authorization data.
-   However, a JSON schema or a type name alone does not necessarily
-   establish the authority represented by a particular authorization
-   details object.  A consumer still needs to understand the type's
-   semantic rules and the meaning of its parameters.
 
    These gaps matter when an authorization server or policy decision
    point evaluates whether requested authority:
@@ -175,8 +177,8 @@ Table of Contents
    *  requires particular token presentation or authentication
       properties.
 
-   This specification defines a common metadata structure for authority
-   descriptions.  It supports both scope values and RAR types.
+   This specification defines a common metadata structure to describe
+   authority.  It supports both scope values and RAR types.
 
 1.1.  Publication Roles
 
@@ -189,12 +191,11 @@ Table of Contents
       authority vocabulary it uses when making issuance decisions.
 
    Protected resource metadata is resource-bound through the resource
-   member defined by [RFC9728].
+   attribute defined by [RFC9728].
 
    Authorization server metadata describes an issuer-local authority
-   vocabulary.  It is not required to identify a particular protected
-   resource and does not, by itself, establish how a resource enforces
-   an issued authority.
+   vocabulary.  It does not establish how a resource enforces an issued
+   authority.
 
 1.2.  Scope
 
@@ -236,13 +237,13 @@ Table of Contents
    exchange binding [AUTHZEN-EXCHANGE] provide mechanisms for policy
    evaluation in authorization server issuance and exchange flows.
 
-   Authority metadata can provide semantic information used in those
-   evaluations.  For example, a deployment can resolve a requested scope
-   into an authority description before consulting a policy decision
-   point.
+   This document provides semantic information which can be used in
+   those evaluations.  For example, a deployment can resolve a requested
+   scope into an authority description before consulting a policy
+   decision point.
 
    This specification does not change those profiles or define an
-   additional AuthZEN request member.  The transport of resolved
+   additional AuthZEN request attribute.  The transport of resolved
    metadata to a policy decision point is determined by the applicable
    profile or deployment.
 
@@ -282,9 +283,9 @@ Table of Contents
 
 2.  Metadata Parameter
 
-   This specification defines the optional JSON object member
-   authority_metadata for both OAuth Authorization Server Metadata
-   [RFC8414] and OAuth Protected Resource Metadata [RFC9728].
+   This specification defines the optional attribute authority_metadata
+   for both OAuth Authorization Server Metadata [RFC8414] and OAuth
+   Protected Resource Metadata [RFC9728].
 
    The structure depends on the publication context.
 
@@ -294,12 +295,12 @@ Table of Contents
 
    authorities:  REQUIRED.  An array of authority entries.
 
-   access_requirement_profiles:  OPTIONAL.  An object whose member names
-      identify reusable access requirement profiles and whose member
-      values contain those profiles.
+   access_requirement_profiles:  OPTIONAL.  An object whose attribute
+      names identify reusable access requirement profiles and whose
+      attribute values describe those profiles.
 
    The protected resource context is supplied by the enclosing
-   document's resource member.  Authority identifiers, profile names,
+   document's resource attribute.  Authority identifiers, profile names,
    families, and relationship targets are local to that metadata
    document.
 
@@ -312,16 +313,7 @@ Table of Contents
 
    Authorization server authority entries describe the publisher's local
    authority vocabulary.  They do not contain resource selectors, access
-   requirement profile references, or attenuation relationships in this
-   version of the specification.
-
-   The presence of authority_metadata indicates that the authorization
-   server publishes metadata using this specification.  No separate
-   support flag is defined.
-
-   Publication does not imply that the authorization server consumes
-   protected resource authority metadata, performs attenuation, or uses
-   a particular policy engine.
+   requirement profile references, or attenuation relationships.
 
 2.3.  Common Requirements
 
@@ -345,9 +337,9 @@ Table of Contents
 
 3.  Authority Entries
 
-3.1.  Common Members
+3.1.  Common attributes
 
-   Authority entries use the following common members.
+   Authority entries use the following common attributes.
 
 3.1.1.  kind
 
@@ -372,7 +364,7 @@ Table of Contents
    space-separated collection of scope values.
 
    For kind equal to authorization_details_type, value identifies the
-   value of the RAR object's type member.
+   value of the RAR object's type attribute.
 
    Matching of kind and value is exact and case-sensitive.
 
@@ -380,9 +372,9 @@ Table of Contents
 
    OPTIONAL.  A human-readable description of the authority.
 
-   Consumers MUST treat this member as descriptive text, not executable
-   policy.  Natural-language descriptions do not replace the structured
-   authority description or applicable type semantics.
+   Consumers MUST treat this attribute as descriptive text, not
+   executable policy.  Natural-language descriptions do not replace the
+   structured authority description or applicable type semantics.
 
 3.1.4.  family
 
@@ -417,7 +409,7 @@ Table of Contents
 
    The authority descriptions are defined in Section 4.
 
-3.2.  Protected Resource Members
+3.2.  Protected Resource attributes
 
    Protected resource authority entries additionally use:
 
@@ -433,10 +425,10 @@ Table of Contents
    A referenced access requirement profile MUST exist in the same
    authority_metadata object.
 
-   This version supports one profile reference per authority entry.
+   This document supports one profile reference per authority entry.
    Profile inheritance and composition are not defined.
 
-3.3.  Authorization Server Members
+3.3.  Authorization Server attributes
 
    Authorization server authority entries are identified by their
    combination of kind and value.
@@ -529,7 +521,7 @@ Table of Contents
    [RFC9396].
 
    The metadata does not replace those rules or duplicate the type's
-   field schema.  This specification defines no binding_fields member.
+   field schema.
 
    For example, two objects of the same payment type may grant different
    authority because they identify different accounts, beneficiaries,
@@ -597,9 +589,6 @@ Table of Contents
    max_lifetime:  OPTIONAL.  A positive integer expressing, in seconds,
       the maximum acceptable total lifetime of the access token.
 
-   single_use:  OPTIONAL.  A boolean.  If true, the access token must be
-      accepted for at most one protected operation.
-
    sender_constrained:  OPTIONAL.  A boolean.  If true, presentation
       must satisfy an applicable sender-constraining mechanism.
 
@@ -607,68 +596,14 @@ Table of Contents
    property.  It does not prohibit the property or override stricter
    policy.
 
-5.2.1.  Token Freshness and Lifetime
+5.2.1.  Sender-Constraining
 
-   max_age and max_lifetime have different meanings.
+   sender_constrained: true means the resource will reject a token that
+   is not sender-constrained.
 
-   For example:
-
-   {
-     "max_age": 300,
-     "max_lifetime": 3600
-   }
-
-   describes a token that may have a one-hour total lifetime but is
-   accepted under this profile only within five minutes of issuance.
-
-   Token issuance time and expiration MUST be obtained from
-   authenticated token data, trusted introspection, or equivalent
-   trusted state.  An untrusted client timestamp cannot establish token
-   freshness.
-
-   JWT access tokens and introspection are possible sources of such
-   data; see [RFC9068] and [RFC7662].
-
-   This specification does not establish a clock-skew allowance.  The
-   deployment determines an appropriate allowance and applies it
-   consistently.
-
-5.2.2.  Single-Use Semantics
-
-   If single_use is true, a conforming resource MUST ensure that the
-   same access token is not accepted for more than one protected
-   operation at that resource.
-
-   Consumption MUST be coordinated atomically across resource instances
-   that accept the token.  Merely publishing the requirement or
-   including a token identifier does not provide replay protection.
-
-   This specification does not define a universal token consumption
-   protocol.  A deployment needs a replay-resistant implementation and a
-   trusted means of identifying the token.
-
-   Single use is not equivalent to exactly-once business execution.  It
-   does not guarantee completion, rollback, or safe retry after an
-   ambiguous failure.
-
-   If one token carries several authorities, a single-use requirement
-   applies to the token as a whole, not separately to each authority.
-
-5.2.3.  Sender-Constraining
-
-   sender_constrained: true requires the resource to validate the proof
-   required by the applicable sender-constraining mechanism.
-
-   Examples include certificate-bound access tokens [RFC8705] and DPoP
-   [RFC9449].
-
-   This member does not select a mechanism.  Mechanism selection depends
-   on the token profile, applicable discovery metadata, and deployment
-   agreement.
-
-   Sender-constraining is not single-use token semantics.  A sender-
-   constrained token may still authorize several operations unless
-   restricted separately.
+   This attribute does not select a mechanism.  Mechanism selection
+   depends on the token profile, applicable discovery metadata, and
+   deployment agreement.
 
 5.3.  Authentication Requirements
 
@@ -679,30 +614,17 @@ Table of Contents
 
    max_age:  OPTIONAL.  A positive integer expressing, in seconds, the
       maximum acceptable elapsed time since the relevant end-user
-      authentication event.
+      authentication event, represented in the token's introspection
+      response's auth_time claim.
 
-   If both members are present, both requirements apply.
+   If both attributes are present, both requirements apply.
 
    acr_values lists alternatives, not cumulative authentication
    requirements.  The resource accepts an authentication context
    recognized as satisfying at least one listed value.
 
-   This specification does not define a numerical or lexical ordering of
-   ACR values.  An ACR string MUST NOT be interpreted as stronger than
-   another merely because of its spelling.
-
-   Authentication information MUST be derived from trusted token data,
-   trusted introspection, or equivalent authenticated information.
-
-   [RFC9470] defines related authentication strength and recentness
-   requirements and a mechanism for signaling insufficient user
-   authentication.
-
    Authentication freshness is distinct from token freshness.  Issuing a
    new token does not necessarily establish a new authentication event.
-
-   These requirements do not establish approval of a particular action
-   or continuous human presence.
 
 5.4.  Default Resource Policy
 
@@ -719,9 +641,8 @@ Table of Contents
    An access token may carry more than one authority.
 
    This specification does not prescribe how an authorization server
-   combines the associated profiles.  It may issue separate tokens,
-   satisfy a common set of requirements, or decline a request according
-   to policy.
+   combines the associated profiles.  It may satisfy a common set of
+   requirements, or decline a request according to policy.
 
    At enforcement time, the resource applies the requirements relevant
    to the authority used for the operation.
@@ -733,9 +654,7 @@ Table of Contents
 6.  Authority Relationships
 
    Protected resource authority entries can publish inline
-   relationships.
-
-   Each relationship object contains:
+   relationships.  Each relationship object contains:
 
    relation:  REQUIRED.  A relationship name.
 
@@ -743,9 +662,7 @@ Table of Contents
       metadata document.
 
    The containing authority entry is the relationship source.  No from
-   member is used.
-
-   This version defines one relationship:
+   attribute is used.  This document defines one relationship:
 
    *  can_be_attenuated_to
 
@@ -846,9 +763,6 @@ Table of Contents
    Where an attenuation relationship and ranks are both published, the
    target rank SHOULD be no greater than the source rank.
 
-   Ranks can be equal for incomparable authorities.  Equal ranks do not
-   identify a tie-breaking rule.
-
 8.  Authorization Server Use
 
    An authorization server can use this metadata when processing an
@@ -923,7 +837,7 @@ Table of Contents
    *  suggesting a lower-authority request using an applicable
       remediation mechanism;
 
-   *  requesting additional authorization;
+   *  requesting additional consent;
 
    *  requiring the client to submit a revised request.
 
@@ -1175,8 +1089,6 @@ Table of Contents
    control access to internal addresses, and apply request size and
    timeout limits.
 
-   Fetching arbitrary metadata is not required by this specification.
-
 10.3.  Semantic Misrepresentation
 
    A publisher can incorrectly describe a scope, type, or containment
@@ -1199,19 +1111,69 @@ Table of Contents
    This specification does not define semantic version negotiation or
    bind a token to a metadata version.
 
-10.5.  Unknown Semantic Values
+10.5.  Malicious Resource Metadata and Policy Downgrade
 
-   Unknown action identifiers, properties, or relationship names cannot
-   safely be interpreted as familiar values.
+   A malicious client can select an attacker-controlled resource whose
+   metadata understates the authority represented by a scope or
+   authorization details type, or declares weaker access requirements.
 
-   A consumer MUST NOT claim to have established authority containment
-   or purpose alignment from semantics it does not understand.
+   If an authorization server applies that metadata outside its resource
+   context, the client might obtain a token usable at another resource
+   under weaker policy.
 
-   This does not mandate a particular AS response.  A deployment may use
-   trusted local policy, decline evaluation, or require further
-   information.
+   An authorization server MUST bind authority metadata used in an
+   issuance decision to the protected resource for which that metadata
+   was validated.  Scope values, authority identifiers, families, and
+   ranks from one resource MUST NOT be used to establish authority
+   semantics for another resource.
 
-10.6.  Scope Combinations
+   An authorization server MUST NOT treat resource metadata as
+   authorization to weaken existing grant restrictions, client policy,
+   subject authority, or AS-local minimum security requirements.
+
+   Omitted or weaker access requirements do not override those
+   requirements.
+
+   When protected resource authority metadata informs token issuance,
+   the authorization server MUST audience-restrict the resulting token
+   to the resource or resources independently evaluated for that
+   issuance decision, using the mechanisms described in [RFC8707].
+
+   A protected resource MUST reject an access token that is not intended
+   for that resource.
+
+   An attacker-controlled resource MUST NOT be able to select an
+   audience mapping that makes its tokens acceptable to another
+   resource.
+
+   Publication of metadata, including an authorization_servers member
+   naming an AS, does not establish that the publisher is trusted by
+   that AS.
+
+   Token refresh or exchange that changes the target resource requires
+   evaluation in the new resource context.  A previous issuance decision
+   based on another resource's metadata does not establish authority for
+   the new target.
+
+10.6.  Requests Naming Multiple Resources
+
+   An OAuth request can identify more than one protected resource.  Each
+   resource's authority metadata and access requirements apply only
+   within that resource's context.
+
+   An authorization server may issue a token intended for multiple
+   resources, require a revised request, or reject an unsupported
+   combination, subject to the applicable OAuth protocol and local
+   policy.
+
+   If the authorization server issues one token intended to satisfy the
+   requirements of multiple resources, that token MUST satisfy all
+   applicable requirements.  Requirements that cannot be jointly
+   satisfied MUST NOT be resolved by selecting the weaker requirement.
+
+   This specification does not define a profile-merging algorithm.
+
+10.7.  Scope Combinations
 
    The authority of several scopes may not equal a simple union of their
    individual descriptions.
@@ -1223,7 +1185,7 @@ Table of Contents
    Consumers need applicable resource policy when evaluating
    combinations.
 
-10.7.  RAR Parameter Restrictions
+10.8.  RAR Parameter Restrictions
 
    Type-level metadata must not cause a consumer to ignore restrictions
    in a concrete authorization details object.
@@ -1231,16 +1193,15 @@ Table of Contents
    Unsafe transformations can widen document access, payment
    destinations, amounts, or other parameter-defined authority.
 
-10.8.  Requirements Are Not Enforcement
+10.9.  Requirements Are Not Enforcement
 
-   Publishing sender-constraining, freshness, or single-use requirements
-   does not implement them.
+   Publishing sender-constraining or freshness requirements does not
+   implement them.
 
    Resources remain responsible for enforcement.  Issuing a short-lived
-   token does not prove recent authentication, and sender-constraining
-   does not establish single use.
+   token does not prove recent authentication.
 
-10.9.  Relationship Processing
+10.10.  Relationship Processing
 
    Relationship graphs can contain cycles or excessive numbers of
    entries.
@@ -1248,7 +1209,7 @@ Table of Contents
    Consumers SHOULD bound graph processing.  Rank must not be used as a
    shortcut for proving containment.
 
-10.10.  Consent Rendering
+10.11.  Consent Rendering
 
    Human-readable descriptions can improve disclosure but do not prove
    comprehension.
@@ -1268,8 +1229,6 @@ Table of Contents
    Published profiles SHOULD describe general access requirements rather
    than user-specific authentication state or individual authorization
    decisions.
-
-   This specification does not require publication of personal data.
 
 12.  IANA Considerations
 
@@ -1302,21 +1261,13 @@ Table of Contents
 
    *  Specification Document: Section 2 of this document
 
-13.  Implementation Status
+13.  Acknowledgments
 
-   This section is to be removed before publication as an RFC.
+   TODO
 
-   No implementation status is asserted by this document.
+14.  References
 
-14.  Acknowledgments
-
-   The problem framing was informed by OAuth working group discussions
-   about scope semantics, RAR type semantics, agent authorization,
-   Mission-bound authorization, and cross-resource workflows.
-
-15.  References
-
-15.1.  Normative References
+14.1.  Normative References
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119,
@@ -1350,12 +1301,7 @@ Table of Contents
               DOI 10.17487/RFC9728, April 2025,
               <https://www.rfc-editor.org/info/rfc9728>.
 
-   [RFC9470]  Bertocci, V. and B. Campbell, "OAuth 2.0 Step Up
-              Authentication Challenge Protocol", RFC 9470,
-              DOI 10.17487/RFC9470, September 2023,
-              <https://www.rfc-editor.org/info/rfc9470>.
-
-15.2.  Informative References
+14.2.  Informative References
 
    [RFC7662]  Richer, J., Ed., "OAuth 2.0 Token Introspection",
               RFC 7662, DOI 10.17487/RFC7662, October 2015,
@@ -1395,14 +1341,6 @@ Appendix A.  Editorial Issues
 
    This section is to be removed before publication as an RFC.
 
-   *  Determine whether the document title should remain "Resource-Bound
-      Authority Metadata" or use "OAuth Authority Metadata" to reflect
-      both publication contexts.
-
-   *  Determine whether interoperable application action and resource
-      vocabularies should be defined separately or remain entirely
-      deployment-specific.
-
    *  Evaluate whether sender-constraining mechanism identifiers are
       needed in access requirement profiles.
 
@@ -1413,10 +1351,7 @@ Appendix A.  Editorial Issues
       dependent access profiles and attenuation transformations.
 
    *  Determine whether extension registries are needed for authority
-      kinds, relationship names, and access requirement members.
-
-   *  Confirm the preferred versioned references for the AuthZEN OAuth
-      issuance and exchange profiles before publication.
+      kinds, relationship names, and access requirement attributes.
 
 Appendix B.  Document History
 
