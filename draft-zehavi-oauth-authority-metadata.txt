@@ -8,7 +8,7 @@ Intended status: Standards Track                          9 October 2026
 Expires: 12 April 2027
 
 
-              OAuth 2.0 Resource-Bound Authority Metadata
+                      OAuth 2.0 Authority Metadata
               draft-zehavi-oauth-authority-metadata-latest
 
 Abstract
