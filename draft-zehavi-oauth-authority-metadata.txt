@@ -85,6 +85,10 @@ Table of Contents
      2.1.  Protected Resource Metadata
      2.2.  Authorization Server Metadata
      2.3.  Common Requirements
+     2.4.  Examples
+       2.4.1.  Protected Resource Metadata
+       2.4.2.  Authorization Server Metadata
+       2.4.3.  Attenuation Decision
    3.  Authority Entries
      3.1.  Common attributes
        3.1.1.  kind
@@ -114,30 +118,26 @@ Table of Contents
      8.1.  Publication Is Not an Issuance Decision
      8.2.  Metadata Sources and Conflicts
      8.3.  Attenuation Options
-   9.  Examples
-     9.1.  Protected Resource Metadata
-     9.2.  Authorization Server Metadata
-     9.3.  Attenuation Decision
-   10. Security Considerations
-     10.1.  Metadata Authenticity
-     10.2.  Untrusted Resource Locations
-     10.3.  Semantic Misrepresentation
-     10.4.  Stale Metadata
-     10.5.  Malicious Resource Metadata and Policy Downgrade
-     10.6.  Requests Naming Multiple Resources
-     10.7.  Scope Combinations
-     10.8.  RAR Parameter Restrictions
-     10.9.  Requirements Are Not Enforcement
-     10.10. Relationship Processing
-     10.11. Consent Rendering
-   11. Privacy Considerations
-   12. IANA Considerations
-     12.1.  OAuth Authorization Server Metadata Registration
-     12.2.  OAuth Protected Resource Metadata Registration
-   13. Acknowledgments
-   14. References
-     14.1.  Normative References
-     14.2.  Informative References
+   9.  Security Considerations
+     9.1.  Metadata Authenticity
+     9.2.  Untrusted Resource Locations
+     9.3.  Semantic Misrepresentation
+     9.4.  Stale Metadata
+     9.5.  Malicious Resource Metadata and Policy Downgrade
+     9.6.  Requests Naming Multiple Resources
+     9.7.  Scope Combinations
+     9.8.  RAR Parameter Restrictions
+     9.9.  Requirements Are Not Enforcement
+     9.10. Relationship Processing
+     9.11. Consent Rendering
+   10. Privacy Considerations
+   11. IANA Considerations
+     11.1.  OAuth Authorization Server Metadata Registration
+     11.2.  OAuth Protected Resource Metadata Registration
+   12. Acknowledgments
+   13. References
+     13.1.  Normative References
+     13.2.  Informative References
    Appendix A.  Editorial Issues
    Appendix B.  Document History
    Author's Address
@@ -334,6 +334,206 @@ Table of Contents
    This specification permits partial publication.  An authority
    consumer cannot assume that the metadata enumerates every authority
    accepted or issued by the publisher.
+
+2.4.  Examples
+
+   The examples use illustrative application vocabularies.  They are not
+   standardized action, effect, or risk registries.
+
+2.4.1.  Protected Resource Metadata
+
+   The following resource accepts a read scope, a management scope that
+   includes read and update access, and a RAR type for document access.
+
+   {
+     "resource": "https://documents.example.com",
+     "authorization_servers": [
+       "https://as.example.com"
+     ],
+     "scopes_supported": [
+       "documents.read",
+       "documents.manage"
+     ],
+     "authority_metadata": {
+       "access_requirement_profiles": {
+         "standard_access": {
+           "token": {
+             "max_lifetime": 3600
+           }
+         },
+         "sensitive_access": {
+           "token": {
+             "max_age": 300,
+             "max_lifetime": 600,
+             "sender_constrained": true
+           },
+           "authentication": {
+             "acr_values": [
+               "urn:example:acr:phishing-resistant"
+             ],
+             "max_age": 300
+           }
+         }
+       },
+       "authorities": [
+         {
+           "id": "documents.read",
+           "kind": "scope",
+           "value": "documents.read",
+           "description": "Read documents accessible to the subject.",
+           "family": "document_access",
+           "rank": 10,
+           "authority": [
+             {
+               "resource_type": "urn:example:resource-type:document",
+               "actions": [
+                 "urn:example:action:document:read"
+               ],
+               "effects": [
+                 "urn:example:effect:data-disclosure"
+               ],
+               "risk": "low"
+             }
+           ],
+           "access_requirement_profile": "standard_access"
+         },
+         {
+           "id": "documents.manage",
+           "kind": "scope",
+           "value": "documents.manage",
+           "description": "Read and update documents accessible to the subject.",
+           "family": "document_access",
+           "rank": 20,
+           "authority": [
+             {
+               "resource_type": "urn:example:resource-type:document",
+               "actions": [
+                 "urn:example:action:document:read",
+                 "urn:example:action:document:update"
+               ],
+               "effects": [
+                 "urn:example:effect:data-disclosure",
+                 "urn:example:effect:state-change"
+               ],
+               "risk": "medium"
+             }
+           ],
+           "access_requirement_profile": "sensitive_access",
+           "relationships": [
+             {
+               "relation": "can_be_attenuated_to",
+               "target": "documents.read"
+             }
+           ]
+         },
+         {
+           "id": "document_access.rar",
+           "kind": "authorization_details_type",
+           "value": "urn:example:authorization-details:document-access",
+           "description": "Access to specified documents under type-specific restrictions.",
+           "family": "document_access",
+           "authority": [
+             {
+               "resource_type": "urn:example:resource-type:document",
+               "actions": [
+                 "urn:example:action:document:read",
+                 "urn:example:action:document:update"
+               ],
+               "effects": [
+                 "urn:example:effect:data-disclosure",
+                 "urn:example:effect:state-change"
+               ],
+               "properties": {
+                 "semantics": "urn:example:semantics:document-access:v1"
+               }
+             }
+           ],
+           "access_requirement_profile": "sensitive_access"
+         }
+       ]
+     }
+   }
+
+   The RAR entry does not receive a fixed rank in this example because
+   its concrete authority varies with the requested actions and document
+   restrictions.
+
+2.4.2.  Authorization Server Metadata
+
+   The following AS publishes its local understanding of profile scopes.
+
+   {
+     "issuer": "https://as.example.com",
+     "scopes_supported": [
+       "profile.read",
+       "profile.manage"
+     ],
+     "authority_metadata": {
+       "authorities": [
+         {
+           "kind": "scope",
+           "value": "profile.read",
+           "description": "Read profile information.",
+           "family": "profile_access",
+           "rank": 10,
+           "authority": [
+             {
+               "resource_type": "urn:example:resource-type:profile",
+               "actions": [
+                 "urn:example:action:profile:read"
+               ],
+               "effects": [
+                 "urn:example:effect:data-disclosure"
+               ],
+               "risk": "low"
+             }
+           ]
+         },
+         {
+           "kind": "scope",
+           "value": "profile.manage",
+           "description": "Read and update profile information.",
+           "family": "profile_access",
+           "rank": 20,
+           "authority": [
+             {
+               "resource_type": "urn:example:resource-type:profile",
+               "actions": [
+                 "urn:example:action:profile:read",
+                 "urn:example:action:profile:update"
+               ],
+               "effects": [
+                 "urn:example:effect:data-disclosure",
+                 "urn:example:effect:state-change"
+               ],
+               "risk": "medium"
+             }
+           ]
+         }
+       ]
+     }
+   }
+
+   There is no authority id, resource selector, access requirement
+   profile, or attenuation relationship.
+
+2.4.3.  Attenuation Decision
+
+   A client requests:
+
+   resource=https://documents.example.com
+   scope=documents.manage
+
+   The resource metadata identifies documents.read as an attenuation
+   target.
+
+   An AS might determine that a read-only task does not need update
+   authority.  Its policy may then issue documents.read or decline the
+   request and suggest that the client request documents.read.
+
+   The metadata identifies the containment relationship.  It does not
+   determine which response the AS chooses or establish that read access
+   satisfies the client's task.
 
 3.  Authority Entries
 
@@ -851,225 +1051,9 @@ Table of Contents
 
    No new error code or remediation response is defined here.
 
-9.  Examples
+9.  Security Considerations
 
-   The examples use illustrative application vocabularies.  They are not
-   standardized action, effect, or risk registries.
-
-9.1.  Protected Resource Metadata
-
-   The following resource accepts a read scope, a management scope that
-   includes read and update access, and a RAR type for document access.
-
-   {
-     "resource": "https://documents.example.com",
-     "authorization_servers": [
-       "https://as.example.com"
-     ],
-     "scopes_supported": [
-       "documents.read",
-       "documents.manage"
-     ],
-     "authority_metadata": {
-       "access_requirement_profiles": {
-         "standard_access": {
-           "token": {
-             "max_lifetime": 3600
-           }
-         },
-         "sensitive_access": {
-           "token": {
-             "max_age": 300,
-             "max_lifetime": 600,
-             "sender_constrained": true
-           },
-           "authentication": {
-             "acr_values": [
-               "urn:example:acr:phishing-resistant"
-             ],
-             "max_age": 300
-           }
-         }
-       },
-       "authorities": [
-         {
-           "id": "documents.read",
-           "kind": "scope",
-           "value": "documents.read",
-           "description": "Read documents accessible to the subject.",
-           "family": "document_access",
-           "rank": 10,
-           "authority": [
-             {
-               "resource_type": "urn:example:resource-type:document",
-               "actions": [
-                 "urn:example:action:document:read"
-               ],
-               "effects": [
-                 "urn:example:effect:data-disclosure"
-               ],
-               "risk": "low"
-             }
-           ],
-           "access_requirement_profile": "standard_access"
-         },
-         {
-           "id": "documents.manage",
-           "kind": "scope",
-           "value": "documents.manage",
-           "description": "Read and update documents accessible to the subject.",
-           "family": "document_access",
-           "rank": 20,
-           "authority": [
-             {
-               "resource_type": "urn:example:resource-type:document",
-               "actions": [
-                 "urn:example:action:document:read",
-                 "urn:example:action:document:update"
-               ],
-               "effects": [
-                 "urn:example:effect:data-disclosure",
-                 "urn:example:effect:state-change"
-               ],
-               "risk": "medium"
-             }
-           ],
-           "access_requirement_profile": "sensitive_access",
-           "relationships": [
-             {
-               "relation": "can_be_attenuated_to",
-               "target": "documents.read"
-             }
-           ]
-         },
-         {
-           "id": "document_access.rar",
-           "kind": "authorization_details_type",
-           "value": "urn:example:authorization-details:document-access",
-           "description": "Access to specified documents under type-specific restrictions.",
-           "family": "document_access",
-           "authority": [
-             {
-               "resource_type": "urn:example:resource-type:document",
-               "actions": [
-                 "urn:example:action:document:read",
-                 "urn:example:action:document:update"
-               ],
-               "effects": [
-                 "urn:example:effect:data-disclosure",
-                 "urn:example:effect:state-change"
-               ],
-               "properties": {
-                 "semantics": "urn:example:semantics:document-access:v1"
-               }
-             }
-           ],
-           "access_requirement_profile": "sensitive_access"
-         }
-       ]
-     }
-   }
-
-   The RAR entry does not receive a fixed rank in this example because
-   its concrete authority varies with the requested actions and document
-   restrictions.
-
-   A concrete request might be:
-
-   [
-     {
-       "type": "urn:example:authorization-details:document-access",
-       "actions": ["read"],
-       "locations": [
-         "https://documents.example.com/documents/123"
-       ]
-     }
-   ]
-
-   The consumer evaluates that object using the type's semantic rules.
-   The type-level metadata does not imply that the request grants update
-   access.
-
-9.2.  Authorization Server Metadata
-
-   The following AS publishes its local understanding of profile scopes.
-
-   {
-     "issuer": "https://as.example.com",
-     "scopes_supported": [
-       "profile.read",
-       "profile.manage"
-     ],
-     "authority_metadata": {
-       "authorities": [
-         {
-           "kind": "scope",
-           "value": "profile.read",
-           "description": "Read profile information.",
-           "family": "profile_access",
-           "rank": 10,
-           "authority": [
-             {
-               "resource_type": "urn:example:resource-type:profile",
-               "actions": [
-                 "urn:example:action:profile:read"
-               ],
-               "effects": [
-                 "urn:example:effect:data-disclosure"
-               ],
-               "risk": "low"
-             }
-           ]
-         },
-         {
-           "kind": "scope",
-           "value": "profile.manage",
-           "description": "Read and update profile information.",
-           "family": "profile_access",
-           "rank": 20,
-           "authority": [
-             {
-               "resource_type": "urn:example:resource-type:profile",
-               "actions": [
-                 "urn:example:action:profile:read",
-                 "urn:example:action:profile:update"
-               ],
-               "effects": [
-                 "urn:example:effect:data-disclosure",
-                 "urn:example:effect:state-change"
-               ],
-               "risk": "medium"
-             }
-           ]
-         }
-       ]
-     }
-   }
-
-   There is no support flag, authority id, resource selector, access
-   requirement profile, or attenuation relationship.
-
-9.3.  Attenuation Decision
-
-   A client requests:
-
-   resource=https://documents.example.com
-   scope=documents.manage
-
-   The resource metadata identifies documents.read as an attenuation
-   target.
-
-   An AS might determine that a read-only task does not need update
-   authority.  Its policy may then issue documents.read or decline the
-   request and suggest that the client request documents.read.
-
-   The metadata identifies the containment relationship.  It does not
-   determine which response the AS chooses or establish that read access
-   satisfies the client's task.
-
-10.  Security Considerations
-
-10.1.  Metadata Authenticity
+9.1.  Metadata Authenticity
 
    Consumers need to validate metadata using the discovery and security
    requirements of [RFC8414] or [RFC9728], as applicable.
@@ -1080,7 +1064,7 @@ Table of Contents
    Metadata publication does not independently establish a trusted
    authorization server and resource relationship.
 
-10.2.  Untrusted Resource Locations
+9.2.  Untrusted Resource Locations
 
    An AS that fetches metadata in response to a client-supplied resource
    indicator can be exposed to server-side request forgery.
@@ -1089,7 +1073,7 @@ Table of Contents
    control access to internal addresses, and apply request size and
    timeout limits.
 
-10.3.  Semantic Misrepresentation
+9.3.  Semantic Misrepresentation
 
    A publisher can incorrectly describe a scope, type, or containment
    relationship.
@@ -1100,7 +1084,7 @@ Table of Contents
    Consumers should rely only on trusted publishers and understood
    vocabularies when using metadata for authorization decisions.
 
-10.4.  Stale Metadata
+9.4.  Stale Metadata
 
    Authority semantics and access requirements may change.
 
@@ -1111,7 +1095,7 @@ Table of Contents
    This specification does not define semantic version negotiation or
    bind a token to a metadata version.
 
-10.5.  Malicious Resource Metadata and Policy Downgrade
+9.5.  Malicious Resource Metadata and Policy Downgrade
 
    A malicious client can select an attacker-controlled resource whose
    metadata understates the authority represented by a scope or
@@ -1155,7 +1139,7 @@ Table of Contents
    based on another resource's metadata does not establish authority for
    the new target.
 
-10.6.  Requests Naming Multiple Resources
+9.6.  Requests Naming Multiple Resources
 
    An OAuth request can identify more than one protected resource.  Each
    resource's authority metadata and access requirements apply only
@@ -1173,7 +1157,7 @@ Table of Contents
 
    This specification does not define a profile-merging algorithm.
 
-10.7.  Scope Combinations
+9.7.  Scope Combinations
 
    The authority of several scopes may not equal a simple union of their
    individual descriptions.
@@ -1185,7 +1169,7 @@ Table of Contents
    Consumers need applicable resource policy when evaluating
    combinations.
 
-10.8.  RAR Parameter Restrictions
+9.8.  RAR Parameter Restrictions
 
    Type-level metadata must not cause a consumer to ignore restrictions
    in a concrete authorization details object.
@@ -1193,7 +1177,7 @@ Table of Contents
    Unsafe transformations can widen document access, payment
    destinations, amounts, or other parameter-defined authority.
 
-10.9.  Requirements Are Not Enforcement
+9.9.  Requirements Are Not Enforcement
 
    Publishing sender-constraining or freshness requirements does not
    implement them.
@@ -1201,7 +1185,7 @@ Table of Contents
    Resources remain responsible for enforcement.  Issuing a short-lived
    token does not prove recent authentication.
 
-10.10.  Relationship Processing
+9.10.  Relationship Processing
 
    Relationship graphs can contain cycles or excessive numbers of
    entries.
@@ -1209,7 +1193,7 @@ Table of Contents
    Consumers SHOULD bound graph processing.  Rank must not be used as a
    shortcut for proving containment.
 
-10.11.  Consent Rendering
+9.11.  Consent Rendering
 
    Human-readable descriptions can improve disclosure but do not prove
    comprehension.
@@ -1218,7 +1202,7 @@ Table of Contents
    NOT execute markup, scripts, or instructions embedded in
    descriptions.
 
-11.  Privacy Considerations
+10.  Privacy Considerations
 
    Authority metadata can disclose supported operations, resource types,
    and authentication expectations.
@@ -1230,9 +1214,9 @@ Table of Contents
    than user-specific authentication state or individual authorization
    decisions.
 
-12.  IANA Considerations
+11.  IANA Considerations
 
-12.1.  OAuth Authorization Server Metadata Registration
+11.1.  OAuth Authorization Server Metadata Registration
 
    This specification requests registration in the "OAuth Authorization
    Server Metadata" registry established by [RFC8414]:
@@ -1246,7 +1230,7 @@ Table of Contents
 
    *  Specification Document: Section 2 of this document
 
-12.2.  OAuth Protected Resource Metadata Registration
+11.2.  OAuth Protected Resource Metadata Registration
 
    This specification requests registration in the "OAuth Protected
    Resource Metadata" registry established by [RFC9728]:
@@ -1261,13 +1245,13 @@ Table of Contents
 
    *  Specification Document: Section 2 of this document
 
-13.  Acknowledgments
+12.  Acknowledgments
 
    TODO
 
-14.  References
+13.  References
 
-14.1.  Normative References
+13.1.  Normative References
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119,
@@ -1301,7 +1285,7 @@ Table of Contents
               DOI 10.17487/RFC9728, April 2025,
               <https://www.rfc-editor.org/info/rfc9728>.
 
-14.2.  Informative References
+13.2.  Informative References
 
    [RFC7662]  Richer, J., Ed., "OAuth 2.0 Token Introspection",
               RFC 7662, DOI 10.17487/RFC7662, October 2015,
