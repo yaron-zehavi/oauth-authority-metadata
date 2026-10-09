@@ -1,0 +1,3089 @@
+<!DOCTYPE html>
+<html lang="en" class="Internet-Draft">
+<head>
+<meta charset="utf-8">
+<meta content="Common,Latin" name="scripts">
+<meta content="initial-scale=1.0" name="viewport">
+<title>OAuth 2.0 Resource-Bound Authority Metadata</title>
+<meta content="Yaron Zehavi" name="author">
+<meta content="
+       OAuth metadata advertises supported scopes and authorization details
+types, but does not provide a common metadata structure for describing
+the authority those values represent. 
+       This specification defines authority metadata extensions for OAuth 2.0
+Protected Resource Metadata and OAuth 2.0 Authorization Server Metadata.
+A protected resource can describe the authority it associates with scopes
+and Rich Authorization Requests types, reusable access requirement
+profiles, and relationships identifying lower-authority alternatives.
+An authorization server can publish a simpler description of its local
+authority vocabulary. 
+       This metadata can inform authorization requests, token issuance, token
+exchange, policy evaluation, consent rendering, and least-privilege
+selection. It does not prescribe an authorization server decision
+algorithm or require automatic attenuation. 
+    " name="description">
+<meta content="xml2rfc 3.34.1" name="generator">
+<meta content="OAuth" name="keyword">
+<meta content="authority metadata" name="keyword">
+<meta content="protected resource" name="keyword">
+<meta content="scopes" name="keyword">
+<meta content="rich authorization requests" name="keyword">
+<meta content="least privilege" name="keyword">
+<meta content="AuthZEN" name="keyword">
+<meta content="draft-zehavi-oauth-authority-metadata-latest" name="ietf.draft">
+<!-- Generator version information:
+  xml2rfc 3.34.1
+    Python 3.14.8
+    ConfigArgParse 1.8.0
+    google-i18n-address 3.1.1
+    intervaltree 3.2.1
+    Jinja2 3.1.6
+    lxml 6.1.1
+    natsort 8.4.0
+    platformdirs 4.12.2
+    pycountry 24.6.1
+    PyYAML 6.0.3
+    requests 2.33.1
+    wcwidth 0.9.1
+-->
+<link href="draft-zehavi-oauth-authority-metadata.xml" rel="alternate" type="application/rfc+xml">
+<link href="#copyright" rel="license">
+<style type="text/css">@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-vietnamese.woff2') format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+1EA0-1EF9, U+20AB;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-cyrillic.woff2') format('woff2');
+  unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-vietnamese.woff2') format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+1EA0-1EF9, U+20AB;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-cyrillic.woff2') format('woff2');
+  unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-vietnamese.woff2') format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+1EA0-1EF9, U+20AB;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: local('Lora SemiBold'), local('Lora-SemiBold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-semibold-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Oxygen Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Oxygen Mono'), local('OxygenMono-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/oxygenmono-regular-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Oxygen Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Oxygen Mono'), local('OxygenMono-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/oxygenmono-regular-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: italic;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-italic-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: italic;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-italic-cyrillic.woff2') format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: italic;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-italic-greek.woff2') format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: italic;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-italic-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: italic;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-italic-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: normal;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-regular-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: normal;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-regular-cyrillic.woff2') format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: normal;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-regular-greek.woff2') format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: normal;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-regular-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: normal;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-regular-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+:root {
+  color-scheme: light dark;
+  --background-color: #fff;
+  --text-color: #222;
+  --title-color: #191919;
+  --link-color: #2a6496;
+  --highlight-color: #f9f9f9;
+  --line-color: #eee;
+  --pilcrow-weak: #ddd;
+  --pilcrow-strong: #bbb;
+  --small-font-size: 14.5px;
+  --font-mono: 'Oxygen Mono', monospace;
+  --font-title: "Sofia Sans Semi Condensed", sans-serif;
+  scrollbar-color: #bbb #eee;
+}
+body {
+  max-width: 600px;
+  margin: 75px auto;
+  padding: 0 5px;
+  color: var(--text-color);
+  background-color: var(--background-color);
+  font: 16px/22px "Lora", serif;
+  scroll-behavior: smooth;
+}
+
+.ears {
+  display: none;
+}
+
+/* headings */
+section {
+  clear: both;
+}
+.section-number {
+  padding-right: 0.5em;
+}
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-title);
+  font-weight: 680;
+  margin: 0.8em 0 0.3em;
+  font-size-adjust: 0.5;
+  color: var(--title-color);
+}
+h1 {
+  &#title {
+    font-size: 32px;
+    line-height: 40px;
+    clear: both;
+    margin: 1.5em 0 0.2em;
+  }
+  &#rfcnum {
+    margin: 1.5em 0 0.2em;
+    & + h1#title {
+      margin: 0.2em 0;
+    }
+  }
+}
+
+h1, h2, h3 {
+  font-size: 22px;
+  line-height: 27px;
+}
+h4, h5, h6 {
+  font-size: 20px;
+  line-height: 24px;
+}
+
+/* general structure */
+.author {
+  padding-bottom: 0.3em;
+  vertical-align: top;
+}
+#abstract+p {
+  font-size: 18px;
+  line-height: 24px;
+  & code, & samp, & tt {
+    font-size: 16px;
+    line-height: 0;
+  }
+}
+
+p {
+  padding: 0;
+  margin: 0.5em 0;
+  text-align: left;
+}
+div {
+  margin: 0;
+}
+.alignRight {
+  margin: 1em 0;
+  &.art-text {
+    background-color: var(--highlight-color);
+    border: 1px solid var(--line-color);
+    border-radius: 3px;
+    padding: 0.5em 1em 0;
+    margin-bottom: 0.5em;
+    & pre {
+      padding: 0;
+      width: auto;
+    }
+  }
+  & > *:first-child {
+    border: none;
+    margin: 0;
+    float: right;
+    clear: both;
+  }
+  & > *:nth-child(2) {
+    clear: both;
+    display: block;
+    border: none;
+  }
+}
+svg {
+  display: block;
+  /* font-family isn't space-separated, but =~ will have to do */
+  &[font-family~="monospace" i], & [font-family~="monospace" i] {
+    font-family: var(--font-mono);
+  }
+}
+.alignCenter {
+  margin: 1em 0;
+  &.art-text {
+    background-color: var(--highlight-color);
+    border: 1px solid var(--line-color);
+    border-radius: 3px;
+    padding: 0.5em 1em 0;
+    margin-bottom: 0.5em;
+    & pre {
+      padding: 0;
+      width: auto;
+    }
+  }
+  & > *:first-child {
+    border: none;
+    /* this isn't optimal, but it's an existence proof.  PrinceXML doesn't
+       support flexbox yet.
+    */
+    display: table;
+    margin: 0 auto;
+  }
+}
+
+/* lists */
+ol, ul {
+  padding: 0;
+  margin: 0 0 0.5em 2em;
+  & :is(ol, ul) {
+    margin-left: 1em;
+  }
+}
+li {
+  margin: 0 0 0.25em 0;
+}
+ul.empty, .ulEmpty {
+  list-style-type: none;
+  & li {
+    margin-top: 0.5em;
+  }
+}
+:is(ul, ol).compact, .ulCompact, .olCompact {
+  margin: 0 0 0 2em;
+  & li {
+    margin: 0;
+    & :first-child { margin-top: 0; }
+    & :last-child { margin-bottom: 0; }
+  }
+}
+
+/* definition lists */
+dl {
+  clear: left;
+  --indent: 3ch;
+  /* --indent: attr(indent ch); not supported in any browser, but we can dream */
+  &.olPercent {
+    --indent: 5ch;
+    & > dt {
+      min-width: calc(var(--indent) - 2ch);
+      float: none;
+    }
+  }
+
+  dl > dd > & {
+    margin-top: 0.5em;
+    margin-bottom: 0;
+  }
+
+  &:not(.dlNewline) > dt {
+    float: left;
+    margin-right: 2ch;
+    min-width: 8ch;
+  }
+  & > dd {
+    margin-bottom: .8em;
+    margin-left: var(--indent) !important; /* stupid element overrides */
+    min-height: 2ex;
+  }
+}
+:is(dl.compact, .dlCompact) > dd {
+  margin-bottom: 0;
+  & > :is(:first-child, .break:first-child + *) {
+    margin-top: 0;
+  }
+  & > :is(:last-child) {
+    margin-bottom: 0;
+  }
+}
+:is(dd, span).break {
+  display: none;
+}
+
+/* links */
+a {
+  text-decoration: none;
+  &[href] {
+    color: var(--link-color);
+    &:hover { text-decoration: underline; }
+    &.selfRef {
+      color: var(--text-color);
+      &:hover {
+        text-decoration: none;
+        background-color: var(--highlight-color);
+      }
+    }
+  }
+}
+.iref + a[href].internal {
+  color: var(--text-color);
+}
+a.xref:is(.cite, .auto), :is(#status-of-memo, #copyright) a {
+  white-space: nowrap;
+}
+
+/* Figures */
+tt, code, pre {
+  background-color: var(--highlight-color);
+  font: 14px/22px var(--font-mono);
+}
+tt, code {
+  /* changing the font for inline elements leads to different ascender
+     and descender heights; as we want to retain baseline alignment,
+     remove leading to avoid altering the final height of lines
+     note: this fails if these blocks take an entire line,
+     a different solution would be great */
+  line-height: 0;
+}
+:is(h1, h2, h3, h4, h5, h6) :is(tt, code) {
+  font-size: 84%;
+}
+pre {
+  border: 1px solid var(--line-color);
+  font-size: 13.5px;
+  line-height: 16px;
+  letter-spacing: -0.2px;
+  margin: 5px;
+  padding: 5px;
+}
+img {
+  max-width: 100%;
+}
+figure {
+  margin: 0.5em 0;
+  padding: 0;
+  & blockquote {
+    margin: 0.8em 0.4em 0.4em;
+  }
+}
+figcaption, caption {
+  font-style: italic;
+  margin: 0.5em 1.5em;
+  text-align: left;
+  caption-side: bottom;
+}
+@media screen {
+  /* Auto-collapse boilerplate. */
+  :is(#status-of-memo, #copyright) {
+    & p {
+      margin: -2px 0;
+      max-height: 0;
+      transition: max-height 2s ease, margin 0.5s ease 0.5s;
+      overflow: hidden;
+    }
+    &:hover p,
+    & h2:target ~ p {
+      margin: 0.5em 0;
+      max-height: 500px;
+      overflow: auto;
+    }
+  }
+  pre, svg {
+    display: inline-block;
+    /* In the horizontal direction, sometimes people make over-sized figures.
+       Scrollbars for those is therefore necessary: auto adds them as necessary..
+       In the vertical direction, the line-height can combine with the font
+       asender/descender height to produce scrollbars: hidden avoids that. */
+    overflow: auto hidden;
+  }
+  pre {
+    max-width: 100%;
+    width: calc(100% - 22px - 1em);
+  }
+  svg {
+    max-width: calc(100% - 22px - 1em);
+  }
+  figure pre {
+    display: block;
+    width: calc(100% - 25px);
+  }
+  :is(pre, svg) + .pilcrow {
+    display: inline-block;
+    vertical-align: text-bottom;
+    padding-bottom: 8px;
+  }
+}
+
+/* aside, blockquote */
+aside, blockquote {
+  margin-left: 0;
+  padding: 0 2em;
+  font-style: italic;
+}
+blockquote {
+  margin: 1em 0;
+  border-left: 2px var(--pilcrow-strong) solid;
+}
+cite {
+  display: block;
+  text-align: right;
+  font-style: italic;
+}
+
+/* tables */
+table {
+  width: auto;
+  max-width: 100%;
+  margin: 0 0 1em;
+  border-collapse: collapse;
+  &.right { margin-left: auto; }
+  &.center { margin-left: auto; margin-right: auto; }
+  &.left { margin-right: auto; }
+  & .text-left { text-align: left; }
+  & .text-center { text-align: center; }
+  & .text-right { text-align: right; }
+  & caption {
+    margin: 0;
+    padding: 3px 0 3px 1em;
+  }
+  & p { margin: 0; }
+}
+
+thead, tbody {
+  border: 1px solid var(--line-color);
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: 5px 10px;
+}
+th {
+  background-color: var(--line-color);
+}
+:is(tr:nth-child(2n), thead+tbody > tr:nth-child(2n+1)) > td {
+  background-color: var(--background-color);
+}
+:is(tr:nth-child(2n+1), thead+tbody > tr:nth-child(2n)) > td {
+  background-color: var(--highlight-color);
+}
+
+/* pilcrow */
+a.pilcrow {
+  margin-left: 3px;
+  opacity: 0.2;
+  user-select: none;
+  &[href] {
+    color: var(--pilcrow-weak);
+    &:hover { text-decoration: none; }
+  }
+  @media not print {
+    :hover > &, &:focus {
+      opacity: 1;
+    }
+    &[href]:hover {
+      color: var(--pilcrow-strong);
+      background-color: transparent;
+    }
+  }
+  @media print {
+    display: none;
+  }
+}
+
+/* misc */
+hr {
+  border: 0;
+  border-top: 1px solid var(--line-color);
+}
+.bcp14 {
+  font-variant: small-caps;
+  font-weight: 600;
+  font-size: var(--small-font-size);
+}
+.role {
+  font-variant: all-small-caps;
+}
+sub, sup {
+  line-height: 1;
+  font-size: 80%;
+}
+
+/* info block */
+#identifiers {
+  margin: 0;
+  font-size: var(--small-font-size);
+  line-height: 18px;
+  --identifier-width: 15ch;
+  & dt {
+    width: var(--identifier-width);
+    min-width: var(--identifier-width);
+    clear: left;
+    float: left;
+    text-align: right;
+    margin-right: 1ch;
+  }
+  & dd {
+    margin: 0;
+    margin-left: calc(1em + var(--identifier-width)) !important;
+    min-width: 5em;
+  }
+  & .authors {
+    & .author {
+      display: inline-block;
+      margin-right: 1.5em;
+    }
+    & .org {
+      font-style: italic;
+    }
+  }
+}
+
+/* The prepared/rendered info at the very bottom of the page */
+.docInfo {
+  color: #999;
+  font-size: 0.9em;
+  font-style: italic;
+  margin-top: 2em;
+  & .prepared {
+    float: right;
+  }
+}
+
+/* table of contents */
+#toc {
+  padding: 0.75em 0 2em 0;
+  margin-bottom: 1em;
+
+  & nav {
+    & ul {
+      margin: 0 0.5em 0 0;
+      padding: 0;
+      list-style: none;
+    }
+    & li {
+      line-height: 1.3em;
+      margin: 2px 0;
+      padding-left: 1.2em;
+      text-indent: -1.2em;
+    }
+  }
+  & a.xref {
+    white-space: normal;
+  }
+}
+
+.references {
+  & > dt {
+    text-align: right;
+    font-weight: bold;
+    min-width: 10ch;
+    margin-right: 1.5ch;
+    &:target::before {
+      content: "⇒";
+      margin: 0 10px 0 -25px;
+    }
+  }
+  & > dd {
+    margin-left: 12ch !important;
+    overflow: visible;
+    & .refInstance {
+      margin-bottom: 0.8em;
+    }
+    & .ascii {
+      margin-bottom: 0.25em;
+    }
+  }
+}
+
+#rfc\.index\.index + ul {
+  margin-left: 0;
+}
+
+/* authors */
+address.vcard {
+  font-style: normal;
+  max-width: 20em;
+  margin: 1em auto 1em 0;
+
+  & .nameRole {
+    font-weight: 700;
+    margin-left: 0;
+  }
+  & .label {
+    margin: 0.5em 0;
+  }
+  & .type {
+    display: none;
+  }
+  & .alternative-contact {
+    margin: 0.5em 0 0.25em 0;
+  }
+  & .non-ascii {
+    margin: 0 0 0 2em;
+  }
+  & div.left {
+    text-align: left;
+  }
+  & div.right {
+    text-align: right;
+  }
+}
+
+hr.addr {
+  border-top: 1px dashed;
+  margin: 0;
+  color: #ddd;
+  max-width: calc(100% - 16px);
+}
+@media (min-width: 500px) {
+  #authors-addresses {
+    & > section {
+      column-count: 2;
+      column-gap: 20px;
+    }
+    & > section > h2 {
+      column-span: all;
+    }
+    /* hack for break-inside: avoid-column */
+    & address {
+      display: inline-block;
+      break-inside: avoid-column;
+    }
+  }
+}
+
+/* Comments */
+.rfcEditorRemove {
+  & p:first-of-type {
+    font-style: italic;
+  }
+}
+.cref {
+  background-color: rgba(249, 232, 105, 0.3);
+  padding: 2px 4px;
+}
+.crefSource {
+  font-style: italic;
+}
+
+@media screen {
+  #toc {
+    & nav {
+      font-family: var(--font-title);
+      font-weight: 360;
+      & > ul { margin-bottom: 2em; }
+      & ul {
+        margin: 0 0 0 4px;
+        & :is(p, li) {
+          margin: 2px 0;
+        }
+      }
+    }
+    & a.toplink {
+      float: right;
+    }
+  }
+}
+@media not screen {
+  #toc a.toplink {
+    display: none;
+  }
+}
+
+
+/* TOC layout for smaller screens */
+@media screen and (max-width: 929px) {
+  #toc {
+    position: fixed;
+    z-index: 2;
+    top: 0;
+    right: 0;
+    padding: 1px 0 0 0;
+    margin: 0;
+    border-bottom: 1px solid #ccc;
+    opacity: 0.6;
+    & h2 {
+      margin: 0;
+      padding: 2px 0 2px 6px;
+      padding-right: 1em;
+      font-size: 18px;
+      line-height: 24px;
+      min-width: 190px;
+      text-align: right;
+      background-color: #444;
+      color: white;
+      cursor: pointer;
+      &::before { /* css hamburger */
+        float: right;
+        position: relative;
+        width: 1em;
+        height: 1px;
+        left: -164px;
+        margin: 8px 0 0 0;
+        background: white none repeat scroll 0 0;
+        box-shadow: 0 4px 0 0 white, 0 8px 0 0 white;
+        content: "";
+      }
+    }
+    & nav {
+      display: none;
+      background-color: var(--background-color);
+      padding: 0.5em 1em 1em;
+      overflow: auto;
+      overscroll-behavior: contain;
+      height: calc(100vh - 48px);
+      border-left: 1px solid #ddd;
+    }
+    &.active {
+      opacity: 1;
+      & nav { display: block; }
+    }
+    /* Make the collapsed ToC header render white on gray also when it's a link */
+    & h2 a,
+    & h2 a:is(:link, :focus, :hover),
+    & a.toplink,
+    & a.toplink:hover {
+      color: white;
+      background-color: #444;
+      text-decoration: none;
+    }
+    & a.toplink {
+      margin: 2px 0.5em 0;
+    }
+  }
+}
+
+/* TOC layout for wide screens */
+@media screen and (min-width: 930px) {
+  body {
+    padding-right: 360px;
+    padding-right: calc(min(180px + 20%, 500px));
+  }
+  #toc {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    right: calc(50vw - 480px);
+    width: 312px;
+    margin: 0;
+    padding: 0;
+    z-index: 1;
+    & h2 {
+      margin: 0;
+      padding: 0.25em 1em 1em 0;
+    }
+    & nav {
+      display: block;
+      height: calc(90vh - 84px);
+      bottom: 0;
+      padding: 0.5em 0 2em;
+      overflow: auto;
+      overscroll-behavior: contain;
+      scrollbar-width: thin;
+    }
+    & a.toplink {
+      margin: 8px 0.5em 0;
+    }
+  }
+  img { /* future proofing */
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+/* pagination */
+@media print {
+  body {
+    width: 100%;
+  }
+  p {
+    orphans: 3;
+    widows: 3;
+  }
+  #n-copyright-notice {
+    border-bottom: none;
+  }
+  #toc {
+    page-break-before: always;
+    border-top: none;
+    padding-top: 0;
+  }
+  #n-introduction {
+    page-break-before: always;
+  }
+  figure, pre, .vcard {
+    page-break-inside: avoid;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+  }
+  :is(h2, h3, h4, h5, h6)+*, dd {
+    page-break-before: avoid;
+  }
+  pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-size: 10pt;
+  }
+  table {
+    border: 1px solid #ddd;
+  }
+  td {
+    border-top: 1px solid #ddd;
+  }
+}
+
+@page :first {
+  padding-top: 0;
+  @top-left {
+    content: normal;
+    border: none;
+  }
+  @top-center {
+    content: normal;
+    border: none;
+  }
+  @top-right {
+    content: normal;
+    border: none;
+  }
+}
+
+@page {
+  size: A4;
+  margin-bottom: 45mm;
+  padding-top: 20px;
+}
+
+/* Dark mode. */
+@media (prefers-color-scheme: dark) {
+:root {
+  --background-color: #121212;
+  --text-color: #f0f0f0;
+  --title-color: #fff;
+  --link-color: #4da4f0;
+  --highlight-color: #282828;
+  --line-color: #444;
+  --pilcrow-weak: #444;
+  --pilcrow-strong: #666;
+  scrollbar-color: #777 #333;
+}
+}
+
+/* SVG Trick: a prefix match works because only black and white are allowed */
+svg {
+  & :is([stroke="black"], [stroke^="#000"]) {
+    stroke: var(--text-color);
+  }
+  & :is([stroke="white"], [stroke^="#fff"]) {
+    stroke: var(--background-color);
+  }
+  & :is([fill="black"], [fill^="#000"], :not([fill])) {
+    fill: var(--text-color);
+  }
+  & :is([fill="white"], [fill^="#fff"]) {
+    fill: var(--background-color);
+  }
+}
+</style>
+
+</head>
+<body class="xml2rfc">
+<table class="ears">
+<thead><tr>
+<td class="left">Internet-Draft</td>
+<td class="center">OAuth Authority Metadata</td>
+<td class="right">October 2026</td>
+</tr></thead>
+<tfoot><tr>
+<td class="left">Zehavi</td>
+<td class="center">Expires 12 April 2027</td>
+<td class="right">[Page]</td>
+</tr></tfoot>
+</table>
+<div id="external-metadata" class="document-information"></div>
+<div id="internal-metadata" class="document-information">
+<dl id="identifiers">
+<dt class="label-workgroup">Workgroup:</dt>
+<dd class="workgroup">OAuth</dd>
+<dt class="label-internet-draft">Internet-Draft:</dt>
+<dd class="internet-draft">draft-zehavi-oauth-authority-metadata-latest</dd>
+<dt class="label-published">Published:</dt>
+<dd class="published">
+<time datetime="2026-10-09" class="published">9 October 2026</time>
+    </dd>
+<dt class="label-intended-status">Intended Status:</dt>
+<dd class="intended-status">Standards Track</dd>
+<dt class="label-expires">Expires:</dt>
+<dd class="expires"><time datetime="2027-04-12">12 April 2027</time></dd>
+<dt class="label-authors">Author:</dt>
+<dd class="authors">
+<div class="author">
+      <div class="author-name">Y. Zehavi</div>
+<div class="org">Raiffeisen Bank International</div>
+</div>
+</dd>
+</dl>
+</div>
+<h1 id="title">OAuth 2.0 Resource-Bound Authority Metadata</h1>
+<section id="section-abstract">
+      <h2 id="abstract"><a href="#abstract" class="selfRef">Abstract</a></h2>
+<p id="section-abstract-1">OAuth metadata advertises supported scopes and authorization details
+types, but does not provide a common metadata structure for describing
+the authority those values represent.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
+<p id="section-abstract-2">This specification defines authority metadata extensions for OAuth 2.0
+Protected Resource Metadata and OAuth 2.0 Authorization Server Metadata.
+A protected resource can describe the authority it associates with scopes
+and Rich Authorization Requests types, reusable access requirement
+profiles, and relationships identifying lower-authority alternatives.
+An authorization server can publish a simpler description of its local
+authority vocabulary.<a href="#section-abstract-2" class="pilcrow">¶</a></p>
+<p id="section-abstract-3">This metadata can inform authorization requests, token issuance, token
+exchange, policy evaluation, consent rendering, and least-privilege
+selection. It does not prescribe an authorization server decision
+algorithm or require automatic attenuation.<a href="#section-abstract-3" class="pilcrow">¶</a></p>
+</section>
+<div id="status-of-memo">
+<section id="section-boilerplate.1">
+        <h2 id="name-status-of-this-memo">
+<a href="#name-status-of-this-memo" class="section-name selfRef">Status of This Memo</a>
+        </h2>
+<p id="section-boilerplate.1-1">
+        This Internet-Draft is submitted in full conformance with the
+        provisions of BCP 78 and BCP 79.<a href="#section-boilerplate.1-1" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.1-2">
+        Internet-Drafts are working documents of the Internet Engineering Task
+        Force (IETF). Note that other groups may also distribute working
+        documents as Internet-Drafts. The list of current Internet-Drafts is
+        at <span><a href="https://datatracker.ietf.org/drafts/current/">https://datatracker.ietf.org/drafts/current/</a></span>.<a href="#section-boilerplate.1-2" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.1-3">
+        Internet-Drafts are draft documents valid for a maximum of six months
+        and may be updated, replaced, or obsoleted by other documents at any
+        time. It is inappropriate to use Internet-Drafts as reference
+        material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.1-4">
+        This Internet-Draft will expire on 12 April 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="copyright">
+<section id="section-boilerplate.2">
+        <h2 id="name-copyright-notice">
+<a href="#name-copyright-notice" class="section-name selfRef">Copyright Notice</a>
+        </h2>
+<p id="section-boilerplate.2-1">
+            Copyright (c) 2026 IETF Trust and the persons identified as the
+            document authors. All rights reserved.<a href="#section-boilerplate.2-1" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.2-2">
+            This document is subject to BCP 78 and the IETF Trust's Legal
+            Provisions Relating to IETF Documents
+            (<span><a href="https://trustee.ietf.org/license-info">https://trustee.ietf.org/license-info</a></span>) in effect on the date of
+            publication of this document. Please review these documents
+            carefully, as they describe your rights and restrictions with
+            respect to this document. Code Components extracted from this
+            document must include Revised BSD License text as described in
+            Section 4.e of the Trust Legal Provisions and are provided without
+            warranty as described in the Revised BSD License.<a href="#section-boilerplate.2-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="toc">
+<section id="section-toc.1">
+        <a href="#" onclick="scroll(0,0)" class="toplink">▲</a><h2 id="name-table-of-contents">
+<a href="#name-table-of-contents" class="section-name selfRef">Table of Contents</a>
+        </h2>
+<nav class="toc"><ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.1">
+            <p id="section-toc.1-1.1.1"><a href="#section-1" class="auto internal xref">1</a>.  <a href="#name-introduction" class="internal xref">Introduction</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.1.2.1">
+                <p id="section-toc.1-1.1.2.1.1" class="keepWithNext"><a href="#section-1.1" class="auto internal xref">1.1</a>.  <a href="#name-publication-roles" class="internal xref">Publication Roles</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.1.2.2">
+                <p id="section-toc.1-1.1.2.2.1" class="keepWithNext"><a href="#section-1.2" class="auto internal xref">1.2</a>.  <a href="#name-scope" class="internal xref">Scope</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.1.2.3">
+                <p id="section-toc.1-1.1.2.3.1" class="keepWithNext"><a href="#section-1.3" class="auto internal xref">1.3</a>.  <a href="#name-relationship-to-authzen" class="internal xref">Relationship to AuthZEN</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.1.2.4">
+                <p id="section-toc.1-1.1.2.4.1"><a href="#section-1.4" class="auto internal xref">1.4</a>.  <a href="#name-conventions-and-terminology" class="internal xref">Conventions and Terminology</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2">
+            <p id="section-toc.1-1.2.1"><a href="#section-2" class="auto internal xref">2</a>.  <a href="#name-metadata-parameter" class="internal xref">Metadata Parameter</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2.2.1">
+                <p id="section-toc.1-1.2.2.1.1"><a href="#section-2.1" class="auto internal xref">2.1</a>.  <a href="#name-protected-resource-metadata" class="internal xref">Protected Resource Metadata</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2.2.2">
+                <p id="section-toc.1-1.2.2.2.1"><a href="#section-2.2" class="auto internal xref">2.2</a>.  <a href="#name-authorization-server-metada" class="internal xref">Authorization Server Metadata</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2.2.3">
+                <p id="section-toc.1-1.2.2.3.1"><a href="#section-2.3" class="auto internal xref">2.3</a>.  <a href="#name-common-requirements" class="internal xref">Common Requirements</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3">
+            <p id="section-toc.1-1.3.1"><a href="#section-3" class="auto internal xref">3</a>.  <a href="#name-authority-entries" class="internal xref">Authority Entries</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.1">
+                <p id="section-toc.1-1.3.2.1.1"><a href="#section-3.1" class="auto internal xref">3.1</a>.  <a href="#name-common-members" class="internal xref">Common Members</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.1.2.1">
+                    <p id="section-toc.1-1.3.2.1.2.1.1"><a href="#section-3.1.1" class="auto internal xref">3.1.1</a>.  <a href="#name-kind" class="internal xref">kind</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.1.2.2">
+                    <p id="section-toc.1-1.3.2.1.2.2.1"><a href="#section-3.1.2" class="auto internal xref">3.1.2</a>.  <a href="#name-value" class="internal xref">value</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.1.2.3">
+                    <p id="section-toc.1-1.3.2.1.2.3.1"><a href="#section-3.1.3" class="auto internal xref">3.1.3</a>.  <a href="#name-description" class="internal xref">description</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.1.2.4">
+                    <p id="section-toc.1-1.3.2.1.2.4.1"><a href="#section-3.1.4" class="auto internal xref">3.1.4</a>.  <a href="#name-family" class="internal xref">family</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.1.2.5">
+                    <p id="section-toc.1-1.3.2.1.2.5.1"><a href="#section-3.1.5" class="auto internal xref">3.1.5</a>.  <a href="#name-rank" class="internal xref">rank</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.1.2.6">
+                    <p id="section-toc.1-1.3.2.1.2.6.1"><a href="#section-3.1.6" class="auto internal xref">3.1.6</a>.  <a href="#name-authority" class="internal xref">authority</a></p>
+</li>
+                </ul>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.2">
+                <p id="section-toc.1-1.3.2.2.1"><a href="#section-3.2" class="auto internal xref">3.2</a>.  <a href="#name-protected-resource-members" class="internal xref">Protected Resource Members</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.3">
+                <p id="section-toc.1-1.3.2.3.1"><a href="#section-3.3" class="auto internal xref">3.3</a>.  <a href="#name-authorization-server-member" class="internal xref">Authorization Server Members</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4">
+            <p id="section-toc.1-1.4.1"><a href="#section-4" class="auto internal xref">4</a>.  <a href="#name-structured-authority-descri" class="internal xref">Structured Authority Descriptions</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.1">
+                <p id="section-toc.1-1.4.2.1.1"><a href="#section-4.1" class="auto internal xref">4.1</a>.  <a href="#name-completeness-and-interpreta" class="internal xref">Completeness and Interpretation</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.2">
+                <p id="section-toc.1-1.4.2.2.1"><a href="#section-4.2" class="auto internal xref">4.2</a>.  <a href="#name-rar-interpretation" class="internal xref">RAR Interpretation</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5">
+            <p id="section-toc.1-1.5.1"><a href="#section-5" class="auto internal xref">5</a>.  <a href="#name-access-requirement-profiles" class="internal xref">Access Requirement Profiles</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.1">
+                <p id="section-toc.1-1.5.2.1.1"><a href="#section-5.1" class="auto internal xref">5.1</a>.  <a href="#name-profile-structure" class="internal xref">Profile Structure</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.2">
+                <p id="section-toc.1-1.5.2.2.1"><a href="#section-5.2" class="auto internal xref">5.2</a>.  <a href="#name-token-requirements" class="internal xref">Token Requirements</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.2.2.1">
+                    <p id="section-toc.1-1.5.2.2.2.1.1"><a href="#section-5.2.1" class="auto internal xref">5.2.1</a>.  <a href="#name-token-freshness-and-lifetim" class="internal xref">Token Freshness and Lifetime</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.2.2.2">
+                    <p id="section-toc.1-1.5.2.2.2.2.1"><a href="#section-5.2.2" class="auto internal xref">5.2.2</a>.  <a href="#name-single-use-semantics" class="internal xref">Single-Use Semantics</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.2.2.3">
+                    <p id="section-toc.1-1.5.2.2.2.3.1"><a href="#section-5.2.3" class="auto internal xref">5.2.3</a>.  <a href="#name-sender-constraining" class="internal xref">Sender-Constraining</a></p>
+</li>
+                </ul>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.3">
+                <p id="section-toc.1-1.5.2.3.1"><a href="#section-5.3" class="auto internal xref">5.3</a>.  <a href="#name-authentication-requirements" class="internal xref">Authentication Requirements</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.4">
+                <p id="section-toc.1-1.5.2.4.1"><a href="#section-5.4" class="auto internal xref">5.4</a>.  <a href="#name-default-resource-policy" class="internal xref">Default Resource Policy</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.5">
+                <p id="section-toc.1-1.5.2.5.1"><a href="#section-5.5" class="auto internal xref">5.5</a>.  <a href="#name-multiple-authorities-in-a-t" class="internal xref">Multiple Authorities in a Token</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6">
+            <p id="section-toc.1-1.6.1"><a href="#section-6" class="auto internal xref">6</a>.  <a href="#name-authority-relationships" class="internal xref">Authority Relationships</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.1">
+                <p id="section-toc.1-1.6.2.1.1"><a href="#section-6.1" class="auto internal xref">6.1</a>.  <a href="#name-can_be_attenuated_to" class="internal xref">can_be_attenuated_to</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.2">
+                <p id="section-toc.1-1.6.2.2.1"><a href="#section-6.2" class="auto internal xref">6.2</a>.  <a href="#name-rar-and-cross-kind-relation" class="internal xref">RAR and Cross-Kind Relationships</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.3">
+                <p id="section-toc.1-1.6.2.3.1"><a href="#section-6.3" class="auto internal xref">6.3</a>.  <a href="#name-relationship-interpretation" class="internal xref">Relationship Interpretation</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7">
+            <p id="section-toc.1-1.7.1"><a href="#section-7" class="auto internal xref">7</a>.  <a href="#name-authority-ordering" class="internal xref">Authority Ordering</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8">
+            <p id="section-toc.1-1.8.1"><a href="#section-8" class="auto internal xref">8</a>.  <a href="#name-authorization-server-use" class="internal xref">Authorization Server Use</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.1">
+                <p id="section-toc.1-1.8.2.1.1"><a href="#section-8.1" class="auto internal xref">8.1</a>.  <a href="#name-publication-is-not-an-issua" class="internal xref">Publication Is Not an Issuance Decision</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.2">
+                <p id="section-toc.1-1.8.2.2.1"><a href="#section-8.2" class="auto internal xref">8.2</a>.  <a href="#name-metadata-sources-and-confli" class="internal xref">Metadata Sources and Conflicts</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.3">
+                <p id="section-toc.1-1.8.2.3.1"><a href="#section-8.3" class="auto internal xref">8.3</a>.  <a href="#name-attenuation-options" class="internal xref">Attenuation Options</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9">
+            <p id="section-toc.1-1.9.1"><a href="#section-9" class="auto internal xref">9</a>.  <a href="#name-examples" class="internal xref">Examples</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9.2.1">
+                <p id="section-toc.1-1.9.2.1.1"><a href="#section-9.1" class="auto internal xref">9.1</a>.  <a href="#name-protected-resource-metadata-2" class="internal xref">Protected Resource Metadata</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9.2.2">
+                <p id="section-toc.1-1.9.2.2.1"><a href="#section-9.2" class="auto internal xref">9.2</a>.  <a href="#name-authorization-server-metadat" class="internal xref">Authorization Server Metadata</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9.2.3">
+                <p id="section-toc.1-1.9.2.3.1"><a href="#section-9.3" class="auto internal xref">9.3</a>.  <a href="#name-attenuation-decision" class="internal xref">Attenuation Decision</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10">
+            <p id="section-toc.1-1.10.1"><a href="#section-10" class="auto internal xref">10</a>. <a href="#name-security-considerations" class="internal xref">Security Considerations</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10.2.1">
+                <p id="section-toc.1-1.10.2.1.1"><a href="#section-10.1" class="auto internal xref">10.1</a>.  <a href="#name-metadata-authenticity" class="internal xref">Metadata Authenticity</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10.2.2">
+                <p id="section-toc.1-1.10.2.2.1"><a href="#section-10.2" class="auto internal xref">10.2</a>.  <a href="#name-untrusted-resource-location" class="internal xref">Untrusted Resource Locations</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10.2.3">
+                <p id="section-toc.1-1.10.2.3.1"><a href="#section-10.3" class="auto internal xref">10.3</a>.  <a href="#name-semantic-misrepresentation" class="internal xref">Semantic Misrepresentation</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10.2.4">
+                <p id="section-toc.1-1.10.2.4.1"><a href="#section-10.4" class="auto internal xref">10.4</a>.  <a href="#name-stale-metadata" class="internal xref">Stale Metadata</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10.2.5">
+                <p id="section-toc.1-1.10.2.5.1"><a href="#section-10.5" class="auto internal xref">10.5</a>.  <a href="#name-unknown-semantic-values" class="internal xref">Unknown Semantic Values</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10.2.6">
+                <p id="section-toc.1-1.10.2.6.1"><a href="#section-10.6" class="auto internal xref">10.6</a>.  <a href="#name-scope-combinations" class="internal xref">Scope Combinations</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10.2.7">
+                <p id="section-toc.1-1.10.2.7.1"><a href="#section-10.7" class="auto internal xref">10.7</a>.  <a href="#name-rar-parameter-restrictions" class="internal xref">RAR Parameter Restrictions</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10.2.8">
+                <p id="section-toc.1-1.10.2.8.1"><a href="#section-10.8" class="auto internal xref">10.8</a>.  <a href="#name-requirements-are-not-enforc" class="internal xref">Requirements Are Not Enforcement</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10.2.9">
+                <p id="section-toc.1-1.10.2.9.1"><a href="#section-10.9" class="auto internal xref">10.9</a>.  <a href="#name-relationship-processing" class="internal xref">Relationship Processing</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10.2.10">
+                <p id="section-toc.1-1.10.2.10.1"><a href="#section-10.10" class="auto internal xref">10.10</a>. <a href="#name-consent-rendering" class="internal xref">Consent Rendering</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.11">
+            <p id="section-toc.1-1.11.1"><a href="#section-11" class="auto internal xref">11</a>. <a href="#name-privacy-considerations" class="internal xref">Privacy Considerations</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.12">
+            <p id="section-toc.1-1.12.1"><a href="#section-12" class="auto internal xref">12</a>. <a href="#name-iana-considerations" class="internal xref">IANA Considerations</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.12.2.1">
+                <p id="section-toc.1-1.12.2.1.1"><a href="#section-12.1" class="auto internal xref">12.1</a>.  <a href="#name-oauth-authorization-server-" class="internal xref">OAuth Authorization Server Metadata Registration</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.12.2.2">
+                <p id="section-toc.1-1.12.2.2.1"><a href="#section-12.2" class="auto internal xref">12.2</a>.  <a href="#name-oauth-protected-resource-me" class="internal xref">OAuth Protected Resource Metadata Registration</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.13">
+            <p id="section-toc.1-1.13.1"><a href="#section-13" class="auto internal xref">13</a>. <a href="#name-implementation-status" class="internal xref">Implementation Status</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.14">
+            <p id="section-toc.1-1.14.1"><a href="#section-14" class="auto internal xref">14</a>. <a href="#name-acknowledgments" class="internal xref">Acknowledgments</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.15">
+            <p id="section-toc.1-1.15.1"><a href="#section-15" class="auto internal xref">15</a>. <a href="#name-references" class="internal xref">References</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.15.2.1">
+                <p id="section-toc.1-1.15.2.1.1"><a href="#section-15.1" class="auto internal xref">15.1</a>.  <a href="#name-normative-references" class="internal xref">Normative References</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.15.2.2">
+                <p id="section-toc.1-1.15.2.2.1"><a href="#section-15.2" class="auto internal xref">15.2</a>.  <a href="#name-informative-references" class="internal xref">Informative References</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.16">
+            <p id="section-toc.1-1.16.1"><a href="#appendix-A" class="auto internal xref">Appendix A</a>.  <a href="#name-editorial-issues" class="internal xref">Editorial Issues</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.17">
+            <p id="section-toc.1-1.17.1"><a href="#appendix-B" class="auto internal xref">Appendix B</a>.  <a href="#name-document-history" class="internal xref">Document History</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.18">
+            <p id="section-toc.1-1.18.1"><a href="#appendix-C" class="auto internal xref"></a><a href="#name-authors-address" class="internal xref">Author's Address</a></p>
+</li>
+        </ul>
+</nav>
+</section>
+</div>
+<div id="introduction">
+<section id="section-1">
+      <h2 id="name-introduction">
+<a href="#section-1" class="section-number selfRef">1. </a><a href="#name-introduction" class="section-name selfRef">Introduction</a>
+      </h2>
+<p id="section-1-1">OAuth 2.0 <span>[<a href="#RFC6749" class="cite xref">RFC6749</a>]</span> uses scope values to express requested and granted
+access. OAuth 2.0 Rich Authorization Requests (RAR) <span>[<a href="#RFC9396" class="cite xref">RFC9396</a>]</span> provides
+the <code>authorization_details</code> parameter for more structured authorization
+requests.<a href="#section-1-1" class="pilcrow">¶</a></p>
+<p id="section-1-2">OAuth 2.0 Authorization Server Metadata <span>[<a href="#RFC8414" class="cite xref">RFC8414</a>]</span> and OAuth 2.0
+Protected Resource Metadata <span>[<a href="#RFC9728" class="cite xref">RFC9728</a>]</span> enable discovery of information
+about authorization servers and protected resources. Supported scope
+values can be advertised using <code>scopes_supported</code>. RAR defines
+authorization server metadata for supported authorization details types.<a href="#section-1-2" class="pilcrow">¶</a></p>
+<p id="section-1-3">A supported scope value does not, by itself, describe the operations,
+resources, or effects that the scope authorizes. Similarly, an
+authorization details type identifies a type-specific authorization
+structure, but discovering its name does not necessarily provide a
+consumer with a machine-processable description of its authority.<a href="#section-1-3" class="pilcrow">¶</a></p>
+<p id="section-1-4">For example, a scope named <code>payments.manage</code> might permit reading,
+creating, executing, or deleting payment instructions. Its name alone
+does not establish which operations are permitted.<a href="#section-1-4" class="pilcrow">¶</a></p>
+<p id="section-1-5">RAR addresses request structure and type-specific authorization data.
+However, a JSON schema or a type name alone does not necessarily establish
+the authority represented by a particular authorization details object.
+A consumer still needs to understand the type's semantic rules and the
+meaning of its parameters.<a href="#section-1-5" class="pilcrow">¶</a></p>
+<p id="section-1-6">These gaps matter when an authorization server or policy decision point
+evaluates whether requested authority:<a href="#section-1-6" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-1-7.1">
+          <p id="section-1-7.1.1">is permitted by an existing grant or local policy;<a href="#section-1-7.1.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-1-7.2">
+          <p id="section-1-7.2.1">aligns with an approved task, purpose, or Mission;<a href="#section-1-7.2.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-1-7.3">
+          <p id="section-1-7.3.1">is broader than necessary;<a href="#section-1-7.3.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-1-7.4">
+          <p id="section-1-7.4.1">has a lower-authority alternative;<a href="#section-1-7.4.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-1-7.5">
+          <p id="section-1-7.5.1">requires particular token presentation or authentication properties.<a href="#section-1-7.5.1" class="pilcrow">¶</a></p>
+</li>
+      </ul>
+<p id="section-1-8">This specification defines a common metadata structure for authority
+descriptions. It supports both scope values and RAR types.<a href="#section-1-8" class="pilcrow">¶</a></p>
+<div id="publication-roles">
+<section id="section-1.1">
+        <h3 id="name-publication-roles">
+<a href="#section-1.1" class="section-number selfRef">1.1. </a><a href="#name-publication-roles" class="section-name selfRef">Publication Roles</a>
+        </h3>
+<p id="section-1.1-1">The publication roles are distinct:<a href="#section-1.1-1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-1.1-2.1">
+            <p id="section-1.1-2.1.1">A protected resource publishes the authority semantics it applies when
+enforcing access.<a href="#section-1.1-2.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.1-2.2">
+            <p id="section-1.1-2.2.1">An authorization server publishes its local understanding of the
+authority vocabulary it uses when making issuance decisions.<a href="#section-1.1-2.2.1" class="pilcrow">¶</a></p>
+</li>
+        </ul>
+<p id="section-1.1-3">Protected resource metadata is resource-bound through the <code>resource</code>
+member defined by <span>[<a href="#RFC9728" class="cite xref">RFC9728</a>]</span>.<a href="#section-1.1-3" class="pilcrow">¶</a></p>
+<p id="section-1.1-4">Authorization server metadata describes an issuer-local authority
+vocabulary. It is not required to identify a particular protected
+resource and does not, by itself, establish how a resource enforces an
+issued authority.<a href="#section-1.1-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="scope">
+<section id="section-1.2">
+        <h3 id="name-scope">
+<a href="#section-1.2" class="section-number selfRef">1.2. </a><a href="#name-scope" class="section-name selfRef">Scope</a>
+        </h3>
+<p id="section-1.2-1">This specification defines:<a href="#section-1.2-1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-1.2-2.1">
+            <p id="section-1.2-2.1.1">an <code>authority_metadata</code> parameter for protected resource metadata;<a href="#section-1.2-2.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.2-2.2">
+            <p id="section-1.2-2.2.1">an <code>authority_metadata</code> parameter for authorization server metadata;<a href="#section-1.2-2.2.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.2-2.3">
+            <p id="section-1.2-2.3.1">a common authority description model for scopes and RAR types;<a href="#section-1.2-2.3.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.2-2.4">
+            <p id="section-1.2-2.4.1">reusable protected resource access requirement profiles;<a href="#section-1.2-2.4.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.2-2.5">
+            <p id="section-1.2-2.5.1">inline attenuation relationships;<a href="#section-1.2-2.5.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.2-2.6">
+            <p id="section-1.2-2.6.1">advisory authority ordering through <code>family</code> and <code>rank</code>.<a href="#section-1.2-2.6.1" class="pilcrow">¶</a></p>
+</li>
+        </ul>
+<p id="section-1.2-3">This specification does not define:<a href="#section-1.2-3" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-1.2-4.1">
+            <p id="section-1.2-4.1.1">a universal authorization policy language;<a href="#section-1.2-4.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.2-4.2">
+            <p id="section-1.2-4.2.1">a universal vocabulary of application actions;<a href="#section-1.2-4.2.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.2-4.3">
+            <p id="section-1.2-4.3.1">a replacement for RAR type definitions or schemas;<a href="#section-1.2-4.3.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.2-4.4">
+            <p id="section-1.2-4.4.1">an authorization server policy decision algorithm;<a href="#section-1.2-4.4.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.2-4.5">
+            <p id="section-1.2-4.5.1">a new OAuth error or remediation protocol;<a href="#section-1.2-4.5.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.2-4.6">
+            <p id="section-1.2-4.6.1">an action approval protocol;<a href="#section-1.2-4.6.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.2-4.7">
+            <p id="section-1.2-4.7.1">a transaction or cross-resource outcome evidence protocol;<a href="#section-1.2-4.7.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-1.2-4.8">
+            <p id="section-1.2-4.8.1">a general-purpose translation between scopes and RAR objects.<a href="#section-1.2-4.8.1" class="pilcrow">¶</a></p>
+</li>
+        </ul>
+</section>
+</div>
+<div id="relationship-to-authzen">
+<section id="section-1.3">
+        <h3 id="name-relationship-to-authzen">
+<a href="#section-1.3" class="section-number selfRef">1.3. </a><a href="#name-relationship-to-authzen" class="section-name selfRef">Relationship to AuthZEN</a>
+        </h3>
+<p id="section-1.3-1">The AuthZEN OAuth token issuance profile <span>[<a href="#AUTHZEN-ISSUANCE" class="cite xref">AUTHZEN-ISSUANCE</a>]</span> and token
+exchange binding <span>[<a href="#AUTHZEN-EXCHANGE" class="cite xref">AUTHZEN-EXCHANGE</a>]</span> provide mechanisms for policy
+evaluation in authorization server issuance and exchange flows.<a href="#section-1.3-1" class="pilcrow">¶</a></p>
+<p id="section-1.3-2">Authority metadata can provide semantic information used in those
+evaluations. For example, a deployment can resolve a requested scope into
+an authority description before consulting a policy decision point.<a href="#section-1.3-2" class="pilcrow">¶</a></p>
+<p id="section-1.3-3">This specification does not change those profiles or define an additional
+AuthZEN request member. The transport of resolved metadata to a policy
+decision point is determined by the applicable profile or deployment.<a href="#section-1.3-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="conventions-and-terminology">
+<section id="section-1.4">
+        <h3 id="name-conventions-and-terminology">
+<a href="#section-1.4" class="section-number selfRef">1.4. </a><a href="#name-conventions-and-terminology" class="section-name selfRef">Conventions and Terminology</a>
+        </h3>
+<p id="section-1.4-1">The key words "<span class="bcp14">MUST</span>", "<span class="bcp14">MUST NOT</span>", "<span class="bcp14">REQUIRED</span>", "<span class="bcp14">SHALL</span>", "<span class="bcp14">SHALL NOT</span>", "<span class="bcp14">SHOULD</span>", "<span class="bcp14">SHOULD NOT</span>", "<span class="bcp14">RECOMMENDED</span>", "<span class="bcp14">NOT RECOMMENDED</span>",
+"<span class="bcp14">MAY</span>", and "<span class="bcp14">OPTIONAL</span>" in this document are to be interpreted as
+described in BCP 14 <span>[<a href="#RFC2119" class="cite xref">RFC2119</a>]</span> <span>[<a href="#RFC8174" class="cite xref">RFC8174</a>]</span> when, and only when, they
+appear in all capitals, as shown here.<a href="#section-1.4-1" class="pilcrow">¶</a></p>
+<p id="section-1.4-2">The following terms are used:<a href="#section-1.4-2" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="section-1.4-3">
+          <dt id="section-1.4-3.1">Authority:</dt>
+          <dd style="margin-left: 1.5em" id="section-1.4-3.2">
+            <p id="section-1.4-3.2.1">The operations and access a credential or authorization grant permits,
+including applicable resource and parameter restrictions.<a href="#section-1.4-3.2.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-1.4-3.3">Authority description:</dt>
+          <dd style="margin-left: 1.5em" id="section-1.4-3.4">
+            <p id="section-1.4-3.4.1">Metadata describing the authority represented by an OAuth scope or
+authorization details type.<a href="#section-1.4-3.4.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-1.4-3.5">Authority publisher:</dt>
+          <dd style="margin-left: 1.5em" id="section-1.4-3.6">
+            <p id="section-1.4-3.6.1">The authorization server or protected resource publishing an authority
+metadata document.<a href="#section-1.4-3.6.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-1.4-3.7">Authority consumer:</dt>
+          <dd style="margin-left: 1.5em" id="section-1.4-3.8">
+            <p id="section-1.4-3.8.1">An authorization server, client, policy decision point, gateway, or
+other component that consumes authority metadata.<a href="#section-1.4-3.8.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-1.4-3.9">Access requirement profile:</dt>
+          <dd style="margin-left: 1.5em" id="section-1.4-3.10">
+            <p id="section-1.4-3.10.1">A named set of properties a protected resource requires when accepting
+access carrying a described authority.<a href="#section-1.4-3.10.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-1.4-3.11">Attenuation:</dt>
+          <dd style="margin-left: 1.5em" id="section-1.4-3.12">
+            <p id="section-1.4-3.12.1">Replacement or restriction of authority with authority that grants no
+greater access.<a href="#section-1.4-3.12.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-1.4-3.13">Authority family:</dt>
+          <dd style="margin-left: 1.5em" id="section-1.4-3.14">
+            <p id="section-1.4-3.14.1">A publisher-defined grouping within which authority ranks have a
+common interpretation.<a href="#section-1.4-3.14.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+</dl>
+</section>
+</div>
+</section>
+</div>
+<div id="metadata-parameter">
+<section id="section-2">
+      <h2 id="name-metadata-parameter">
+<a href="#section-2" class="section-number selfRef">2. </a><a href="#name-metadata-parameter" class="section-name selfRef">Metadata Parameter</a>
+      </h2>
+<p id="section-2-1">This specification defines the optional JSON object member
+<code>authority_metadata</code> for both OAuth Authorization Server Metadata
+<span>[<a href="#RFC8414" class="cite xref">RFC8414</a>]</span> and OAuth Protected Resource Metadata <span>[<a href="#RFC9728" class="cite xref">RFC9728</a>]</span>.<a href="#section-2-1" class="pilcrow">¶</a></p>
+<p id="section-2-2">The structure depends on the publication context.<a href="#section-2-2" class="pilcrow">¶</a></p>
+<div id="protected-resource-metadata">
+<section id="section-2.1">
+        <h3 id="name-protected-resource-metadata">
+<a href="#section-2.1" class="section-number selfRef">2.1. </a><a href="#name-protected-resource-metadata" class="section-name selfRef">Protected Resource Metadata</a>
+        </h3>
+<p id="section-2.1-1">In protected resource metadata, <code>authority_metadata</code> contains:<a href="#section-2.1-1" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="section-2.1-2">
+          <dt id="section-2.1-2.1">
+<code>authorities</code>:</dt>
+          <dd style="margin-left: 1.5em" id="section-2.1-2.2">
+            <p id="section-2.1-2.2.1"><span class="bcp14">REQUIRED</span>. An array of authority entries.<a href="#section-2.1-2.2.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-2.1-2.3">
+<code>access_requirement_profiles</code>:</dt>
+          <dd style="margin-left: 1.5em" id="section-2.1-2.4">
+            <p id="section-2.1-2.4.1"><span class="bcp14">OPTIONAL</span>. An object whose member names identify reusable access
+requirement profiles and whose member values contain those profiles.<a href="#section-2.1-2.4.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+</dl>
+<p id="section-2.1-3">The protected resource context is supplied by the enclosing document's
+<code>resource</code> member. Authority identifiers, profile names, families, and
+relationship targets are local to that metadata document.<a href="#section-2.1-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="authorization-server-metadata">
+<section id="section-2.2">
+        <h3 id="name-authorization-server-metada">
+<a href="#section-2.2" class="section-number selfRef">2.2. </a><a href="#name-authorization-server-metada" class="section-name selfRef">Authorization Server Metadata</a>
+        </h3>
+<p id="section-2.2-1">In authorization server metadata, <code>authority_metadata</code> contains:<a href="#section-2.2-1" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="section-2.2-2">
+          <dt id="section-2.2-2.1">
+<code>authorities</code>:</dt>
+          <dd style="margin-left: 1.5em" id="section-2.2-2.2">
+            <p id="section-2.2-2.2.1"><span class="bcp14">REQUIRED</span>. An array of authorization server authority entries.<a href="#section-2.2-2.2.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+</dl>
+<p id="section-2.2-3">Authorization server authority entries describe the publisher's local
+authority vocabulary. They do not contain resource selectors, access
+requirement profile references, or attenuation relationships in this
+version of the specification.<a href="#section-2.2-3" class="pilcrow">¶</a></p>
+<p id="section-2.2-4">The presence of <code>authority_metadata</code> indicates that the authorization
+server publishes metadata using this specification. No separate support
+flag is defined.<a href="#section-2.2-4" class="pilcrow">¶</a></p>
+<p id="section-2.2-5">Publication does not imply that the authorization server consumes
+protected resource authority metadata, performs attenuation, or uses a
+particular policy engine.<a href="#section-2.2-5" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="common-requirements">
+<section id="section-2.3">
+        <h3 id="name-common-requirements">
+<a href="#section-2.3" class="section-number selfRef">2.3. </a><a href="#name-common-requirements" class="section-name selfRef">Common Requirements</a>
+        </h3>
+<p id="section-2.3-1">Within either publication context:<a href="#section-2.3-1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-2.3-2.1">
+            <p id="section-2.3-2.1.1"><code>authorities</code> <span class="bcp14">MUST</span> be a JSON array.<a href="#section-2.3-2.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-2.3-2.2">
+            <p id="section-2.3-2.2.1">Each authority entry <span class="bcp14">MUST</span> be a JSON object.<a href="#section-2.3-2.2.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-2.3-2.3">
+            <p id="section-2.3-2.3.1">A publisher <span class="bcp14">MUST NOT</span> publish more than one entry with the same
+combination of <code>kind</code> and <code>value</code> in the same metadata document.<a href="#section-2.3-2.3.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-2.3-2.4">
+            <p id="section-2.3-2.4.1">An empty <code>authorities</code> array describes no authorities.<a href="#section-2.3-2.4.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-2.3-2.5">
+            <p id="section-2.3-2.5.1">Omission of an authority entry <span class="bcp14">MUST NOT</span> be interpreted as a statement
+that the authority is unsupported or unrestricted.<a href="#section-2.3-2.5.1" class="pilcrow">¶</a></p>
+</li>
+        </ul>
+<p id="section-2.3-3">This specification permits partial publication. An authority consumer
+cannot assume that the metadata enumerates every authority accepted or
+issued by the publisher.<a href="#section-2.3-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="authority-entries">
+<section id="section-3">
+      <h2 id="name-authority-entries">
+<a href="#section-3" class="section-number selfRef">3. </a><a href="#name-authority-entries" class="section-name selfRef">Authority Entries</a>
+      </h2>
+<div id="common-members">
+<section id="section-3.1">
+        <h3 id="name-common-members">
+<a href="#section-3.1" class="section-number selfRef">3.1. </a><a href="#name-common-members" class="section-name selfRef">Common Members</a>
+        </h3>
+<p id="section-3.1-1">Authority entries use the following common members.<a href="#section-3.1-1" class="pilcrow">¶</a></p>
+<div id="kind">
+<section id="section-3.1.1">
+          <h4 id="name-kind">
+<a href="#section-3.1.1" class="section-number selfRef">3.1.1. </a><a href="#name-kind" class="section-name selfRef">kind</a>
+          </h4>
+<p id="section-3.1.1-1"><span class="bcp14">REQUIRED</span>. A string identifying the OAuth representation of the authority.<a href="#section-3.1.1-1" class="pilcrow">¶</a></p>
+<p id="section-3.1.1-2">This specification defines:<a href="#section-3.1.1-2" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="section-3.1.1-3">
+            <dt id="section-3.1.1-3.1">
+<code>scope</code>:</dt>
+            <dd style="margin-left: 1.5em" id="section-3.1.1-3.2">
+              <p id="section-3.1.1-3.2.1">The entry describes one OAuth scope value.<a href="#section-3.1.1-3.2.1" class="pilcrow">¶</a></p>
+</dd>
+            <dd class="break"></dd>
+<dt id="section-3.1.1-3.3">
+<code>authorization_details_type</code>:</dt>
+            <dd style="margin-left: 1.5em" id="section-3.1.1-3.4">
+              <p id="section-3.1.1-3.4.1">The entry describes a RAR authorization details type.<a href="#section-3.1.1-3.4.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+</dl>
+<p id="section-3.1.1-4">Consumers <span class="bcp14">MUST NOT</span> interpret an unrecognized <code>kind</code> as one of the kinds
+defined here.<a href="#section-3.1.1-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="value">
+<section id="section-3.1.2">
+          <h4 id="name-value">
+<a href="#section-3.1.2" class="section-number selfRef">3.1.2. </a><a href="#name-value" class="section-name selfRef">value</a>
+          </h4>
+<p id="section-3.1.2-1"><span class="bcp14">REQUIRED</span>. A non-empty string.<a href="#section-3.1.2-1" class="pilcrow">¶</a></p>
+<p id="section-3.1.2-2">For <code>kind</code> equal to <code>scope</code>, <code>value</code> identifies one scope value, not a
+space-separated collection of scope values.<a href="#section-3.1.2-2" class="pilcrow">¶</a></p>
+<p id="section-3.1.2-3">For <code>kind</code> equal to <code>authorization_details_type</code>, <code>value</code> identifies the
+value of the RAR object's <code>type</code> member.<a href="#section-3.1.2-3" class="pilcrow">¶</a></p>
+<p id="section-3.1.2-4">Matching of <code>kind</code> and <code>value</code> is exact and case-sensitive.<a href="#section-3.1.2-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="description">
+<section id="section-3.1.3">
+          <h4 id="name-description">
+<a href="#section-3.1.3" class="section-number selfRef">3.1.3. </a><a href="#name-description" class="section-name selfRef">description</a>
+          </h4>
+<p id="section-3.1.3-1"><span class="bcp14">OPTIONAL</span>. A human-readable description of the authority.<a href="#section-3.1.3-1" class="pilcrow">¶</a></p>
+<p id="section-3.1.3-2">Consumers <span class="bcp14">MUST</span> treat this member as descriptive text, not executable
+policy. Natural-language descriptions do not replace the structured
+authority description or applicable type semantics.<a href="#section-3.1.3-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="family">
+<section id="section-3.1.4">
+          <h4 id="name-family">
+<a href="#section-3.1.4" class="section-number selfRef">3.1.4. </a><a href="#name-family" class="section-name selfRef">family</a>
+          </h4>
+<p id="section-3.1.4-1"><span class="bcp14">OPTIONAL</span>. A non-empty string identifying a publisher-defined authority
+family.<a href="#section-3.1.4-1" class="pilcrow">¶</a></p>
+<p id="section-3.1.4-2">A family identifier has meaning only within the publishing metadata
+document. The same string in another publisher's metadata does not
+establish a shared vocabulary.<a href="#section-3.1.4-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="rank">
+<section id="section-3.1.5">
+          <h4 id="name-rank">
+<a href="#section-3.1.5" class="section-number selfRef">3.1.5. </a><a href="#name-rank" class="section-name selfRef">rank</a>
+          </h4>
+<p id="section-3.1.5-1"><span class="bcp14">OPTIONAL</span>. A non-negative integer providing an advisory ordering within
+the specified <code>family</code>.<a href="#section-3.1.5-1" class="pilcrow">¶</a></p>
+<p id="section-3.1.5-2">An entry containing <code>rank</code> <span class="bcp14">MUST</span> also contain <code>family</code>.<a href="#section-3.1.5-2" class="pilcrow">¶</a></p>
+<p id="section-3.1.5-3">Lower values express the publisher's preferred ordering toward lower
+authority within that family. Equal values do not imply equivalent
+authority.<a href="#section-3.1.5-3" class="pilcrow">¶</a></p>
+<p id="section-3.1.5-4">Rank does not prove containment, interchangeability, or suitability for
+a task. See <a href="#ordering" class="auto internal xref">Section 7</a>.<a href="#section-3.1.5-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="authority">
+<section id="section-3.1.6">
+          <h4 id="name-authority">
+<a href="#section-3.1.6" class="section-number selfRef">3.1.6. </a><a href="#name-authority" class="section-name selfRef">authority</a>
+          </h4>
+<p id="section-3.1.6-1"><span class="bcp14">REQUIRED</span>. A non-empty array of structured authority descriptions.<a href="#section-3.1.6-1" class="pilcrow">¶</a></p>
+<p id="section-3.1.6-2">Each element describes an aspect of the authority represented by the
+entry. Multiple elements describe the combined authority of the entry;
+they are not alternative choices.<a href="#section-3.1.6-2" class="pilcrow">¶</a></p>
+<p id="section-3.1.6-3">The authority descriptions are defined in <a href="#structured-authority" class="auto internal xref">Section 4</a>.<a href="#section-3.1.6-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="protected-resource-members">
+<section id="section-3.2">
+        <h3 id="name-protected-resource-members">
+<a href="#section-3.2" class="section-number selfRef">3.2. </a><a href="#name-protected-resource-members" class="section-name selfRef">Protected Resource Members</a>
+        </h3>
+<p id="section-3.2-1">Protected resource authority entries additionally use:<a href="#section-3.2-1" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="section-3.2-2">
+          <dt id="section-3.2-2.1">
+<code>id</code>:</dt>
+          <dd style="margin-left: 1.5em" id="section-3.2-2.2">
+            <p id="section-3.2-2.2.1"><span class="bcp14">REQUIRED</span>. A non-empty string identifying the entry within this metadata
+document. Every <code>id</code> <span class="bcp14">MUST</span> be unique within the document.<a href="#section-3.2-2.2.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-3.2-2.3">
+<code>access_requirement_profile</code>:</dt>
+          <dd style="margin-left: 1.5em" id="section-3.2-2.4">
+            <p id="section-3.2-2.4.1"><span class="bcp14">OPTIONAL</span>. A string naming one entry in
+<code>access_requirement_profiles</code>.<a href="#section-3.2-2.4.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-3.2-2.5">
+<code>relationships</code>:</dt>
+          <dd style="margin-left: 1.5em" id="section-3.2-2.6">
+            <p id="section-3.2-2.6.1"><span class="bcp14">OPTIONAL</span>. An array of inline relationship objects as defined in
+<a href="#relationships" class="auto internal xref">Section 6</a>.<a href="#section-3.2-2.6.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+</dl>
+<p id="section-3.2-3">A referenced access requirement profile <span class="bcp14">MUST</span> exist in the same
+<code>authority_metadata</code> object.<a href="#section-3.2-3" class="pilcrow">¶</a></p>
+<p id="section-3.2-4">This version supports one profile reference per authority entry.
+Profile inheritance and composition are not defined.<a href="#section-3.2-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="authorization-server-members">
+<section id="section-3.3">
+        <h3 id="name-authorization-server-member">
+<a href="#section-3.3" class="section-number selfRef">3.3. </a><a href="#name-authorization-server-member" class="section-name selfRef">Authorization Server Members</a>
+        </h3>
+<p id="section-3.3-1">Authorization server authority entries are identified by their
+combination of <code>kind</code> and <code>value</code>.<a href="#section-3.3-1" class="pilcrow">¶</a></p>
+<p id="section-3.3-2">An authorization server authority entry <span class="bcp14">MUST NOT</span> contain <code>id</code>,
+<code>access_requirement_profile</code>, or <code>relationships</code>.<a href="#section-3.3-2" class="pilcrow">¶</a></p>
+<p id="section-3.3-3">Authorization server authority metadata <span class="bcp14">MUST NOT</span> contain
+<code>access_requirement_profiles</code>.<a href="#section-3.3-3" class="pilcrow">¶</a></p>
+<p id="section-3.3-4">These restrictions distinguish the AS's local authority descriptions
+from a protected resource's access enforcement expectations.<a href="#section-3.3-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="structured-authority">
+<section id="section-4">
+      <h2 id="name-structured-authority-descri">
+<a href="#section-4" class="section-number selfRef">4. </a><a href="#name-structured-authority-descri" class="section-name selfRef">Structured Authority Descriptions</a>
+      </h2>
+<p id="section-4-1">Each object in an entry's <code>authority</code> array contains:<a href="#section-4-1" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="section-4-2">
+        <dt id="section-4-2.1">
+<code>resource_type</code>:</dt>
+        <dd style="margin-left: 1.5em" id="section-4-2.2">
+          <p id="section-4-2.2.1"><span class="bcp14">REQUIRED</span>. A non-empty string identifying the application resource type
+to which the described authority applies.<a href="#section-4-2.2.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-4-2.3">
+<code>actions</code>:</dt>
+        <dd style="margin-left: 1.5em" id="section-4-2.4">
+          <p id="section-4-2.4.1"><span class="bcp14">REQUIRED</span>. A non-empty array of non-empty strings identifying permitted
+application actions.<a href="#section-4-2.4.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-4-2.5">
+<code>effects</code>:</dt>
+        <dd style="margin-left: 1.5em" id="section-4-2.6">
+          <p id="section-4-2.6.1"><span class="bcp14">OPTIONAL</span>. An array of non-empty strings describing consequences or
+side effects associated with the authority.<a href="#section-4-2.6.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-4-2.7">
+<code>risk</code>:</dt>
+        <dd style="margin-left: 1.5em" id="section-4-2.8">
+          <p id="section-4-2.8.1"><span class="bcp14">OPTIONAL</span>. A non-empty string identifying a publisher-defined risk
+classification.<a href="#section-4-2.8.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-4-2.9">
+<code>properties</code>:</dt>
+        <dd style="margin-left: 1.5em" id="section-4-2.10">
+          <p id="section-4-2.10.1"><span class="bcp14">OPTIONAL</span>. A JSON object containing additional domain-specific semantic
+attributes.<a href="#section-4-2.10.1" class="pilcrow">¶</a></p>
+</dd>
+      <dd class="break"></dd>
+</dl>
+<p id="section-4-3">For example:<a href="#section-4-3" class="pilcrow">¶</a></p>
+<div class="lang-json sourcecode" id="section-4-4">
+<pre>
+{
+  "resource_type": "urn:example:resource-type:payment",
+  "actions": [
+    "urn:example:action:payment:read",
+    "urn:example:action:payment:execute"
+  ],
+  "effects": [
+    "urn:example:effect:external-transfer"
+  ],
+  "risk": "high"
+}
+</pre><a href="#section-4-4" class="pilcrow">¶</a>
+</div>
+<p id="section-4-5">This specification defines the structure of these descriptions, not a
+universal vocabulary for their values.<a href="#section-4-5" class="pilcrow">¶</a></p>
+<p id="section-4-6">Publishers <span class="bcp14">SHOULD</span> use stable identifiers and documented vocabularies.
+URI identifiers are <span class="bcp14">RECOMMENDED</span> when vocabulary values are intended to
+be understood across independently operated systems.<a href="#section-4-6" class="pilcrow">¶</a></p>
+<p id="section-4-7">A consumer <span class="bcp14">MUST NOT</span> assume that identical local strings from different
+publishers have identical semantics.<a href="#section-4-7" class="pilcrow">¶</a></p>
+<div id="completeness-and-interpretation">
+<section id="section-4.1">
+        <h3 id="name-completeness-and-interpreta">
+<a href="#section-4.1" class="section-number selfRef">4.1. </a><a href="#name-completeness-and-interpreta" class="section-name selfRef">Completeness and Interpretation</a>
+        </h3>
+<p id="section-4.1-1">An authority description identifies the authority semantics known to
+its publisher. It does not independently establish a complete policy
+model.<a href="#section-4.1-1" class="pilcrow">¶</a></p>
+<p id="section-4.1-2">In particular:<a href="#section-4.1-2" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-4.1-3.1">
+            <p id="section-4.1-3.1.1"><code>resource_type</code> does not identify every resource instance accessible
+under the authority.<a href="#section-4.1-3.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-4.1-3.2">
+            <p id="section-4.1-3.2.1">An action name does not, by itself, identify permitted parameter values.<a href="#section-4.1-3.2.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-4.1-3.3">
+            <p id="section-4.1-3.3.1">An effect describes consequences; it does not confer additional
+authority.<a href="#section-4.1-3.3.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-4.1-3.4">
+            <p id="section-4.1-3.4.1">A risk label does not establish an ordering of access rights.<a href="#section-4.1-3.4.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-4.1-3.5">
+            <p id="section-4.1-3.5.1">Missing <code>properties</code> do not mean that no restrictions exist.<a href="#section-4.1-3.5.1" class="pilcrow">¶</a></p>
+</li>
+        </ul>
+<p id="section-4.1-4">A consumer performing semantic authorization evaluation needs the
+applicable vocabulary definitions, RAR type semantics, request values,
+and local policy.<a href="#section-4.1-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="rar-interpretation">
+<section id="section-4.2">
+        <h3 id="name-rar-interpretation">
+<a href="#section-4.2" class="section-number selfRef">4.2. </a><a href="#name-rar-interpretation" class="section-name selfRef">RAR Interpretation</a>
+        </h3>
+<p id="section-4.2-1">For a RAR entry, the authority description applies to the type identified
+by <code>value</code>.<a href="#section-4.2-1" class="pilcrow">¶</a></p>
+<p id="section-4.2-2">The authority represented by a concrete RAR object depends on that
+object's parameters and the type-specific rules defined under
+<span>[<a href="#RFC9396" class="cite xref">RFC9396</a>]</span>.<a href="#section-4.2-2" class="pilcrow">¶</a></p>
+<p id="section-4.2-3">The metadata does not replace those rules or duplicate the type's field
+schema. This specification defines no <code>binding_fields</code> member.<a href="#section-4.2-3" class="pilcrow">¶</a></p>
+<p id="section-4.2-4">For example, two objects of the same payment type may grant different
+authority because they identify different accounts, beneficiaries,
+amounts, or actions.<a href="#section-4.2-4" class="pilcrow">¶</a></p>
+<p id="section-4.2-5">A consumer <span class="bcp14">MUST NOT</span> determine concrete RAR authority solely from its
+type-level authority metadata.<a href="#section-4.2-5" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="access-profiles">
+<section id="section-5">
+      <h2 id="name-access-requirement-profiles">
+<a href="#section-5" class="section-number selfRef">5. </a><a href="#name-access-requirement-profiles" class="section-name selfRef">Access Requirement Profiles</a>
+      </h2>
+<p id="section-5-1">Access requirement profiles are published only in protected resource
+metadata.<a href="#section-5-1" class="pilcrow">¶</a></p>
+<p id="section-5-2">A profile describes properties the resource requires when accepting a
+token carrying the associated authority. It does not instruct an
+authorization server to issue a token or grant that authority.<a href="#section-5-2" class="pilcrow">¶</a></p>
+<div id="profile-structure">
+<section id="section-5.1">
+        <h3 id="name-profile-structure">
+<a href="#section-5.1" class="section-number selfRef">5.1. </a><a href="#name-profile-structure" class="section-name selfRef">Profile Structure</a>
+        </h3>
+<p id="section-5.1-1"><code>access_requirement_profiles</code> is a JSON object keyed by profile name.<a href="#section-5.1-1" class="pilcrow">¶</a></p>
+<p id="section-5.1-2">Each profile can contain:<a href="#section-5.1-2" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="section-5.1-3">
+          <dt id="section-5.1-3.1">
+<code>description</code>:</dt>
+          <dd style="margin-left: 1.5em" id="section-5.1-3.2">
+            <p id="section-5.1-3.2.1"><span class="bcp14">OPTIONAL</span>. Human-readable explanatory text.<a href="#section-5.1-3.2.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-5.1-3.3">
+<code>token</code>:</dt>
+          <dd style="margin-left: 1.5em" id="section-5.1-3.4">
+            <p id="section-5.1-3.4.1"><span class="bcp14">OPTIONAL</span>. Token presentation requirements.<a href="#section-5.1-3.4.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-5.1-3.5">
+<code>authentication</code>:</dt>
+          <dd style="margin-left: 1.5em" id="section-5.1-3.6">
+            <p id="section-5.1-3.6.1"><span class="bcp14">OPTIONAL</span>. End-user authentication requirements.<a href="#section-5.1-3.6.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+</dl>
+<p id="section-5.1-4">Profile names are local, case-sensitive identifiers. They do not imply
+standardized security levels.<a href="#section-5.1-4" class="pilcrow">¶</a></p>
+<p id="section-5.1-5">For example:<a href="#section-5.1-5" class="pilcrow">¶</a></p>
+<div class="lang-json sourcecode" id="section-5.1-6">
+<pre>
+{
+  "access_requirement_profiles": {
+    "sensitive_access": {
+      "description": "Requirements for sensitive account access.",
+      "token": {
+        "max_age": 300,
+        "max_lifetime": 600,
+        "sender_constrained": true
+      },
+      "authentication": {
+        "acr_values": [
+          "urn:example:acr:phishing-resistant"
+        ],
+        "max_age": 300
+      }
+    }
+  }
+}
+</pre><a href="#section-5.1-6" class="pilcrow">¶</a>
+</div>
+<p id="section-5.1-7">An omitted requirement means that the profile makes no assertion about
+that property. It does not remove requirements established by other
+resource policy.<a href="#section-5.1-7" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="token-requirements">
+<section id="section-5.2">
+        <h3 id="name-token-requirements">
+<a href="#section-5.2" class="section-number selfRef">5.2. </a><a href="#name-token-requirements" class="section-name selfRef">Token Requirements</a>
+        </h3>
+<p id="section-5.2-1">The <code>token</code> object can contain:<a href="#section-5.2-1" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="section-5.2-2">
+          <dt id="section-5.2-2.1">
+<code>max_age</code>:</dt>
+          <dd style="margin-left: 1.5em" id="section-5.2-2.2">
+            <p id="section-5.2-2.2.1"><span class="bcp14">OPTIONAL</span>. A positive integer expressing, in seconds, the maximum
+acceptable elapsed time since the access token was issued.<a href="#section-5.2-2.2.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-5.2-2.3">
+<code>max_lifetime</code>:</dt>
+          <dd style="margin-left: 1.5em" id="section-5.2-2.4">
+            <p id="section-5.2-2.4.1"><span class="bcp14">OPTIONAL</span>. A positive integer expressing, in seconds, the maximum
+acceptable total lifetime of the access token.<a href="#section-5.2-2.4.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-5.2-2.5">
+<code>single_use</code>:</dt>
+          <dd style="margin-left: 1.5em" id="section-5.2-2.6">
+            <p id="section-5.2-2.6.1"><span class="bcp14">OPTIONAL</span>. A boolean. If <code>true</code>, the access token must be accepted for
+at most one protected operation.<a href="#section-5.2-2.6.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-5.2-2.7">
+<code>sender_constrained</code>:</dt>
+          <dd style="margin-left: 1.5em" id="section-5.2-2.8">
+            <p id="section-5.2-2.8.1"><span class="bcp14">OPTIONAL</span>. A boolean. If <code>true</code>, presentation must satisfy an
+applicable sender-constraining mechanism.<a href="#section-5.2-2.8.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+</dl>
+<p id="section-5.2-3">A boolean value of <code>false</code> means that this profile does not require the
+property. It does not prohibit the property or override stricter policy.<a href="#section-5.2-3" class="pilcrow">¶</a></p>
+<div id="token-freshness-and-lifetime">
+<section id="section-5.2.1">
+          <h4 id="name-token-freshness-and-lifetim">
+<a href="#section-5.2.1" class="section-number selfRef">5.2.1. </a><a href="#name-token-freshness-and-lifetim" class="section-name selfRef">Token Freshness and Lifetime</a>
+          </h4>
+<p id="section-5.2.1-1"><code>max_age</code> and <code>max_lifetime</code> have different meanings.<a href="#section-5.2.1-1" class="pilcrow">¶</a></p>
+<p id="section-5.2.1-2">For example:<a href="#section-5.2.1-2" class="pilcrow">¶</a></p>
+<div class="lang-json sourcecode" id="section-5.2.1-3">
+<pre>
+{
+  "max_age": 300,
+  "max_lifetime": 3600
+}
+</pre><a href="#section-5.2.1-3" class="pilcrow">¶</a>
+</div>
+<p id="section-5.2.1-4">describes a token that may have a one-hour total lifetime but is accepted
+under this profile only within five minutes of issuance.<a href="#section-5.2.1-4" class="pilcrow">¶</a></p>
+<p id="section-5.2.1-5">Token issuance time and expiration <span class="bcp14">MUST</span> be obtained from authenticated
+token data, trusted introspection, or equivalent trusted state. An
+untrusted client timestamp cannot establish token freshness.<a href="#section-5.2.1-5" class="pilcrow">¶</a></p>
+<p id="section-5.2.1-6">JWT access tokens and introspection are possible sources of such data;
+see <span>[<a href="#RFC9068" class="cite xref">RFC9068</a>]</span> and <span>[<a href="#RFC7662" class="cite xref">RFC7662</a>]</span>.<a href="#section-5.2.1-6" class="pilcrow">¶</a></p>
+<p id="section-5.2.1-7">This specification does not establish a clock-skew allowance. The
+deployment determines an appropriate allowance and applies it
+consistently.<a href="#section-5.2.1-7" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="single-use-semantics">
+<section id="section-5.2.2">
+          <h4 id="name-single-use-semantics">
+<a href="#section-5.2.2" class="section-number selfRef">5.2.2. </a><a href="#name-single-use-semantics" class="section-name selfRef">Single-Use Semantics</a>
+          </h4>
+<p id="section-5.2.2-1">If <code>single_use</code> is <code>true</code>, a conforming resource <span class="bcp14">MUST</span> ensure that the
+same access token is not accepted for more than one protected operation
+at that resource.<a href="#section-5.2.2-1" class="pilcrow">¶</a></p>
+<p id="section-5.2.2-2">Consumption <span class="bcp14">MUST</span> be coordinated atomically across resource instances
+that accept the token. Merely publishing the requirement or including
+a token identifier does not provide replay protection.<a href="#section-5.2.2-2" class="pilcrow">¶</a></p>
+<p id="section-5.2.2-3">This specification does not define a universal token consumption
+protocol. A deployment needs a replay-resistant implementation and a
+trusted means of identifying the token.<a href="#section-5.2.2-3" class="pilcrow">¶</a></p>
+<p id="section-5.2.2-4">Single use is not equivalent to exactly-once business execution. It
+does not guarantee completion, rollback, or safe retry after an
+ambiguous failure.<a href="#section-5.2.2-4" class="pilcrow">¶</a></p>
+<p id="section-5.2.2-5">If one token carries several authorities, a single-use requirement
+applies to the token as a whole, not separately to each authority.<a href="#section-5.2.2-5" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="sender-constraining">
+<section id="section-5.2.3">
+          <h4 id="name-sender-constraining">
+<a href="#section-5.2.3" class="section-number selfRef">5.2.3. </a><a href="#name-sender-constraining" class="section-name selfRef">Sender-Constraining</a>
+          </h4>
+<p id="section-5.2.3-1"><code>sender_constrained: true</code> requires the resource to validate the proof
+required by the applicable sender-constraining mechanism.<a href="#section-5.2.3-1" class="pilcrow">¶</a></p>
+<p id="section-5.2.3-2">Examples include certificate-bound access tokens <span>[<a href="#RFC8705" class="cite xref">RFC8705</a>]</span> and DPoP
+<span>[<a href="#RFC9449" class="cite xref">RFC9449</a>]</span>.<a href="#section-5.2.3-2" class="pilcrow">¶</a></p>
+<p id="section-5.2.3-3">This member does not select a mechanism. Mechanism selection depends on
+the token profile, applicable discovery metadata, and deployment
+agreement.<a href="#section-5.2.3-3" class="pilcrow">¶</a></p>
+<p id="section-5.2.3-4">Sender-constraining is not single-use token semantics. A sender-constrained
+token may still authorize several operations unless restricted separately.<a href="#section-5.2.3-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="authentication-requirements">
+<section id="section-5.3">
+        <h3 id="name-authentication-requirements">
+<a href="#section-5.3" class="section-number selfRef">5.3. </a><a href="#name-authentication-requirements" class="section-name selfRef">Authentication Requirements</a>
+        </h3>
+<p id="section-5.3-1">The <code>authentication</code> object can contain:<a href="#section-5.3-1" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="section-5.3-2">
+          <dt id="section-5.3-2.1">
+<code>acr_values</code>:</dt>
+          <dd style="margin-left: 1.5em" id="section-5.3-2.2">
+            <p id="section-5.3-2.2.1"><span class="bcp14">OPTIONAL</span>. A non-empty array of acceptable authentication context class
+reference values.<a href="#section-5.3-2.2.1" class="pilcrow">¶</a></p>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-5.3-2.3">
+<code>max_age</code>:</dt>
+          <dd style="margin-left: 1.5em" id="section-5.3-2.4">
+            <p id="section-5.3-2.4.1"><span class="bcp14">OPTIONAL</span>. A positive integer expressing, in seconds, the maximum
+acceptable elapsed time since the relevant end-user authentication
+event.<a href="#section-5.3-2.4.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+</dl>
+<p id="section-5.3-3">If both members are present, both requirements apply.<a href="#section-5.3-3" class="pilcrow">¶</a></p>
+<p id="section-5.3-4"><code>acr_values</code> lists alternatives, not cumulative authentication
+requirements. The resource accepts an authentication context recognized
+as satisfying at least one listed value.<a href="#section-5.3-4" class="pilcrow">¶</a></p>
+<p id="section-5.3-5">This specification does not define a numerical or lexical ordering of
+ACR values. An ACR string <span class="bcp14">MUST NOT</span> be interpreted as stronger than
+another merely because of its spelling.<a href="#section-5.3-5" class="pilcrow">¶</a></p>
+<p id="section-5.3-6">Authentication information <span class="bcp14">MUST</span> be derived from trusted token data,
+trusted introspection, or equivalent authenticated information.<a href="#section-5.3-6" class="pilcrow">¶</a></p>
+<p id="section-5.3-7"><span>[<a href="#RFC9470" class="cite xref">RFC9470</a>]</span> defines related authentication strength and recentness
+requirements and a mechanism for signaling insufficient user
+authentication.<a href="#section-5.3-7" class="pilcrow">¶</a></p>
+<p id="section-5.3-8">Authentication freshness is distinct from token freshness. Issuing a
+new token does not necessarily establish a new authentication event.<a href="#section-5.3-8" class="pilcrow">¶</a></p>
+<p id="section-5.3-9">These requirements do not establish approval of a particular action or
+continuous human presence.<a href="#section-5.3-9" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="default-resource-policy">
+<section id="section-5.4">
+        <h3 id="name-default-resource-policy">
+<a href="#section-5.4" class="section-number selfRef">5.4. </a><a href="#name-default-resource-policy" class="section-name selfRef">Default Resource Policy</a>
+        </h3>
+<p id="section-5.4-1">If an authority entry has no <code>access_requirement_profile</code>, no additional
+profile is declared for that entry.<a href="#section-5.4-1" class="pilcrow">¶</a></p>
+<p id="section-5.4-2">Resource-wide policy and other applicable requirements still apply.<a href="#section-5.4-2" class="pilcrow">¶</a></p>
+<p id="section-5.4-3">A profile cannot weaken a requirement established by the resource's
+other enforcement policy.<a href="#section-5.4-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="multiple-authorities-in-a-token">
+<section id="section-5.5">
+        <h3 id="name-multiple-authorities-in-a-t">
+<a href="#section-5.5" class="section-number selfRef">5.5. </a><a href="#name-multiple-authorities-in-a-t" class="section-name selfRef">Multiple Authorities in a Token</a>
+        </h3>
+<p id="section-5.5-1">An access token may carry more than one authority.<a href="#section-5.5-1" class="pilcrow">¶</a></p>
+<p id="section-5.5-2">This specification does not prescribe how an authorization server
+combines the associated profiles. It may issue separate tokens, satisfy
+a common set of requirements, or decline a request according to policy.<a href="#section-5.5-2" class="pilcrow">¶</a></p>
+<p id="section-5.5-3">At enforcement time, the resource applies the requirements relevant to
+the authority used for the operation.<a href="#section-5.5-3" class="pilcrow">¶</a></p>
+<p id="section-5.5-4">If an operation requires multiple authorities, all applicable requirements
+must be satisfied. A weaker profile cannot cancel a stronger requirement.<a href="#section-5.5-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="relationships">
+<section id="section-6">
+      <h2 id="name-authority-relationships">
+<a href="#section-6" class="section-number selfRef">6. </a><a href="#name-authority-relationships" class="section-name selfRef">Authority Relationships</a>
+      </h2>
+<p id="section-6-1">Protected resource authority entries can publish inline <code>relationships</code>.<a href="#section-6-1" class="pilcrow">¶</a></p>
+<p id="section-6-2">Each relationship object contains:<a href="#section-6-2" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="section-6-3">
+        <dt id="section-6-3.1">
+<code>relation</code>:</dt>
+        <dd style="margin-left: 1.5em" id="section-6-3.2">
+          <p id="section-6-3.2.1"><span class="bcp14">REQUIRED</span>. A relationship name.<a href="#section-6-3.2.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-6-3.3">
+<code>target</code>:</dt>
+        <dd style="margin-left: 1.5em" id="section-6-3.4">
+          <p id="section-6-3.4.1"><span class="bcp14">REQUIRED</span>. The <code>id</code> of another authority entry in the same metadata
+document.<a href="#section-6-3.4.1" class="pilcrow">¶</a></p>
+</dd>
+      <dd class="break"></dd>
+</dl>
+<p id="section-6-4">The containing authority entry is the relationship source. No <code>from</code>
+member is used.<a href="#section-6-4" class="pilcrow">¶</a></p>
+<p id="section-6-5">This version defines one relationship:<a href="#section-6-5" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-6-6.1">
+          <p id="section-6-6.1.1"><code>can_be_attenuated_to</code><a href="#section-6-6.1.1" class="pilcrow">¶</a></p>
+</li>
+      </ul>
+<p id="section-6-7">The target <span class="bcp14">MUST</span> exist, <span class="bcp14">MUST</span> differ from the source, and <span class="bcp14">MUST</span> be in the
+same metadata document.<a href="#section-6-7" class="pilcrow">¶</a></p>
+<p id="section-6-8">Both entries <span class="bcp14">MUST</span> declare the same <code>family</code>.<a href="#section-6-8" class="pilcrow">¶</a></p>
+<div id="canbeattenuatedto">
+<section id="section-6.1">
+        <h3 id="name-can_be_attenuated_to">
+<a href="#section-6.1" class="section-number selfRef">6.1. </a><a href="#name-can_be_attenuated_to" class="section-name selfRef">can_be_attenuated_to</a>
+        </h3>
+<p id="section-6.1-1">The relationship:<a href="#section-6.1-1" class="pilcrow">¶</a></p>
+<div class="lang-json sourcecode" id="section-6.1-2">
+<pre>
+{
+  "relation": "can_be_attenuated_to",
+  "target": "documents.read"
+}
+</pre><a href="#section-6.1-2" class="pilcrow">¶</a>
+</div>
+<p id="section-6.1-3">asserts that the target represents no greater authority than the source
+under the protected resource's authority semantics.<a href="#section-6.1-3" class="pilcrow">¶</a></p>
+<p id="section-6.1-4">This is a containment assertion, not merely a statement that the target
+is lower risk or belongs to an earlier workflow phase.<a href="#section-6.1-4" class="pilcrow">¶</a></p>
+<p id="section-6.1-5">For example, if <code>documents.manage</code> authorizes both reading and modifying
+documents, it can declare attenuation to a scope that authorizes reading
+the same documents.<a href="#section-6.1-5" class="pilcrow">¶</a></p>
+<p id="section-6.1-6">Conversely, a payment execution authority does not automatically contain
+payment preparation or payment status access. Those are different
+operations. A relationship is valid only if the resource's actual
+semantics establish the asserted containment.<a href="#section-6.1-6" class="pilcrow">¶</a></p>
+<p id="section-6.1-7">A publisher <span class="bcp14">MUST NOT</span> declare this relationship based solely on rank,
+risk, or perceived similarity.<a href="#section-6.1-7" class="pilcrow">¶</a></p>
+<p id="section-6.1-8">The relationship does not assert that the target satisfies the client's
+task, purpose, or Mission.<a href="#section-6.1-8" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="rar-and-cross-kind-relationships">
+<section id="section-6.2">
+        <h3 id="name-rar-and-cross-kind-relation">
+<a href="#section-6.2" class="section-number selfRef">6.2. </a><a href="#name-rar-and-cross-kind-relation" class="section-name selfRef">RAR and Cross-Kind Relationships</a>
+        </h3>
+<p id="section-6.2-1">Relationships can identify targets of a different <code>kind</code>.<a href="#section-6.2-1" class="pilcrow">¶</a></p>
+<p id="section-6.2-2">However, identifying a target does not define a transformation of
+authorization request data.<a href="#section-6.2-2" class="pilcrow">¶</a></p>
+<p id="section-6.2-3">For RAR types, authority comparison may depend on concrete object
+parameters. An asserted relationship does not authorize dropping,
+widening, or changing parameter restrictions.<a href="#section-6.2-3" class="pilcrow">¶</a></p>
+<p id="section-6.2-4">A consumer needs applicable type semantics or configured policy to
+establish a safe concrete transformation. This specification does not
+define that transformation.<a href="#section-6.2-4" class="pilcrow">¶</a></p>
+<p id="section-6.2-5">If containment cannot be established for the concrete request, the
+relationship alone is insufficient grounds for replacement.<a href="#section-6.2-5" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="relationship-interpretation">
+<section id="section-6.3">
+        <h3 id="name-relationship-interpretation">
+<a href="#section-6.3" class="section-number selfRef">6.3. </a><a href="#name-relationship-interpretation" class="section-name selfRef">Relationship Interpretation</a>
+        </h3>
+<p id="section-6.3-1">Containment is transitive when the same resource context and compatible
+semantic restrictions apply.<a href="#section-6.3-1" class="pilcrow">¶</a></p>
+<p id="section-6.3-2">A consumer is not required to compute a transitive closure, select a
+target, or perform substitution.<a href="#section-6.3-2" class="pilcrow">¶</a></p>
+<p id="section-6.3-3">Unrecognized relationship names <span class="bcp14">MUST NOT</span> be interpreted as
+<code>can_be_attenuated_to</code>.<a href="#section-6.3-3" class="pilcrow">¶</a></p>
+<p id="section-6.3-4">Consumers traversing relationships <span class="bcp14">SHOULD</span> apply limits to traversal
+depth and visited entries to avoid unbounded processing.<a href="#section-6.3-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="ordering">
+<section id="section-7">
+      <h2 id="name-authority-ordering">
+<a href="#section-7" class="section-number selfRef">7. </a><a href="#name-authority-ordering" class="section-name selfRef">Authority Ordering</a>
+      </h2>
+<p id="section-7-1"><code>family</code> and <code>rank</code> provide advisory ordering.<a href="#section-7-1" class="pilcrow">¶</a></p>
+<p id="section-7-2">A consumer can use them to:<a href="#section-7-2" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-7-3.1">
+          <p id="section-7-3.1.1">display authorities in a publisher-defined order;<a href="#section-7-3.1.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-7-3.2">
+          <p id="section-7-3.2.1">prioritize evaluation of lower-authority candidates;<a href="#section-7-3.2.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-7-3.3">
+          <p id="section-7-3.3.1">organize authority choices for human review.<a href="#section-7-3.3.1" class="pilcrow">¶</a></p>
+</li>
+      </ul>
+<p id="section-7-4">Ranks can be compared only within the same family and metadata document.<a href="#section-7-4" class="pilcrow">¶</a></p>
+<p id="section-7-5">Rank <span class="bcp14">MUST NOT</span> be used by itself to establish:<a href="#section-7-5" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-7-6.1">
+          <p id="section-7-6.1.1">authority containment;<a href="#section-7-6.1.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-7-6.2">
+          <p id="section-7-6.2.1">equivalent authority;<a href="#section-7-6.2.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-7-6.3">
+          <p id="section-7-6.3.1">safe attenuation;<a href="#section-7-6.3.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-7-6.4">
+          <p id="section-7-6.4.1">satisfaction of a purpose or Mission;<a href="#section-7-6.4.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-7-6.5">
+          <p id="section-7-6.5.1">comparable security or risk across publishers.<a href="#section-7-6.5.1" class="pilcrow">¶</a></p>
+</li>
+      </ul>
+<p id="section-7-7">Where an attenuation relationship and ranks are both published, the
+target rank <span class="bcp14">SHOULD</span> be no greater than the source rank.<a href="#section-7-7" class="pilcrow">¶</a></p>
+<p id="section-7-8">Ranks can be equal for incomparable authorities. Equal ranks do not
+identify a tie-breaking rule.<a href="#section-7-8" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="authorization-server-use">
+<section id="section-8">
+      <h2 id="name-authorization-server-use">
+<a href="#section-8" class="section-number selfRef">8. </a><a href="#name-authorization-server-use" class="section-name selfRef">Authorization Server Use</a>
+      </h2>
+<p id="section-8-1">An authorization server can use this metadata when processing an
+authorization request, token request, or token exchange request.<a href="#section-8-1" class="pilcrow">¶</a></p>
+<p id="section-8-2">A resource indicator <span>[<a href="#RFC8707" class="cite xref">RFC8707</a>]</span> can identify the relevant protected
+resource. The server can obtain its metadata using <span>[<a href="#RFC9728" class="cite xref">RFC9728</a>]</span> or use
+trusted cached metadata or configured information.<a href="#section-8-2" class="pilcrow">¶</a></p>
+<p id="section-8-3">Possible uses include:<a href="#section-8-3" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-8-4.1">
+          <p id="section-8-4.1.1">resolving scope and RAR authority semantics;<a href="#section-8-4.1.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-8-4.2">
+          <p id="section-8-4.2.1">evaluating authority against a grant or local policy;<a href="#section-8-4.2.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-8-4.3">
+          <p id="section-8-4.3.1">informing an external policy decision point;<a href="#section-8-4.3.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-8-4.4">
+          <p id="section-8-4.4.1">rendering authority descriptions;<a href="#section-8-4.4.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-8-4.5">
+          <p id="section-8-4.5.1">assessing resource access requirements;<a href="#section-8-4.5.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-8-4.6">
+          <p id="section-8-4.6.1">identifying lower-authority alternatives.<a href="#section-8-4.6.1" class="pilcrow">¶</a></p>
+</li>
+      </ul>
+<p id="section-8-5">This specification does not require a particular processing sequence.<a href="#section-8-5" class="pilcrow">¶</a></p>
+<div id="publication-is-not-an-issuance-decision">
+<section id="section-8.1">
+        <h3 id="name-publication-is-not-an-issua">
+<a href="#section-8.1" class="section-number selfRef">8.1. </a><a href="#name-publication-is-not-an-issua" class="section-name selfRef">Publication Is Not an Issuance Decision</a>
+        </h3>
+<p id="section-8.1-1">An AS-published authority description does not imply that:<a href="#section-8.1-1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-8.1-2.1">
+            <p id="section-8.1-2.1.1">every client can request that authority;<a href="#section-8.1-2.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-8.1-2.2">
+            <p id="section-8.1-2.2.1">every subject can grant it;<a href="#section-8.1-2.2.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-8.1-2.3">
+            <p id="section-8.1-2.3.1">the AS will issue it;<a href="#section-8.1-2.3.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-8.1-2.4">
+            <p id="section-8.1-2.4.1">any particular resource accepts it.<a href="#section-8.1-2.4.1" class="pilcrow">¶</a></p>
+</li>
+        </ul>
+<p id="section-8.1-3">Similarly, a resource's published authority description does not authorize
+issuance by an AS.<a href="#section-8.1-3" class="pilcrow">¶</a></p>
+<p id="section-8.1-4">Existing grant restrictions, client policy, subject authority, and
+applicable protocol rules remain in effect.<a href="#section-8.1-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="metadata-sources-and-conflicts">
+<section id="section-8.2">
+        <h3 id="name-metadata-sources-and-confli">
+<a href="#section-8.2" class="section-number selfRef">8.2. </a><a href="#name-metadata-sources-and-confli" class="section-name selfRef">Metadata Sources and Conflicts</a>
+        </h3>
+<p id="section-8.2-1">An authorization server may use local policy or configuration when
+protected resource metadata is unavailable.<a href="#section-8.2-1" class="pilcrow">¶</a></p>
+<p id="section-8.2-2">AS-published metadata expresses the AS's local understanding. It does not
+override the protected resource's enforcement semantics.<a href="#section-8.2-2" class="pilcrow">¶</a></p>
+<p id="section-8.2-3">If AS and resource descriptions conflict, this specification does not
+mandate a precedence algorithm or require issuance. The conflict is an
+input to trust configuration and local policy.<a href="#section-8.2-3" class="pilcrow">¶</a></p>
+<p id="section-8.2-4">A consumer <span class="bcp14">MUST NOT</span> treat an unresolved semantic conflict as proof of
+safe attenuation or authority alignment.<a href="#section-8.2-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="attenuation-options">
+<section id="section-8.3">
+        <h3 id="name-attenuation-options">
+<a href="#section-8.3" class="section-number selfRef">8.3. </a><a href="#name-attenuation-options" class="section-name selfRef">Attenuation Options</a>
+        </h3>
+<p id="section-8.3-1">Attenuation handling is determined by AS policy.<a href="#section-8.3-1" class="pilcrow">¶</a></p>
+<p id="section-8.3-2">Possible behaviors include:<a href="#section-8.3-2" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-8.3-3.1">
+            <p id="section-8.3-3.1.1">issuing the originally requested authority;<a href="#section-8.3-3.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-8.3-3.2">
+            <p id="section-8.3-3.2.1">issuing lower authority where permitted by the applicable OAuth flow;<a href="#section-8.3-3.2.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-8.3-3.3">
+            <p id="section-8.3-3.3.1">declining the original request;<a href="#section-8.3-3.3.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-8.3-3.4">
+            <p id="section-8.3-3.4.1">suggesting a lower-authority request using an applicable remediation
+mechanism;<a href="#section-8.3-3.4.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-8.3-3.5">
+            <p id="section-8.3-3.5.1">requesting additional authorization;<a href="#section-8.3-3.5.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-8.3-3.6">
+            <p id="section-8.3-3.6.1">requiring the client to submit a revised request.<a href="#section-8.3-3.6.1" class="pilcrow">¶</a></p>
+</li>
+        </ul>
+<p id="section-8.3-4">This specification does not require an AS to search relationships, select
+the lowest rank, or issue an attenuated token.<a href="#section-8.3-4" class="pilcrow">¶</a></p>
+<p id="section-8.3-5">Where an AS changes granted authority, it remains responsible for the
+applicable response requirements of <span>[<a href="#RFC6749" class="cite xref">RFC6749</a>]</span>, <span>[<a href="#RFC9396" class="cite xref">RFC9396</a>]</span>, and the
+relevant grant or exchange protocol, including <span>[<a href="#RFC8693" class="cite xref">RFC8693</a>]</span> where applicable.<a href="#section-8.3-5" class="pilcrow">¶</a></p>
+<p id="section-8.3-6">No new error code or remediation response is defined here.<a href="#section-8.3-6" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="examples">
+<section id="section-9">
+      <h2 id="name-examples">
+<a href="#section-9" class="section-number selfRef">9. </a><a href="#name-examples" class="section-name selfRef">Examples</a>
+      </h2>
+<p id="section-9-1">The examples use illustrative application vocabularies. They are not
+standardized action, effect, or risk registries.<a href="#section-9-1" class="pilcrow">¶</a></p>
+<div id="protected-resource-metadata-1">
+<section id="section-9.1">
+        <h3 id="name-protected-resource-metadata-2">
+<a href="#section-9.1" class="section-number selfRef">9.1. </a><a href="#name-protected-resource-metadata-2" class="section-name selfRef">Protected Resource Metadata</a>
+        </h3>
+<p id="section-9.1-1">The following resource accepts a read scope, a management scope that
+includes read and update access, and a RAR type for document access.<a href="#section-9.1-1" class="pilcrow">¶</a></p>
+<div class="breakable lang-json sourcecode" id="section-9.1-2">
+<pre>
+{
+  "resource": "https://documents.example.com",
+  "authorization_servers": [
+    "https://as.example.com"
+  ],
+  "scopes_supported": [
+    "documents.read",
+    "documents.manage"
+  ],
+  "authority_metadata": {
+    "access_requirement_profiles": {
+      "standard_access": {
+        "token": {
+          "max_lifetime": 3600
+        }
+      },
+      "sensitive_access": {
+        "token": {
+          "max_age": 300,
+          "max_lifetime": 600,
+          "sender_constrained": true
+        },
+        "authentication": {
+          "acr_values": [
+            "urn:example:acr:phishing-resistant"
+          ],
+          "max_age": 300
+        }
+      }
+    },
+    "authorities": [
+      {
+        "id": "documents.read",
+        "kind": "scope",
+        "value": "documents.read",
+        "description": "Read documents accessible to the subject.",
+        "family": "document_access",
+        "rank": 10,
+        "authority": [
+          {
+            "resource_type": "urn:example:resource-type:document",
+            "actions": [
+              "urn:example:action:document:read"
+            ],
+            "effects": [
+              "urn:example:effect:data-disclosure"
+            ],
+            "risk": "low"
+          }
+        ],
+        "access_requirement_profile": "standard_access"
+      },
+      {
+        "id": "documents.manage",
+        "kind": "scope",
+        "value": "documents.manage",
+        "description": "Read and update documents accessible to the subject.",
+        "family": "document_access",
+        "rank": 20,
+        "authority": [
+          {
+            "resource_type": "urn:example:resource-type:document",
+            "actions": [
+              "urn:example:action:document:read",
+              "urn:example:action:document:update"
+            ],
+            "effects": [
+              "urn:example:effect:data-disclosure",
+              "urn:example:effect:state-change"
+            ],
+            "risk": "medium"
+          }
+        ],
+        "access_requirement_profile": "sensitive_access",
+        "relationships": [
+          {
+            "relation": "can_be_attenuated_to",
+            "target": "documents.read"
+          }
+        ]
+      },
+      {
+        "id": "document_access.rar",
+        "kind": "authorization_details_type",
+        "value": "urn:example:authorization-details:document-access",
+        "description": "Access to specified documents under type-specific restrictions.",
+        "family": "document_access",
+        "authority": [
+          {
+            "resource_type": "urn:example:resource-type:document",
+            "actions": [
+              "urn:example:action:document:read",
+              "urn:example:action:document:update"
+            ],
+            "effects": [
+              "urn:example:effect:data-disclosure",
+              "urn:example:effect:state-change"
+            ],
+            "properties": {
+              "semantics": "urn:example:semantics:document-access:v1"
+            }
+          }
+        ],
+        "access_requirement_profile": "sensitive_access"
+      }
+    ]
+  }
+}
+</pre><a href="#section-9.1-2" class="pilcrow">¶</a>
+</div>
+<p id="section-9.1-3">The RAR entry does not receive a fixed rank in this example because its
+concrete authority varies with the requested actions and document
+restrictions.<a href="#section-9.1-3" class="pilcrow">¶</a></p>
+<p id="section-9.1-4">A concrete request might be:<a href="#section-9.1-4" class="pilcrow">¶</a></p>
+<div class="lang-json sourcecode" id="section-9.1-5">
+<pre>
+[
+  {
+    "type": "urn:example:authorization-details:document-access",
+    "actions": ["read"],
+    "locations": [
+      "https://documents.example.com/documents/123"
+    ]
+  }
+]
+</pre><a href="#section-9.1-5" class="pilcrow">¶</a>
+</div>
+<p id="section-9.1-6">The consumer evaluates that object using the type's semantic rules.
+The type-level metadata does not imply that the request grants update
+access.<a href="#section-9.1-6" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="authorization-server-metadata-1">
+<section id="section-9.2">
+        <h3 id="name-authorization-server-metadat">
+<a href="#section-9.2" class="section-number selfRef">9.2. </a><a href="#name-authorization-server-metadat" class="section-name selfRef">Authorization Server Metadata</a>
+        </h3>
+<p id="section-9.2-1">The following AS publishes its local understanding of profile scopes.<a href="#section-9.2-1" class="pilcrow">¶</a></p>
+<div class="breakable lang-json sourcecode" id="section-9.2-2">
+<pre>
+{
+  "issuer": "https://as.example.com",
+  "scopes_supported": [
+    "profile.read",
+    "profile.manage"
+  ],
+  "authority_metadata": {
+    "authorities": [
+      {
+        "kind": "scope",
+        "value": "profile.read",
+        "description": "Read profile information.",
+        "family": "profile_access",
+        "rank": 10,
+        "authority": [
+          {
+            "resource_type": "urn:example:resource-type:profile",
+            "actions": [
+              "urn:example:action:profile:read"
+            ],
+            "effects": [
+              "urn:example:effect:data-disclosure"
+            ],
+            "risk": "low"
+          }
+        ]
+      },
+      {
+        "kind": "scope",
+        "value": "profile.manage",
+        "description": "Read and update profile information.",
+        "family": "profile_access",
+        "rank": 20,
+        "authority": [
+          {
+            "resource_type": "urn:example:resource-type:profile",
+            "actions": [
+              "urn:example:action:profile:read",
+              "urn:example:action:profile:update"
+            ],
+            "effects": [
+              "urn:example:effect:data-disclosure",
+              "urn:example:effect:state-change"
+            ],
+            "risk": "medium"
+          }
+        ]
+      }
+    ]
+  }
+}
+</pre><a href="#section-9.2-2" class="pilcrow">¶</a>
+</div>
+<p id="section-9.2-3">There is no support flag, authority <code>id</code>, resource selector, access
+requirement profile, or attenuation relationship.<a href="#section-9.2-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="attenuation-decision">
+<section id="section-9.3">
+        <h3 id="name-attenuation-decision">
+<a href="#section-9.3" class="section-number selfRef">9.3. </a><a href="#name-attenuation-decision" class="section-name selfRef">Attenuation Decision</a>
+        </h3>
+<p id="section-9.3-1">A client requests:<a href="#section-9.3-1" class="pilcrow">¶</a></p>
+<div class="lang-text sourcecode" id="section-9.3-2">
+<pre>
+resource=https://documents.example.com
+scope=documents.manage
+</pre><a href="#section-9.3-2" class="pilcrow">¶</a>
+</div>
+<p id="section-9.3-3">The resource metadata identifies <code>documents.read</code> as an attenuation
+target.<a href="#section-9.3-3" class="pilcrow">¶</a></p>
+<p id="section-9.3-4">An AS might determine that a read-only task does not need update
+authority. Its policy may then issue <code>documents.read</code> or decline the
+request and suggest that the client request <code>documents.read</code>.<a href="#section-9.3-4" class="pilcrow">¶</a></p>
+<p id="section-9.3-5">The metadata identifies the containment relationship. It does not
+determine which response the AS chooses or establish that read access
+satisfies the client's task.<a href="#section-9.3-5" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="security-considerations">
+<section id="section-10">
+      <h2 id="name-security-considerations">
+<a href="#section-10" class="section-number selfRef">10. </a><a href="#name-security-considerations" class="section-name selfRef">Security Considerations</a>
+      </h2>
+<div id="metadata-authenticity">
+<section id="section-10.1">
+        <h3 id="name-metadata-authenticity">
+<a href="#section-10.1" class="section-number selfRef">10.1. </a><a href="#name-metadata-authenticity" class="section-name selfRef">Metadata Authenticity</a>
+        </h3>
+<p id="section-10.1-1">Consumers need to validate metadata using the discovery and security
+requirements of <span>[<a href="#RFC8414" class="cite xref">RFC8414</a>]</span> or <span>[<a href="#RFC9728" class="cite xref">RFC9728</a>]</span>, as applicable.<a href="#section-10.1-1" class="pilcrow">¶</a></p>
+<p id="section-10.1-2">Obtaining a document over TLS is not sufficient if the document's issuer
+or resource identity does not match the expected identity.<a href="#section-10.1-2" class="pilcrow">¶</a></p>
+<p id="section-10.1-3">Metadata publication does not independently establish a trusted
+authorization server and resource relationship.<a href="#section-10.1-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="untrusted-resource-locations">
+<section id="section-10.2">
+        <h3 id="name-untrusted-resource-location">
+<a href="#section-10.2" class="section-number selfRef">10.2. </a><a href="#name-untrusted-resource-location" class="section-name selfRef">Untrusted Resource Locations</a>
+        </h3>
+<p id="section-10.2-1">An AS that fetches metadata in response to a client-supplied resource
+indicator can be exposed to server-side request forgery.<a href="#section-10.2-1" class="pilcrow">¶</a></p>
+<p id="section-10.2-2">Implementations <span class="bcp14">SHOULD</span> validate destinations, constrain redirects,
+control access to internal addresses, and apply request size and timeout
+limits.<a href="#section-10.2-2" class="pilcrow">¶</a></p>
+<p id="section-10.2-3">Fetching arbitrary metadata is not required by this specification.<a href="#section-10.2-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="semantic-misrepresentation">
+<section id="section-10.3">
+        <h3 id="name-semantic-misrepresentation">
+<a href="#section-10.3" class="section-number selfRef">10.3. </a><a href="#name-semantic-misrepresentation" class="section-name selfRef">Semantic Misrepresentation</a>
+        </h3>
+<p id="section-10.3-1">A publisher can incorrectly describe a scope, type, or containment
+relationship.<a href="#section-10.3-1" class="pilcrow">¶</a></p>
+<p id="section-10.3-2">An authenticated document proves the document's source, not the
+correctness of its semantic claims.<a href="#section-10.3-2" class="pilcrow">¶</a></p>
+<p id="section-10.3-3">Consumers should rely only on trusted publishers and understood
+vocabularies when using metadata for authorization decisions.<a href="#section-10.3-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="stale-metadata">
+<section id="section-10.4">
+        <h3 id="name-stale-metadata">
+<a href="#section-10.4" class="section-number selfRef">10.4. </a><a href="#name-stale-metadata" class="section-name selfRef">Stale Metadata</a>
+        </h3>
+<p id="section-10.4-1">Authority semantics and access requirements may change.<a href="#section-10.4-1" class="pilcrow">¶</a></p>
+<p id="section-10.4-2">Consumers <span class="bcp14">SHOULD</span> use bounded caching and an appropriate refresh strategy.
+An old description must not be assumed to remain valid indefinitely.<a href="#section-10.4-2" class="pilcrow">¶</a></p>
+<p id="section-10.4-3">This specification does not define semantic version negotiation or bind
+a token to a metadata version.<a href="#section-10.4-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="unknown-semantic-values">
+<section id="section-10.5">
+        <h3 id="name-unknown-semantic-values">
+<a href="#section-10.5" class="section-number selfRef">10.5. </a><a href="#name-unknown-semantic-values" class="section-name selfRef">Unknown Semantic Values</a>
+        </h3>
+<p id="section-10.5-1">Unknown action identifiers, properties, or relationship names cannot
+safely be interpreted as familiar values.<a href="#section-10.5-1" class="pilcrow">¶</a></p>
+<p id="section-10.5-2">A consumer <span class="bcp14">MUST NOT</span> claim to have established authority containment or
+purpose alignment from semantics it does not understand.<a href="#section-10.5-2" class="pilcrow">¶</a></p>
+<p id="section-10.5-3">This does not mandate a particular AS response. A deployment may use
+trusted local policy, decline evaluation, or require further information.<a href="#section-10.5-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="scope-combinations">
+<section id="section-10.6">
+        <h3 id="name-scope-combinations">
+<a href="#section-10.6" class="section-number selfRef">10.6. </a><a href="#name-scope-combinations" class="section-name selfRef">Scope Combinations</a>
+        </h3>
+<p id="section-10.6-1">The authority of several scopes may not equal a simple union of their
+individual descriptions.<a href="#section-10.6-1" class="pilcrow">¶</a></p>
+<p id="section-10.6-2">A resource can apply combination-dependent semantics, and a token can
+also carry claims or authorization details that affect enforcement.<a href="#section-10.6-2" class="pilcrow">¶</a></p>
+<p id="section-10.6-3">This specification does not define scope combination semantics.
+Consumers need applicable resource policy when evaluating combinations.<a href="#section-10.6-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="rar-parameter-restrictions">
+<section id="section-10.7">
+        <h3 id="name-rar-parameter-restrictions">
+<a href="#section-10.7" class="section-number selfRef">10.7. </a><a href="#name-rar-parameter-restrictions" class="section-name selfRef">RAR Parameter Restrictions</a>
+        </h3>
+<p id="section-10.7-1">Type-level metadata must not cause a consumer to ignore restrictions in
+a concrete authorization details object.<a href="#section-10.7-1" class="pilcrow">¶</a></p>
+<p id="section-10.7-2">Unsafe transformations can widen document access, payment destinations,
+amounts, or other parameter-defined authority.<a href="#section-10.7-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="requirements-are-not-enforcement">
+<section id="section-10.8">
+        <h3 id="name-requirements-are-not-enforc">
+<a href="#section-10.8" class="section-number selfRef">10.8. </a><a href="#name-requirements-are-not-enforc" class="section-name selfRef">Requirements Are Not Enforcement</a>
+        </h3>
+<p id="section-10.8-1">Publishing sender-constraining, freshness, or single-use requirements
+does not implement them.<a href="#section-10.8-1" class="pilcrow">¶</a></p>
+<p id="section-10.8-2">Resources remain responsible for enforcement. Issuing a short-lived
+token does not prove recent authentication, and sender-constraining does
+not establish single use.<a href="#section-10.8-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="relationship-processing">
+<section id="section-10.9">
+        <h3 id="name-relationship-processing">
+<a href="#section-10.9" class="section-number selfRef">10.9. </a><a href="#name-relationship-processing" class="section-name selfRef">Relationship Processing</a>
+        </h3>
+<p id="section-10.9-1">Relationship graphs can contain cycles or excessive numbers of entries.<a href="#section-10.9-1" class="pilcrow">¶</a></p>
+<p id="section-10.9-2">Consumers <span class="bcp14">SHOULD</span> bound graph processing. Rank must not be used as a
+shortcut for proving containment.<a href="#section-10.9-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="consent-rendering">
+<section id="section-10.10">
+        <h3 id="name-consent-rendering">
+<a href="#section-10.10" class="section-number selfRef">10.10. </a><a href="#name-consent-rendering" class="section-name selfRef">Consent Rendering</a>
+        </h3>
+<p id="section-10.10-1">Human-readable descriptions can improve disclosure but do not prove
+comprehension.<a href="#section-10.10-1" class="pilcrow">¶</a></p>
+<p id="section-10.10-2">Descriptions <span class="bcp14">SHOULD</span> be displayed as untrusted text. Consumers <span class="bcp14">MUST NOT</span>
+execute markup, scripts, or instructions embedded in descriptions.<a href="#section-10.10-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="privacy-considerations">
+<section id="section-11">
+      <h2 id="name-privacy-considerations">
+<a href="#section-11" class="section-number selfRef">11. </a><a href="#name-privacy-considerations" class="section-name selfRef">Privacy Considerations</a>
+      </h2>
+<p id="section-11-1">Authority metadata can disclose supported operations, resource types,
+and authentication expectations.<a href="#section-11-1" class="pilcrow">¶</a></p>
+<p id="section-11-2">Publishers should consider whether public metadata exposes sensitive
+operational information.<a href="#section-11-2" class="pilcrow">¶</a></p>
+<p id="section-11-3">Published profiles <span class="bcp14">SHOULD</span> describe general access requirements rather
+than user-specific authentication state or individual authorization
+decisions.<a href="#section-11-3" class="pilcrow">¶</a></p>
+<p id="section-11-4">This specification does not require publication of personal data.<a href="#section-11-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="iana-considerations">
+<section id="section-12">
+      <h2 id="name-iana-considerations">
+<a href="#section-12" class="section-number selfRef">12. </a><a href="#name-iana-considerations" class="section-name selfRef">IANA Considerations</a>
+      </h2>
+<div id="oauth-authorization-server-metadata-registration">
+<section id="section-12.1">
+        <h3 id="name-oauth-authorization-server-">
+<a href="#section-12.1" class="section-number selfRef">12.1. </a><a href="#name-oauth-authorization-server-" class="section-name selfRef">OAuth Authorization Server Metadata Registration</a>
+        </h3>
+<p id="section-12.1-1">This specification requests registration in the "OAuth Authorization
+Server Metadata" registry established by <span>[<a href="#RFC8414" class="cite xref">RFC8414</a>]</span>:<a href="#section-12.1-1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-12.1-2.1">
+            <p id="section-12.1-2.1.1">Metadata Name: <code>authority_metadata</code><a href="#section-12.1-2.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-12.1-2.2">
+            <p id="section-12.1-2.2.1">Metadata Description: JSON object describing the authorization
+server's local authority vocabulary.<a href="#section-12.1-2.2.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-12.1-2.3">
+            <p id="section-12.1-2.3.1">Change Controller: IETF<a href="#section-12.1-2.3.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-12.1-2.4">
+            <p id="section-12.1-2.4.1">Specification Document: <a href="#metadata-parameter" class="auto internal xref">Section 2</a> of this document<a href="#section-12.1-2.4.1" class="pilcrow">¶</a></p>
+</li>
+        </ul>
+</section>
+</div>
+<div id="oauth-protected-resource-metadata-registration">
+<section id="section-12.2">
+        <h3 id="name-oauth-protected-resource-me">
+<a href="#section-12.2" class="section-number selfRef">12.2. </a><a href="#name-oauth-protected-resource-me" class="section-name selfRef">OAuth Protected Resource Metadata Registration</a>
+        </h3>
+<p id="section-12.2-1">This specification requests registration in the "OAuth Protected
+Resource Metadata" registry established by <span>[<a href="#RFC9728" class="cite xref">RFC9728</a>]</span>:<a href="#section-12.2-1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-12.2-2.1">
+            <p id="section-12.2-2.1.1">Metadata Name: <code>authority_metadata</code><a href="#section-12.2-2.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-12.2-2.2">
+            <p id="section-12.2-2.2.1">Metadata Description: JSON object describing resource-bound authority,
+reusable access requirement profiles, and attenuation relationships.<a href="#section-12.2-2.2.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-12.2-2.3">
+            <p id="section-12.2-2.3.1">Change Controller: IETF<a href="#section-12.2-2.3.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-12.2-2.4">
+            <p id="section-12.2-2.4.1">Specification Document: <a href="#metadata-parameter" class="auto internal xref">Section 2</a> of this document<a href="#section-12.2-2.4.1" class="pilcrow">¶</a></p>
+</li>
+        </ul>
+</section>
+</div>
+</section>
+</div>
+<div id="implementation-status">
+<section id="section-13">
+      <h2 id="name-implementation-status">
+<a href="#section-13" class="section-number selfRef">13. </a><a href="#name-implementation-status" class="section-name selfRef">Implementation Status</a>
+      </h2>
+<p id="section-13-1">This section is to be removed before publication as an RFC.<a href="#section-13-1" class="pilcrow">¶</a></p>
+<p id="section-13-2">No implementation status is asserted by this document.<a href="#section-13-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="acknowledgments">
+<section id="section-14">
+      <h2 id="name-acknowledgments">
+<a href="#section-14" class="section-number selfRef">14. </a><a href="#name-acknowledgments" class="section-name selfRef">Acknowledgments</a>
+      </h2>
+<p id="section-14-1">The problem framing was informed by OAuth working group discussions
+about scope semantics, RAR type semantics, agent authorization,
+Mission-bound authorization, and cross-resource workflows.<a href="#section-14-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="sec-combined-references">
+<section id="section-15">
+      <h2 id="name-references">
+<a href="#section-15" class="section-number selfRef">15. </a><a href="#name-references" class="section-name selfRef">References</a>
+      </h2>
+<div id="sec-normative-references">
+<section id="section-15.1">
+        <h3 id="name-normative-references">
+<a href="#section-15.1" class="section-number selfRef">15.1. </a><a href="#name-normative-references" class="section-name selfRef">Normative References</a>
+        </h3>
+<dl class="references">
+<dt id="RFC2119">[RFC2119]</dt>
+        <dd>
+<span class="refAuthor">Bradner, S.</span>, <span class="refTitle">"Key words for use in RFCs to Indicate Requirement Levels"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 2119</span>, <span class="seriesInfo">DOI 10.17487/RFC2119</span>, <time datetime="1997-03" class="refDate">March 1997</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc2119">https://www.rfc-editor.org/info/rfc2119</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC8174">[RFC8174]</dt>
+        <dd>
+<span class="refAuthor">Leiba, B.</span>, <span class="refTitle">"Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 8174</span>, <span class="seriesInfo">DOI 10.17487/RFC8174</span>, <time datetime="2017-05" class="refDate">May 2017</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc8174">https://www.rfc-editor.org/info/rfc8174</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC6749">[RFC6749]</dt>
+        <dd>
+<span class="refAuthor">Hardt, D., Ed.</span>, <span class="refTitle">"The OAuth 2.0 Authorization Framework"</span>, <span class="seriesInfo">RFC 6749</span>, <span class="seriesInfo">DOI 10.17487/RFC6749</span>, <time datetime="2012-10" class="refDate">October 2012</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc6749">https://www.rfc-editor.org/info/rfc6749</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC8414">[RFC8414]</dt>
+        <dd>
+<span class="refAuthor">Jones, M.</span>, <span class="refAuthor">Sakimura, N.</span>, and <span class="refAuthor">J. Bradley</span>, <span class="refTitle">"OAuth 2.0 Authorization Server Metadata"</span>, <span class="seriesInfo">RFC 8414</span>, <span class="seriesInfo">DOI 10.17487/RFC8414</span>, <time datetime="2018-06" class="refDate">June 2018</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc8414">https://www.rfc-editor.org/info/rfc8414</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC8707">[RFC8707]</dt>
+        <dd>
+<span class="refAuthor">Campbell, B.</span>, <span class="refAuthor">Bradley, J.</span>, and <span class="refAuthor">H. Tschofenig</span>, <span class="refTitle">"Resource Indicators for OAuth 2.0"</span>, <span class="seriesInfo">RFC 8707</span>, <span class="seriesInfo">DOI 10.17487/RFC8707</span>, <time datetime="2020-02" class="refDate">February 2020</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc8707">https://www.rfc-editor.org/info/rfc8707</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC9396">[RFC9396]</dt>
+        <dd>
+<span class="refAuthor">Lodderstedt, T.</span>, <span class="refAuthor">Richer, J.</span>, and <span class="refAuthor">B. Campbell</span>, <span class="refTitle">"OAuth 2.0 Rich Authorization Requests"</span>, <span class="seriesInfo">RFC 9396</span>, <span class="seriesInfo">DOI 10.17487/RFC9396</span>, <time datetime="2023-05" class="refDate">May 2023</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc9396">https://www.rfc-editor.org/info/rfc9396</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC9728">[RFC9728]</dt>
+        <dd>
+<span class="refAuthor">Jones, M.B.</span>, <span class="refAuthor">Hunt, P.</span>, and <span class="refAuthor">A. Parecki</span>, <span class="refTitle">"OAuth 2.0 Protected Resource Metadata"</span>, <span class="seriesInfo">RFC 9728</span>, <span class="seriesInfo">DOI 10.17487/RFC9728</span>, <time datetime="2025-04" class="refDate">April 2025</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc9728">https://www.rfc-editor.org/info/rfc9728</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC9470">[RFC9470]</dt>
+      <dd>
+<span class="refAuthor">Bertocci, V.</span> and <span class="refAuthor">B. Campbell</span>, <span class="refTitle">"OAuth 2.0 Step Up Authentication Challenge Protocol"</span>, <span class="seriesInfo">RFC 9470</span>, <span class="seriesInfo">DOI 10.17487/RFC9470</span>, <time datetime="2023-09" class="refDate">September 2023</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc9470">https://www.rfc-editor.org/info/rfc9470</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+</dl>
+</section>
+</div>
+<div id="sec-informative-references">
+<section id="section-15.2">
+        <h3 id="name-informative-references">
+<a href="#section-15.2" class="section-number selfRef">15.2. </a><a href="#name-informative-references" class="section-name selfRef">Informative References</a>
+        </h3>
+<dl class="references">
+<dt id="RFC7662">[RFC7662]</dt>
+        <dd>
+<span class="refAuthor">Richer, J., Ed.</span>, <span class="refTitle">"OAuth 2.0 Token Introspection"</span>, <span class="seriesInfo">RFC 7662</span>, <span class="seriesInfo">DOI 10.17487/RFC7662</span>, <time datetime="2015-10" class="refDate">October 2015</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc7662">https://www.rfc-editor.org/info/rfc7662</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC8693">[RFC8693]</dt>
+        <dd>
+<span class="refAuthor">Jones, M.</span>, <span class="refAuthor">Nadalin, A.</span>, <span class="refAuthor">Campbell, B., Ed.</span>, <span class="refAuthor">Bradley, J.</span>, and <span class="refAuthor">C. Mortimore</span>, <span class="refTitle">"OAuth 2.0 Token Exchange"</span>, <span class="seriesInfo">RFC 8693</span>, <span class="seriesInfo">DOI 10.17487/RFC8693</span>, <time datetime="2020-01" class="refDate">January 2020</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc8693">https://www.rfc-editor.org/info/rfc8693</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC8705">[RFC8705]</dt>
+        <dd>
+<span class="refAuthor">Campbell, B.</span>, <span class="refAuthor">Bradley, J.</span>, <span class="refAuthor">Sakimura, N.</span>, and <span class="refAuthor">T. Lodderstedt</span>, <span class="refTitle">"OAuth 2.0 Mutual-TLS Client Authentication and Certificate-Bound Access Tokens"</span>, <span class="seriesInfo">RFC 8705</span>, <span class="seriesInfo">DOI 10.17487/RFC8705</span>, <time datetime="2020-02" class="refDate">February 2020</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc8705">https://www.rfc-editor.org/info/rfc8705</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC9068">[RFC9068]</dt>
+        <dd>
+<span class="refAuthor">Bertocci, V.</span>, <span class="refTitle">"JSON Web Token (JWT) Profile for OAuth 2.0 Access Tokens"</span>, <span class="seriesInfo">RFC 9068</span>, <span class="seriesInfo">DOI 10.17487/RFC9068</span>, <time datetime="2021-10" class="refDate">October 2021</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc9068">https://www.rfc-editor.org/info/rfc9068</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC9449">[RFC9449]</dt>
+        <dd>
+<span class="refAuthor">Fett, D.</span>, <span class="refAuthor">Campbell, B.</span>, <span class="refAuthor">Bradley, J.</span>, <span class="refAuthor">Lodderstedt, T.</span>, <span class="refAuthor">Jones, M.</span>, and <span class="refAuthor">D. Waite</span>, <span class="refTitle">"OAuth 2.0 Demonstrating Proof of Possession (DPoP)"</span>, <span class="seriesInfo">RFC 9449</span>, <span class="seriesInfo">DOI 10.17487/RFC9449</span>, <time datetime="2023-09" class="refDate">September 2023</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc9449">https://www.rfc-editor.org/info/rfc9449</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="AUTHZEN-ISSUANCE">[AUTHZEN-ISSUANCE]</dt>
+        <dd>
+<span class="refAuthor">OpenID Foundation</span>, <span class="refTitle">"AuthZEN Profile for OAuth 2.0 Token Issuance"</span>, <time datetime="2026" class="refDate">2026</time>, <span>&lt;<a href="https://openid.github.io/authzen/authzen-oauth-token-issuance-1_0.html">https://openid.github.io/authzen/authzen-oauth-token-issuance-1_0.html</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="AUTHZEN-EXCHANGE">[AUTHZEN-EXCHANGE]</dt>
+      <dd>
+<span class="refAuthor">OpenID Foundation</span>, <span class="refTitle">"AuthZEN Binding for OAuth 2.0 Token Exchange"</span>, <time datetime="2026" class="refDate">2026</time>, <span>&lt;<a href="https://openid.github.io/authzen/authzen-oauth-token-exchange-1_0.html">https://openid.github.io/authzen/authzen-oauth-token-exchange-1_0.html</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+</dl>
+</section>
+</div>
+</section>
+</div>
+<div id="editorial-issues">
+<section id="appendix-A">
+      <h2 id="name-editorial-issues">
+<a href="#appendix-A" class="section-number selfRef">Appendix A. </a><a href="#name-editorial-issues" class="section-name selfRef">Editorial Issues</a>
+      </h2>
+<p id="appendix-A-1">This section is to be removed before publication as an RFC.<a href="#appendix-A-1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="appendix-A-2.1">
+          <p id="appendix-A-2.1.1">Determine whether the document title should remain
+"Resource-Bound Authority Metadata" or use "OAuth Authority Metadata"
+to reflect both publication contexts.<a href="#appendix-A-2.1.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="appendix-A-2.2">
+          <p id="appendix-A-2.2.1">Determine whether interoperable application action and resource
+vocabularies should be defined separately or remain entirely
+deployment-specific.<a href="#appendix-A-2.2.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="appendix-A-2.3">
+          <p id="appendix-A-2.3.1">Evaluate whether sender-constraining mechanism identifiers are needed
+in access requirement profiles.<a href="#appendix-A-2.3.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="appendix-A-2.4">
+          <p id="appendix-A-2.4.1">Evaluate whether additional metadata is needed to associate
+type-specific semantic definitions with RAR entries.<a href="#appendix-A-2.4.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="appendix-A-2.5">
+          <p id="appendix-A-2.5.1">Determine whether future revisions should support parameter-dependent
+access profiles and attenuation transformations.<a href="#appendix-A-2.5.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="appendix-A-2.6">
+          <p id="appendix-A-2.6.1">Determine whether extension registries are needed for authority
+kinds, relationship names, and access requirement members.<a href="#appendix-A-2.6.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="appendix-A-2.7">
+          <p id="appendix-A-2.7.1">Confirm the preferred versioned references for the AuthZEN OAuth
+issuance and exchange profiles before publication.<a href="#appendix-A-2.7.1" class="pilcrow">¶</a></p>
+</li>
+      </ul>
+</section>
+</div>
+<div id="document-history">
+<section id="appendix-B">
+      <h2 id="name-document-history">
+<a href="#appendix-B" class="section-number selfRef">Appendix B. </a><a href="#name-document-history" class="section-name selfRef">Document History</a>
+      </h2>
+<p id="appendix-B-1">-00<a href="#appendix-B-1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="appendix-B-2.1">
+          <p id="appendix-B-2.1.1">Initial working draft.<a href="#appendix-B-2.1.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="appendix-B-2.2">
+          <p id="appendix-B-2.2.1">Defined shared scope and RAR authority descriptions.<a href="#appendix-B-2.2.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="appendix-B-2.3">
+          <p id="appendix-B-2.3.1">Defined protected resource access requirement profiles.<a href="#appendix-B-2.3.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="appendix-B-2.4">
+          <p id="appendix-B-2.4.1">Defined inline attenuation relationships.<a href="#appendix-B-2.4.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="appendix-B-2.5">
+          <p id="appendix-B-2.5.1">Defined advisory family and rank ordering.<a href="#appendix-B-2.5.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="appendix-B-2.6">
+          <p id="appendix-B-2.6.1">Defined simpler AS-local authority metadata without a support flag,
+resource selectors, or authority identifiers.<a href="#appendix-B-2.6.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="appendix-B-2.7">
+          <p id="appendix-B-2.7.1">Left attenuation response behavior to AS policy.<a href="#appendix-B-2.7.1" class="pilcrow">¶</a></p>
+</li>
+      </ul>
+</section>
+</div>
+<div id="authors-addresses">
+<section id="appendix-C">
+      <h2 id="name-authors-address">
+<a href="#name-authors-address" class="section-name selfRef">Author's Address</a>
+      </h2>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Yaron Zehavi</span></div>
+<div dir="auto" class="left"><span class="org">Raiffeisen Bank International</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:yaron.zehavi@rbinternational.com" class="email">yaron.zehavi@rbinternational.com</a>
+</div>
+</address>
+</section>
+</div>
+<script>const toc = document.getElementById("toc");
+toc.querySelector("h2").addEventListener("click", e => {
+  toc.classList.toggle("active");
+});
+toc.querySelector("nav").addEventListener("click", e => {
+  toc.classList.remove("active");
+});
+</script>
+</body>
+</html>
