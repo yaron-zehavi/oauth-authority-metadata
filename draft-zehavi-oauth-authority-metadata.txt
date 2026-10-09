@@ -776,10 +776,6 @@ Table of Contents
      }
    }
 
-   An omitted requirement means that the profile makes no assertion
-   about that property.  It does not remove requirements established by
-   other resource policy.
-
 5.2.  Token Requirements
 
    The token object can contain:
