@@ -1,5 +1,5 @@
 ---
-title: OAuth 2.0 Resource-Bound Authority Metadata
+title: OAuth 2.0 Authority Metadata
 abbrev: OAuth Authority Metadata
 docname: draft-zehavi-oauth-authority-metadata-latest
 category: std
