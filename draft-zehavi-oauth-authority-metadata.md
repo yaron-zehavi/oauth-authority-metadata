@@ -203,6 +203,202 @@ Within either publication context:
 
 This specification permits partial publication. An authority consumer cannot assume that the metadata enumerates every authority accepted or issued by the publisher.
 
+## Examples
+
+The examples use illustrative application vocabularies. They are not standardized action, effect, or risk registries.
+
+### Protected Resource Metadata
+
+The following resource accepts a read scope, a management scope that includes read and update access, and a RAR type for document access.
+
+~~~ json
+{
+  "resource": "https://documents.example.com",
+  "authorization_servers": [
+    "https://as.example.com"
+  ],
+  "scopes_supported": [
+    "documents.read",
+    "documents.manage"
+  ],
+  "authority_metadata": {
+    "access_requirement_profiles": {
+      "standard_access": {
+        "token": {
+          "max_lifetime": 3600
+        }
+      },
+      "sensitive_access": {
+        "token": {
+          "max_age": 300,
+          "max_lifetime": 600,
+          "sender_constrained": true
+        },
+        "authentication": {
+          "acr_values": [
+            "urn:example:acr:phishing-resistant"
+          ],
+          "max_age": 300
+        }
+      }
+    },
+    "authorities": [
+      {
+        "id": "documents.read",
+        "kind": "scope",
+        "value": "documents.read",
+        "description": "Read documents accessible to the subject.",
+        "family": "document_access",
+        "rank": 10,
+        "authority": [
+          {
+            "resource_type": "urn:example:resource-type:document",
+            "actions": [
+              "urn:example:action:document:read"
+            ],
+            "effects": [
+              "urn:example:effect:data-disclosure"
+            ],
+            "risk": "low"
+          }
+        ],
+        "access_requirement_profile": "standard_access"
+      },
+      {
+        "id": "documents.manage",
+        "kind": "scope",
+        "value": "documents.manage",
+        "description": "Read and update documents accessible to the subject.",
+        "family": "document_access",
+        "rank": 20,
+        "authority": [
+          {
+            "resource_type": "urn:example:resource-type:document",
+            "actions": [
+              "urn:example:action:document:read",
+              "urn:example:action:document:update"
+            ],
+            "effects": [
+              "urn:example:effect:data-disclosure",
+              "urn:example:effect:state-change"
+            ],
+            "risk": "medium"
+          }
+        ],
+        "access_requirement_profile": "sensitive_access",
+        "relationships": [
+          {
+            "relation": "can_be_attenuated_to",
+            "target": "documents.read"
+          }
+        ]
+      },
+      {
+        "id": "document_access.rar",
+        "kind": "authorization_details_type",
+        "value": "urn:example:authorization-details:document-access",
+        "description": "Access to specified documents under type-specific restrictions.",
+        "family": "document_access",
+        "authority": [
+          {
+            "resource_type": "urn:example:resource-type:document",
+            "actions": [
+              "urn:example:action:document:read",
+              "urn:example:action:document:update"
+            ],
+            "effects": [
+              "urn:example:effect:data-disclosure",
+              "urn:example:effect:state-change"
+            ],
+            "properties": {
+              "semantics": "urn:example:semantics:document-access:v1"
+            }
+          }
+        ],
+        "access_requirement_profile": "sensitive_access"
+      }
+    ]
+  }
+}
+~~~
+
+The RAR entry does not receive a fixed rank in this example because its concrete authority varies with the requested actions and document restrictions.
+
+### Authorization Server Metadata
+
+The following AS publishes its local understanding of profile scopes.
+
+~~~ json
+{
+  "issuer": "https://as.example.com",
+  "scopes_supported": [
+    "profile.read",
+    "profile.manage"
+  ],
+  "authority_metadata": {
+    "authorities": [
+      {
+        "kind": "scope",
+        "value": "profile.read",
+        "description": "Read profile information.",
+        "family": "profile_access",
+        "rank": 10,
+        "authority": [
+          {
+            "resource_type": "urn:example:resource-type:profile",
+            "actions": [
+              "urn:example:action:profile:read"
+            ],
+            "effects": [
+              "urn:example:effect:data-disclosure"
+            ],
+            "risk": "low"
+          }
+        ]
+      },
+      {
+        "kind": "scope",
+        "value": "profile.manage",
+        "description": "Read and update profile information.",
+        "family": "profile_access",
+        "rank": 20,
+        "authority": [
+          {
+            "resource_type": "urn:example:resource-type:profile",
+            "actions": [
+              "urn:example:action:profile:read",
+              "urn:example:action:profile:update"
+            ],
+            "effects": [
+              "urn:example:effect:data-disclosure",
+              "urn:example:effect:state-change"
+            ],
+            "risk": "medium"
+          }
+        ]
+      }
+    ]
+  }
+}
+~~~
+
+There is no authority `id`, resource selector, access requirement profile, or attenuation relationship.
+
+### Attenuation Decision
+
+A client requests:
+
+~~~ text
+resource=https://documents.example.com
+scope=documents.manage
+~~~
+
+The resource metadata identifies `documents.read` as an attenuation target.
+
+An AS might determine that a read-only task does not need update authority. Its policy may then issue `documents.read` or decline the request and suggest that the client request `documents.read`.
+
+The metadata identifies the containment relationship. It does not determine which response the AS chooses or establish that read access satisfies the client's task.
+
 # Authority Entries
 
 ## Common attributes
@@ -625,223 +821,6 @@ This specification does not require an AS to search relationships, select the lo
 Where an AS changes granted authority, it remains responsible for the applicable response requirements of {{RFC6749}}, {{RFC9396}}, and the relevant grant or exchange protocol, including {{RFC8693}} where applicable.
 
 No new error code or remediation response is defined here.
-
-# Examples
-
-The examples use illustrative application vocabularies. They are not standardized action, effect, or risk registries.
-
-## Protected Resource Metadata
-
-The following resource accepts a read scope, a management scope that includes read and update access, and a RAR type for document access.
-
-~~~ json
-{
-  "resource": "https://documents.example.com",
-  "authorization_servers": [
-    "https://as.example.com"
-  ],
-  "scopes_supported": [
-    "documents.read",
-    "documents.manage"
-  ],
-  "authority_metadata": {
-    "access_requirement_profiles": {
-      "standard_access": {
-        "token": {
-          "max_lifetime": 3600
-        }
-      },
-      "sensitive_access": {
-        "token": {
-          "max_age": 300,
-          "max_lifetime": 600,
-          "sender_constrained": true
-        },
-        "authentication": {
-          "acr_values": [
-            "urn:example:acr:phishing-resistant"
-          ],
-          "max_age": 300
-        }
-      }
-    },
-    "authorities": [
-      {
-        "id": "documents.read",
-        "kind": "scope",
-        "value": "documents.read",
-        "description": "Read documents accessible to the subject.",
-        "family": "document_access",
-        "rank": 10,
-        "authority": [
-          {
-            "resource_type": "urn:example:resource-type:document",
-            "actions": [
-              "urn:example:action:document:read"
-            ],
-            "effects": [
-              "urn:example:effect:data-disclosure"
-            ],
-            "risk": "low"
-          }
-        ],
-        "access_requirement_profile": "standard_access"
-      },
-      {
-        "id": "documents.manage",
-        "kind": "scope",
-        "value": "documents.manage",
-        "description": "Read and update documents accessible to the subject.",
-        "family": "document_access",
-        "rank": 20,
-        "authority": [
-          {
-            "resource_type": "urn:example:resource-type:document",
-            "actions": [
-              "urn:example:action:document:read",
-              "urn:example:action:document:update"
-            ],
-            "effects": [
-              "urn:example:effect:data-disclosure",
-              "urn:example:effect:state-change"
-            ],
-            "risk": "medium"
-          }
-        ],
-        "access_requirement_profile": "sensitive_access",
-        "relationships": [
-          {
-            "relation": "can_be_attenuated_to",
-            "target": "documents.read"
-          }
-        ]
-      },
-      {
-        "id": "document_access.rar",
-        "kind": "authorization_details_type",
-        "value": "urn:example:authorization-details:document-access",
-        "description": "Access to specified documents under type-specific restrictions.",
-        "family": "document_access",
-        "authority": [
-          {
-            "resource_type": "urn:example:resource-type:document",
-            "actions": [
-              "urn:example:action:document:read",
-              "urn:example:action:document:update"
-            ],
-            "effects": [
-              "urn:example:effect:data-disclosure",
-              "urn:example:effect:state-change"
-            ],
-            "properties": {
-              "semantics": "urn:example:semantics:document-access:v1"
-            }
-          }
-        ],
-        "access_requirement_profile": "sensitive_access"
-      }
-    ]
-  }
-}
-~~~
-
-The RAR entry does not receive a fixed rank in this example because its
-concrete authority varies with the requested actions and document
-restrictions.
-
-A concrete request might be:
-
-~~~ json
-[
-  {
-    "type": "urn:example:authorization-details:document-access",
-    "actions": ["read"],
-    "locations": [
-      "https://documents.example.com/documents/123"
-    ]
-  }
-]
-~~~
-
-The consumer evaluates that object using the type's semantic rules.
-The type-level metadata does not imply that the request grants update
-access.
-
-## Authorization Server Metadata
-
-The following AS publishes its local understanding of profile scopes.
-
-~~~ json
-{
-  "issuer": "https://as.example.com",
-  "scopes_supported": [
-    "profile.read",
-    "profile.manage"
-  ],
-  "authority_metadata": {
-    "authorities": [
-      {
-        "kind": "scope",
-        "value": "profile.read",
-        "description": "Read profile information.",
-        "family": "profile_access",
-        "rank": 10,
-        "authority": [
-          {
-            "resource_type": "urn:example:resource-type:profile",
-            "actions": [
-              "urn:example:action:profile:read"
-            ],
-            "effects": [
-              "urn:example:effect:data-disclosure"
-            ],
-            "risk": "low"
-          }
-        ]
-      },
-      {
-        "kind": "scope",
-        "value": "profile.manage",
-        "description": "Read and update profile information.",
-        "family": "profile_access",
-        "rank": 20,
-        "authority": [
-          {
-            "resource_type": "urn:example:resource-type:profile",
-            "actions": [
-              "urn:example:action:profile:read",
-              "urn:example:action:profile:update"
-            ],
-            "effects": [
-              "urn:example:effect:data-disclosure",
-              "urn:example:effect:state-change"
-            ],
-            "risk": "medium"
-          }
-        ]
-      }
-    ]
-  }
-}
-~~~
-
-There is no support flag, authority `id`, resource selector, access
-requirement profile, or attenuation relationship.
-
-## Attenuation Decision
-
-A client requests:
-
-~~~ text
-resource=https://documents.example.com
-scope=documents.manage
-~~~
-
-The resource metadata identifies `documents.read` as an attenuation target.
-
-An AS might determine that a read-only task does not need update authority. Its policy may then issue `documents.read` or decline the request and suggest that the client request `documents.read`.
-
-The metadata identifies the containment relationship. It does not determine which response the AS chooses or establish that read access satisfies the client's task.
 
 # Security Considerations
 
