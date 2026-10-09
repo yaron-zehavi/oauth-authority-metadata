@@ -29,7 +29,6 @@ normative:
   RFC8707:
   RFC9396:
   RFC9728:
-  RFC9470:
 
 informative:
   RFC7662:
@@ -54,56 +53,30 @@ informative:
 
 --- abstract
 
-OAuth metadata advertises supported scopes and authorization details
-types, but does not provide a common metadata structure for describing
-the authority those values represent.
+While OAuth metadata advertises supported scopes and authorization details types, no metadata describes the **authority** those values represent.
 
-This specification defines authority metadata extensions for OAuth 2.0
-Protected Resource Metadata and OAuth 2.0 Authorization Server Metadata.
-A protected resource can describe the authority it associates with scopes
-and Rich Authorization Requests types, reusable access requirement
-profiles, and relationships identifying lower-authority alternatives.
-An authorization server can publish a simpler description of its local
-authority vocabulary.
+This specification defines authority metadata extensions for OAuth 2.0 Protected Resource Metadata and OAuth 2.0 Authorization Server Metadata.
 
-This metadata can inform authorization requests, token issuance, token
-exchange, policy evaluation, consent rendering, and least-privilege
-selection. It does not prescribe an authorization server decision
-algorithm or require automatic attenuation.
+A protected resource can describe the authority it associates with scopes and RAR types, reusable access requirements profiles, and relationships identifying lower-authority alternatives.
+
+An authorization server can publish a simpler description of its local authority vocabulary.
+
+This metadata can inform authentication and authorization decisions before token issuance and exchange, as well as support authority attenuation.
 
 --- middle
 
 # Introduction
 
-OAuth 2.0 {{RFC6749}} uses scope values to express requested and granted
-access. OAuth 2.0 Rich Authorization Requests (RAR) {{RFC9396}} provides
-the `authorization_details` parameter for more structured authorization
-requests.
+OAuth 2.0 {{RFC6749}} uses scope values to express requested and granted access.
+OAuth 2.0 Rich Authorization Requests (RAR) {{RFC9396}} provides the `authorization_details` parameter for structured authorization requests.
 
-OAuth 2.0 Authorization Server Metadata {{RFC8414}} and OAuth 2.0
-Protected Resource Metadata {{RFC9728}} enable discovery of information
-about authorization servers and protected resources. Supported scope
-values can be advertised using `scopes_supported`. RAR defines
-authorization server metadata for supported authorization details types.
+OAuth 2.0 Authorization Server Metadata {{RFC8414}} and OAuth 2.0 Protected Resource Metadata {{RFC9728}} enable discovery of information about authorization servers and protected resources. Supported scope values and RAR types can be advertised using `scopes_supported` and `authorization_details_types_supported`.
 
-A supported scope value does not, by itself, describe the operations,
-resources, or effects that the scope authorizes. Similarly, an
-authorization details type identifies a type-specific authorization
-structure, but discovering its name does not necessarily provide a
-consumer with a machine-processable description of its authority.
+Supported scope values and RAR types are only identifiers, which do not provide a description of their authority: the operations, resources, or effects they authorizes.
 
-For example, a scope named `payments.manage` might permit reading,
-creating, executing, or deleting payment instructions. Its name alone
-does not establish which operations are permitted.
+For example, a scope named `payments.manage` might permit reading, creating, executing, or deleting payment instructions. Its name alone does not establish which operations are permitted.
 
-RAR addresses request structure and type-specific authorization data.
-However, a JSON schema or a type name alone does not necessarily establish
-the authority represented by a particular authorization details object.
-A consumer still needs to understand the type's semantic rules and the
-meaning of its parameters.
-
-These gaps matter when an authorization server or policy decision point
-evaluates whether requested authority:
+These gaps matter when an authorization server or policy decision point evaluates whether requested authority:
 
 * is permitted by an existing grant or local policy;
 * aligns with an approved task, purpose, or Mission;
@@ -111,25 +84,18 @@ evaluates whether requested authority:
 * has a lower-authority alternative;
 * requires particular token presentation or authentication properties.
 
-This specification defines a common metadata structure for authority
-descriptions. It supports both scope values and RAR types.
+This specification defines a common metadata structure to describe authority. It supports both scope values and RAR types.
 
 ## Publication Roles
 
 The publication roles are distinct:
 
-* A protected resource publishes the authority semantics it applies when
-  enforcing access.
-* An authorization server publishes its local understanding of the
-  authority vocabulary it uses when making issuance decisions.
+* A protected resource publishes the authority semantics it applies when enforcing access.
+* An authorization server publishes its local understanding of the authority vocabulary it uses when making issuance decisions.
 
-Protected resource metadata is resource-bound through the `resource`
-member defined by {{RFC9728}}.
+Protected resource metadata is resource-bound through the `resource` attribute defined by {{RFC9728}}.
 
-Authorization server metadata describes an issuer-local authority
-vocabulary. It is not required to identify a particular protected
-resource and does not, by itself, establish how a resource enforces an
-issued authority.
+Authorization server metadata describes an issuer-local authority vocabulary. It does not establish how a resource enforces an issued authority.
 
 ## Scope
 
@@ -155,17 +121,11 @@ This specification does not define:
 
 ## Relationship to AuthZEN
 
-The AuthZEN OAuth token issuance profile {{AUTHZEN-ISSUANCE}} and token
-exchange binding {{AUTHZEN-EXCHANGE}} provide mechanisms for policy
-evaluation in authorization server issuance and exchange flows.
+The AuthZEN OAuth token issuance profile {{AUTHZEN-ISSUANCE}} and token exchange binding {{AUTHZEN-EXCHANGE}} provide mechanisms for policy evaluation in authorization server issuance and exchange flows.
 
-Authority metadata can provide semantic information used in those
-evaluations. For example, a deployment can resolve a requested scope into
-an authority description before consulting a policy decision point.
+This document provides semantic information which can be used in those evaluations. For example, a deployment can resolve a requested scope into an authority description before consulting a policy decision point.
 
-This specification does not change those profiles or define an additional
-AuthZEN request member. The transport of resolved metadata to a policy
-decision point is determined by the applicable profile or deployment.
+This specification does not change those profiles or define an additional AuthZEN request attribute. The transport of resolved metadata to a policy decision point is determined by the applicable profile or deployment.
 
 ## Conventions and Terminology
 
@@ -203,9 +163,7 @@ Authority family:
 
 # Metadata Parameter {#metadata-parameter}
 
-This specification defines the optional JSON object member
-`authority_metadata` for both OAuth Authorization Server Metadata
-{{RFC8414}} and OAuth Protected Resource Metadata {{RFC9728}}.
+This specification defines the optional attribute `authority_metadata` for both OAuth Authorization Server Metadata {{RFC8414}} and OAuth Protected Resource Metadata {{RFC9728}}.
 
 The structure depends on the publication context.
 
@@ -217,12 +175,10 @@ In protected resource metadata, `authority_metadata` contains:
 : REQUIRED. An array of authority entries.
 
 `access_requirement_profiles`:
-: OPTIONAL. An object whose member names identify reusable access
-  requirement profiles and whose member values contain those profiles.
+: OPTIONAL. An object whose attribute names identify reusable access
+  requirement profiles and whose attribute values describe those profiles.
 
-The protected resource context is supplied by the enclosing document's
-`resource` member. Authority identifiers, profile names, families, and
-relationship targets are local to that metadata document.
+The protected resource context is supplied by the enclosing document's `resource` attribute. Authority identifiers, profile names, families, and relationship targets are local to that metadata document.
 
 ## Authorization Server Metadata
 
@@ -231,18 +187,7 @@ In authorization server metadata, `authority_metadata` contains:
 `authorities`:
 : REQUIRED. An array of authorization server authority entries.
 
-Authorization server authority entries describe the publisher's local
-authority vocabulary. They do not contain resource selectors, access
-requirement profile references, or attenuation relationships in this
-version of the specification.
-
-The presence of `authority_metadata` indicates that the authorization
-server publishes metadata using this specification. No separate support
-flag is defined.
-
-Publication does not imply that the authorization server consumes
-protected resource authority metadata, performs attenuation, or uses a
-particular policy engine.
+Authorization server authority entries describe the publisher's local authority vocabulary. They do not contain resource selectors, access requirement profile references, or attenuation relationships.
 
 ## Common Requirements
 
@@ -256,15 +201,13 @@ Within either publication context:
 * Omission of an authority entry MUST NOT be interpreted as a statement
   that the authority is unsupported or unrestricted.
 
-This specification permits partial publication. An authority consumer
-cannot assume that the metadata enumerates every authority accepted or
-issued by the publisher.
+This specification permits partial publication. An authority consumer cannot assume that the metadata enumerates every authority accepted or issued by the publisher.
 
 # Authority Entries
 
-## Common Members
+## Common attributes
 
-Authority entries use the following common members.
+Authority entries use the following common attributes.
 
 ### kind
 
@@ -278,18 +221,15 @@ This specification defines:
 `authorization_details_type`:
 : The entry describes a RAR authorization details type.
 
-Consumers MUST NOT interpret an unrecognized `kind` as one of the kinds
-defined here.
+Consumers MUST NOT interpret an unrecognized `kind` as one of the kinds defined here.
 
 ### value
 
 REQUIRED. A non-empty string.
 
-For `kind` equal to `scope`, `value` identifies one scope value, not a
-space-separated collection of scope values.
+For `kind` equal to `scope`, `value` identifies one scope value, not a space-separated collection of scope values.
 
-For `kind` equal to `authorization_details_type`, `value` identifies the
-value of the RAR object's `type` member.
+For `kind` equal to `authorization_details_type`, `value` identifies the value of the RAR object's `type` attribute.
 
 Matching of `kind` and `value` is exact and case-sensitive.
 
@@ -297,18 +237,14 @@ Matching of `kind` and `value` is exact and case-sensitive.
 
 OPTIONAL. A human-readable description of the authority.
 
-Consumers MUST treat this member as descriptive text, not executable
-policy. Natural-language descriptions do not replace the structured
-authority description or applicable type semantics.
+Consumers MUST treat this attribute as descriptive text, not executable policy.
+Natural-language descriptions do not replace the structured authority description or applicable type semantics.
 
 ### family
 
-OPTIONAL. A non-empty string identifying a publisher-defined authority
-family.
+OPTIONAL. A non-empty string identifying a publisher-defined authority family.
 
-A family identifier has meaning only within the publishing metadata
-document. The same string in another publisher's metadata does not
-establish a shared vocabulary.
+A family identifier has meaning only within the publishing metadata document. The same string in another publisher's metadata does not establish a shared vocabulary.
 
 ### rank
 
@@ -317,24 +253,21 @@ the specified `family`.
 
 An entry containing `rank` MUST also contain `family`.
 
-Lower values express the publisher's preferred ordering toward lower
-authority within that family. Equal values do not imply equivalent
-authority.
+Lower values express the publisher's preferred ordering toward lower authority within that family. Equal values do not imply equivalent authority.
 
-Rank does not prove containment, interchangeability, or suitability for
-a task. See {{ordering}}.
+Rank does not prove containment, interchangeability, or suitability for a task. See {{ordering}}.
 
 ### authority
 
 REQUIRED. A non-empty array of structured authority descriptions.
 
-Each element describes an aspect of the authority represented by the
-entry. Multiple elements describe the combined authority of the entry;
+Each element describes an aspect of the authority represented by the entry.
+Multiple elements describe the combined authority of the entry;
 they are not alternative choices.
 
 The authority descriptions are defined in {{structured-authority}}.
 
-## Protected Resource Members
+## Protected Resource attributes
 
 Protected resource authority entries additionally use:
 
@@ -343,32 +276,25 @@ Protected resource authority entries additionally use:
   document. Every `id` MUST be unique within the document.
 
 `access_requirement_profile`:
-: OPTIONAL. A string naming one entry in
-  `access_requirement_profiles`.
+: OPTIONAL. A string naming one entry in `access_requirement_profiles`.
 
 `relationships`:
-: OPTIONAL. An array of inline relationship objects as defined in
-  {{relationships}}.
+: OPTIONAL. An array of inline relationship objects as defined in {{relationships}}.
 
-A referenced access requirement profile MUST exist in the same
-`authority_metadata` object.
+A referenced access requirement profile MUST exist in the same `authority_metadata` object.
 
-This version supports one profile reference per authority entry.
+This document supports one profile reference per authority entry.
 Profile inheritance and composition are not defined.
 
-## Authorization Server Members
+## Authorization Server attributes
 
-Authorization server authority entries are identified by their
-combination of `kind` and `value`.
+Authorization server authority entries are identified by their combination of `kind` and `value`.
 
-An authorization server authority entry MUST NOT contain `id`,
-`access_requirement_profile`, or `relationships`.
+An authorization server authority entry MUST NOT contain `id`, `access_requirement_profile`, or `relationships`.
 
-Authorization server authority metadata MUST NOT contain
-`access_requirement_profiles`.
+Authorization server authority metadata MUST NOT contain `access_requirement_profiles`.
 
-These restrictions distinguish the AS's local authority descriptions
-from a protected resource's access enforcement expectations.
+These restrictions distinguish the AS's local authority descriptions from a protected resource's access enforcement expectations.
 
 # Structured Authority Descriptions {#structured-authority}
 
@@ -410,21 +336,15 @@ For example:
 }
 ~~~
 
-This specification defines the structure of these descriptions, not a
-universal vocabulary for their values.
+This specification defines the structure of these descriptions, not a universal vocabulary for their values.
 
-Publishers SHOULD use stable identifiers and documented vocabularies.
-URI identifiers are RECOMMENDED when vocabulary values are intended to
-be understood across independently operated systems.
+Publishers SHOULD use stable identifiers and documented vocabularies. URI identifiers are RECOMMENDED when vocabulary values are intended to be understood across independently operated systems.
 
-A consumer MUST NOT assume that identical local strings from different
-publishers have identical semantics.
+A consumer MUST NOT assume that identical local strings from different publishers have identical semantics.
 
 ## Completeness and Interpretation
 
-An authority description identifies the authority semantics known to
-its publisher. It does not independently establish a complete policy
-model.
+An authority description identifies the authority semantics known to its publisher. It does not independently establish a complete policy model.
 
 In particular:
 
@@ -436,37 +356,25 @@ In particular:
 * A risk label does not establish an ordering of access rights.
 * Missing `properties` do not mean that no restrictions exist.
 
-A consumer performing semantic authorization evaluation needs the
-applicable vocabulary definitions, RAR type semantics, request values,
-and local policy.
+A consumer performing semantic authorization evaluation needs the applicable vocabulary definitions, RAR type semantics, request values, and local policy.
 
 ## RAR Interpretation
 
-For a RAR entry, the authority description applies to the type identified
-by `value`.
+For a RAR entry, the authority description applies to the type identified by `value`.
 
-The authority represented by a concrete RAR object depends on that
-object's parameters and the type-specific rules defined under
-{{RFC9396}}.
+The authority represented by a concrete RAR object depends on that object's parameters and the type-specific rules defined under {{RFC9396}}.
 
-The metadata does not replace those rules or duplicate the type's field
-schema. This specification defines no `binding_fields` member.
+The metadata does not replace those rules or duplicate the type's field schema.
 
-For example, two objects of the same payment type may grant different
-authority because they identify different accounts, beneficiaries,
-amounts, or actions.
+For example, two objects of the same payment type may grant different authority because they identify different accounts, beneficiaries, amounts, or actions.
 
-A consumer MUST NOT determine concrete RAR authority solely from its
-type-level authority metadata.
+A consumer MUST NOT determine concrete RAR authority solely from its type-level authority metadata.
 
 # Access Requirement Profiles {#access-profiles}
 
-Access requirement profiles are published only in protected resource
-metadata.
+Access requirement profiles are published only in protected resource metadata.
 
-A profile describes properties the resource requires when accepting a
-token carrying the associated authority. It does not instruct an
-authorization server to issue a token or grant that authority.
+A profile describes properties the resource requires when accepting a token carrying the associated authority. It does not instruct an authorization server to issue a token or grant that authority.
 
 ## Profile Structure
 
@@ -483,8 +391,7 @@ Each profile can contain:
 `authentication`:
 : OPTIONAL. End-user authentication requirements.
 
-Profile names are local, case-sensitive identifiers. They do not imply
-standardized security levels.
+Profile names are local, case-sensitive identifiers. They do not imply standardized security levels.
 
 For example:
 
@@ -509,9 +416,7 @@ For example:
 }
 ~~~
 
-An omitted requirement means that the profile makes no assertion about
-that property. It does not remove requirements established by other
-resource policy.
+An omitted requirement means that the profile makes no assertion about that property. It does not remove requirements established by other resource policy.
 
 ## Token Requirements
 
@@ -525,79 +430,17 @@ The `token` object can contain:
 : OPTIONAL. A positive integer expressing, in seconds, the maximum
   acceptable total lifetime of the access token.
 
-`single_use`:
-: OPTIONAL. A boolean. If `true`, the access token must be accepted for
-  at most one protected operation.
-
 `sender_constrained`:
 : OPTIONAL. A boolean. If `true`, presentation must satisfy an
   applicable sender-constraining mechanism.
 
-A boolean value of `false` means that this profile does not require the
-property. It does not prohibit the property or override stricter policy.
-
-### Token Freshness and Lifetime
-
-`max_age` and `max_lifetime` have different meanings.
-
-For example:
-
-~~~ json
-{
-  "max_age": 300,
-  "max_lifetime": 3600
-}
-~~~
-
-describes a token that may have a one-hour total lifetime but is accepted
-under this profile only within five minutes of issuance.
-
-Token issuance time and expiration MUST be obtained from authenticated
-token data, trusted introspection, or equivalent trusted state. An
-untrusted client timestamp cannot establish token freshness.
-
-JWT access tokens and introspection are possible sources of such data;
-see {{RFC9068}} and {{RFC7662}}.
-
-This specification does not establish a clock-skew allowance. The
-deployment determines an appropriate allowance and applies it
-consistently.
-
-### Single-Use Semantics
-
-If `single_use` is `true`, a conforming resource MUST ensure that the
-same access token is not accepted for more than one protected operation
-at that resource.
-
-Consumption MUST be coordinated atomically across resource instances
-that accept the token. Merely publishing the requirement or including
-a token identifier does not provide replay protection.
-
-This specification does not define a universal token consumption
-protocol. A deployment needs a replay-resistant implementation and a
-trusted means of identifying the token.
-
-Single use is not equivalent to exactly-once business execution. It
-does not guarantee completion, rollback, or safe retry after an
-ambiguous failure.
-
-If one token carries several authorities, a single-use requirement
-applies to the token as a whole, not separately to each authority.
+A boolean value of `false` means that this profile does not require the property. It does not prohibit the property or override stricter policy.
 
 ### Sender-Constraining
 
-`sender_constrained: true` requires the resource to validate the proof
-required by the applicable sender-constraining mechanism.
+`sender_constrained: true` means the resource will reject a token that is not sender-constrained.
 
-Examples include certificate-bound access tokens {{RFC8705}} and DPoP
-{{RFC9449}}.
-
-This member does not select a mechanism. Mechanism selection depends on
-the token profile, applicable discovery metadata, and deployment
-agreement.
-
-Sender-constraining is not single-use token semantics. A sender-constrained
-token may still authorize several operations unless restricted separately.
+This attribute does not select a mechanism. Mechanism selection depends on the token profile, applicable discovery metadata, and deployment agreement.
 
 ## Authentication Requirements
 
@@ -610,59 +453,35 @@ The `authentication` object can contain:
 `max_age`:
 : OPTIONAL. A positive integer expressing, in seconds, the maximum
   acceptable elapsed time since the relevant end-user authentication
-  event.
+  event, represented in the token's introspection response's `auth_time` claim.
 
-If both members are present, both requirements apply.
+If both attributes are present, both requirements apply.
 
-`acr_values` lists alternatives, not cumulative authentication
-requirements. The resource accepts an authentication context recognized
-as satisfying at least one listed value.
+`acr_values` lists alternatives, not cumulative authentication requirements. The resource accepts an authentication context recognized as satisfying at least one listed value.
 
-This specification does not define a numerical or lexical ordering of
-ACR values. An ACR string MUST NOT be interpreted as stronger than
-another merely because of its spelling.
-
-Authentication information MUST be derived from trusted token data,
-trusted introspection, or equivalent authenticated information.
-
-{{RFC9470}} defines related authentication strength and recentness
-requirements and a mechanism for signaling insufficient user
-authentication.
-
-Authentication freshness is distinct from token freshness. Issuing a
-new token does not necessarily establish a new authentication event.
-
-These requirements do not establish approval of a particular action or
-continuous human presence.
+Authentication freshness is distinct from token freshness. Issuing a new token does not necessarily establish a new authentication event.
 
 ## Default Resource Policy
 
-If an authority entry has no `access_requirement_profile`, no additional
-profile is declared for that entry.
+If an authority entry has no `access_requirement_profile`, no additional profile is declared for that entry.
 
 Resource-wide policy and other applicable requirements still apply.
 
-A profile cannot weaken a requirement established by the resource's
-other enforcement policy.
+A profile cannot weaken a requirement established by the resource's other enforcement policy.
 
 ## Multiple Authorities in a Token
 
 An access token may carry more than one authority.
 
-This specification does not prescribe how an authorization server
-combines the associated profiles. It may issue separate tokens, satisfy
-a common set of requirements, or decline a request according to policy.
+This specification does not prescribe how an authorization server combines the associated profiles. It may satisfy a common set of requirements, or decline a request according to policy.
 
-At enforcement time, the resource applies the requirements relevant to
-the authority used for the operation.
+At enforcement time, the resource applies the requirements relevant to the authority used for the operation.
 
-If an operation requires multiple authorities, all applicable requirements
-must be satisfied. A weaker profile cannot cancel a stronger requirement.
+If an operation requires multiple authorities, all applicable requirements must be satisfied. A weaker profile cannot cancel a stronger requirement.
 
 # Authority Relationships {#relationships}
 
 Protected resource authority entries can publish inline `relationships`.
-
 Each relationship object contains:
 
 `relation`:
@@ -672,15 +491,12 @@ Each relationship object contains:
 : REQUIRED. The `id` of another authority entry in the same metadata
   document.
 
-The containing authority entry is the relationship source. No `from`
-member is used.
-
-This version defines one relationship:
+The containing authority entry is the relationship source. No `from` attribute is used.
+This document defines one relationship:
 
 * `can_be_attenuated_to`
 
-The target MUST exist, MUST differ from the source, and MUST be in the
-same metadata document.
+The target MUST exist, MUST differ from the source, and MUST be in the same metadata document.
 
 Both entries MUST declare the same `family`.
 
@@ -695,58 +511,39 @@ The relationship:
 }
 ~~~
 
-asserts that the target represents no greater authority than the source
-under the protected resource's authority semantics.
+asserts that the target represents no greater authority than the source under the protected resource's authority semantics.
 
-This is a containment assertion, not merely a statement that the target
-is lower risk or belongs to an earlier workflow phase.
+This is a containment assertion, not merely a statement that the target is lower risk or belongs to an earlier workflow phase.
 
-For example, if `documents.manage` authorizes both reading and modifying
-documents, it can declare attenuation to a scope that authorizes reading
-the same documents.
+For example, if `documents.manage` authorizes both reading and modifying documents, it can declare attenuation to a scope that authorizes reading the same documents.
 
-Conversely, a payment execution authority does not automatically contain
-payment preparation or payment status access. Those are different
-operations. A relationship is valid only if the resource's actual
-semantics establish the asserted containment.
+Conversely, a payment execution authority does not automatically contain payment preparation or payment status access. Those are different operations. A relationship is valid only if the resource's actual semantics establish the asserted containment.
 
-A publisher MUST NOT declare this relationship based solely on rank,
-risk, or perceived similarity.
+A publisher MUST NOT declare this relationship based solely on rank, risk, or perceived similarity.
 
-The relationship does not assert that the target satisfies the client's
-task, purpose, or Mission.
+The relationship does not assert that the target satisfies the client's task, purpose, or Mission.
 
 ## RAR and Cross-Kind Relationships
 
 Relationships can identify targets of a different `kind`.
 
-However, identifying a target does not define a transformation of
-authorization request data.
+However, identifying a target does not define a transformation of authorization request data.
 
-For RAR types, authority comparison may depend on concrete object
-parameters. An asserted relationship does not authorize dropping,
-widening, or changing parameter restrictions.
+For RAR types, authority comparison may depend on concrete object parameters. An asserted relationship does not authorize dropping, widening, or changing parameter restrictions.
 
-A consumer needs applicable type semantics or configured policy to
-establish a safe concrete transformation. This specification does not
-define that transformation.
+A consumer needs applicable type semantics or configured policy to establish a safe concrete transformation. This specification does not define that transformation.
 
-If containment cannot be established for the concrete request, the
-relationship alone is insufficient grounds for replacement.
+If containment cannot be established for the concrete request, the relationship alone is insufficient grounds for replacement.
 
 ## Relationship Interpretation
 
-Containment is transitive when the same resource context and compatible
-semantic restrictions apply.
+Containment is transitive when the same resource context and compatible semantic restrictions apply.
 
-A consumer is not required to compute a transitive closure, select a
-target, or perform substitution.
+A consumer is not required to compute a transitive closure, select a target, or perform substitution.
 
-Unrecognized relationship names MUST NOT be interpreted as
-`can_be_attenuated_to`.
+Unrecognized relationship names MUST NOT be interpreted as `can_be_attenuated_to`.
 
-Consumers traversing relationships SHOULD apply limits to traversal
-depth and visited entries to avoid unbounded processing.
+Consumers traversing relationships SHOULD apply limits to traversal depth and visited entries to avoid unbounded processing.
 
 # Authority Ordering {#ordering}
 
@@ -768,20 +565,13 @@ Rank MUST NOT be used by itself to establish:
 * satisfaction of a purpose or Mission;
 * comparable security or risk across publishers.
 
-Where an attenuation relationship and ranks are both published, the
-target rank SHOULD be no greater than the source rank.
-
-Ranks can be equal for incomparable authorities. Equal ranks do not
-identify a tie-breaking rule.
+Where an attenuation relationship and ranks are both published, the target rank SHOULD be no greater than the source rank.
 
 # Authorization Server Use
 
-An authorization server can use this metadata when processing an
-authorization request, token request, or token exchange request.
+An authorization server can use this metadata when processing an authorization request, token request, or token exchange request.
 
-A resource indicator {{RFC8707}} can identify the relevant protected
-resource. The server can obtain its metadata using {{RFC9728}} or use
-trusted cached metadata or configured information.
+A resource indicator {{RFC8707}} can identify the relevant protected resource. The server can obtain its metadata using {{RFC9728}} or use trusted cached metadata or configured information.
 
 Possible uses include:
 
@@ -803,26 +593,19 @@ An AS-published authority description does not imply that:
 * the AS will issue it;
 * any particular resource accepts it.
 
-Similarly, a resource's published authority description does not authorize
-issuance by an AS.
+Similarly, a resource's published authority description does not authorize issuance by an AS.
 
-Existing grant restrictions, client policy, subject authority, and
-applicable protocol rules remain in effect.
+Existing grant restrictions, client policy, subject authority, and applicable protocol rules remain in effect.
 
 ## Metadata Sources and Conflicts
 
-An authorization server may use local policy or configuration when
-protected resource metadata is unavailable.
+An authorization server may use local policy or configuration when protected resource metadata is unavailable.
 
-AS-published metadata expresses the AS's local understanding. It does not
-override the protected resource's enforcement semantics.
+AS-published metadata expresses the AS's local understanding. It does not override the protected resource's enforcement semantics.
 
-If AS and resource descriptions conflict, this specification does not
-mandate a precedence algorithm or require issuance. The conflict is an
-input to trust configuration and local policy.
+If AS and resource descriptions conflict, this specification does not mandate a precedence algorithm or require issuance. The conflict is an input to trust configuration and local policy.
 
-A consumer MUST NOT treat an unresolved semantic conflict as proof of
-safe attenuation or authority alignment.
+A consumer MUST NOT treat an unresolved semantic conflict as proof of safe attenuation or authority alignment.
 
 ## Attenuation Options
 
@@ -833,29 +616,23 @@ Possible behaviors include:
 * issuing the originally requested authority;
 * issuing lower authority where permitted by the applicable OAuth flow;
 * declining the original request;
-* suggesting a lower-authority request using an applicable remediation
-  mechanism;
-* requesting additional authorization;
+* suggesting a lower-authority request using an applicable remediation mechanism;
+* requesting additional consent;
 * requiring the client to submit a revised request.
 
-This specification does not require an AS to search relationships, select
-the lowest rank, or issue an attenuated token.
+This specification does not require an AS to search relationships, select the lowest rank, or issue an attenuated token.
 
-Where an AS changes granted authority, it remains responsible for the
-applicable response requirements of {{RFC6749}}, {{RFC9396}}, and the
-relevant grant or exchange protocol, including {{RFC8693}} where applicable.
+Where an AS changes granted authority, it remains responsible for the applicable response requirements of {{RFC6749}}, {{RFC9396}}, and the relevant grant or exchange protocol, including {{RFC8693}} where applicable.
 
 No new error code or remediation response is defined here.
 
 # Examples
 
-The examples use illustrative application vocabularies. They are not
-standardized action, effect, or risk registries.
+The examples use illustrative application vocabularies. They are not standardized action, effect, or risk registries.
 
 ## Protected Resource Metadata
 
-The following resource accepts a read scope, a management scope that
-includes read and update access, and a RAR type for document access.
+The following resource accepts a read scope, a management scope that includes read and update access, and a RAR type for document access.
 
 ~~~ json
 {
@@ -1060,51 +837,35 @@ resource=https://documents.example.com
 scope=documents.manage
 ~~~
 
-The resource metadata identifies `documents.read` as an attenuation
-target.
+The resource metadata identifies `documents.read` as an attenuation target.
 
-An AS might determine that a read-only task does not need update
-authority. Its policy may then issue `documents.read` or decline the
-request and suggest that the client request `documents.read`.
+An AS might determine that a read-only task does not need update authority. Its policy may then issue `documents.read` or decline the request and suggest that the client request `documents.read`.
 
-The metadata identifies the containment relationship. It does not
-determine which response the AS chooses or establish that read access
-satisfies the client's task.
+The metadata identifies the containment relationship. It does not determine which response the AS chooses or establish that read access satisfies the client's task.
 
 # Security Considerations
 
 ## Metadata Authenticity
 
-Consumers need to validate metadata using the discovery and security
-requirements of {{RFC8414}} or {{RFC9728}}, as applicable.
+Consumers need to validate metadata using the discovery and security requirements of {{RFC8414}} or {{RFC9728}}, as applicable.
 
-Obtaining a document over TLS is not sufficient if the document's issuer
-or resource identity does not match the expected identity.
+Obtaining a document over TLS is not sufficient if the document's issuer or resource identity does not match the expected identity.
 
-Metadata publication does not independently establish a trusted
-authorization server and resource relationship.
+Metadata publication does not independently establish a trusted authorization server and resource relationship.
 
 ## Untrusted Resource Locations
 
-An AS that fetches metadata in response to a client-supplied resource
-indicator can be exposed to server-side request forgery.
+An AS that fetches metadata in response to a client-supplied resource indicator can be exposed to server-side request forgery.
 
-Implementations SHOULD validate destinations, constrain redirects,
-control access to internal addresses, and apply request size and timeout
-limits.
-
-Fetching arbitrary metadata is not required by this specification.
+Implementations SHOULD validate destinations, constrain redirects, control access to internal addresses, and apply request size and timeout limits.
 
 ## Semantic Misrepresentation
 
-A publisher can incorrectly describe a scope, type, or containment
-relationship.
+A publisher can incorrectly describe a scope, type, or containment relationship.
 
-An authenticated document proves the document's source, not the
-correctness of its semantic claims.
+An authenticated document proves the document's source, not the correctness of its semantic claims.
 
-Consumers should rely only on trusted publishers and understood
-vocabularies when using metadata for authorization decisions.
+Consumers should rely only on trusted publishers and understood vocabularies when using metadata for authorization decisions.
 
 ## Stale Metadata
 
@@ -1113,27 +874,47 @@ Authority semantics and access requirements may change.
 Consumers SHOULD use bounded caching and an appropriate refresh strategy.
 An old description must not be assumed to remain valid indefinitely.
 
-This specification does not define semantic version negotiation or bind
-a token to a metadata version.
+This specification does not define semantic version negotiation or bind a token to a metadata version.
 
-## Unknown Semantic Values
+## Malicious Resource Metadata and Policy Downgrade
 
-Unknown action identifiers, properties, or relationship names cannot
-safely be interpreted as familiar values.
+A malicious client can select an attacker-controlled resource whose metadata understates the authority represented by a scope or authorization details type, or declares weaker access requirements.
 
-A consumer MUST NOT claim to have established authority containment or
-purpose alignment from semantics it does not understand.
+If an authorization server applies that metadata outside its resource context, the client might obtain a token usable at another resource under weaker policy.
 
-This does not mandate a particular AS response. A deployment may use
-trusted local policy, decline evaluation, or require further information.
+An authorization server MUST bind authority metadata used in an issuance decision to the protected resource for which that metadata was validated.
+Scope values, authority identifiers, families, and ranks from one resource MUST NOT be used to establish authority semantics for another resource.
+
+An authorization server MUST NOT treat resource metadata as authorization to weaken existing grant restrictions, client policy, subject authority, or AS-local minimum security requirements.
+
+Omitted or weaker access requirements do not override those requirements.
+
+When protected resource authority metadata informs token issuance, the authorization server MUST audience-restrict the resulting token to the resource or resources independently evaluated for that issuance decision, using the mechanisms described in {{RFC8707}}.
+
+A protected resource MUST reject an access token that is not intended for that resource.
+
+An attacker-controlled resource MUST NOT be able to select an audience mapping that makes its tokens acceptable to another resource.
+
+Publication of metadata, including an `authorization_servers` member naming an AS, does not establish that the publisher is trusted by that AS.
+
+Token refresh or exchange that changes the target resource requires evaluation in the new resource context. A previous issuance decision based on another resource's metadata does not establish authority for the new target.
+
+## Requests Naming Multiple Resources
+
+An OAuth request can identify more than one protected resource.
+Each resource's authority metadata and access requirements apply only within that resource's context.
+
+An authorization server may issue a token intended for multiple resources, require a revised request, or reject an unsupported combination, subject to the applicable OAuth protocol and local policy.
+
+If the authorization server issues one token intended to satisfy the requirements of multiple resources, that token MUST satisfy all applicable requirements. Requirements that cannot be jointly satisfied MUST NOT be resolved by selecting the weaker requirement.
+
+This specification does not define a profile-merging algorithm.
 
 ## Scope Combinations
 
-The authority of several scopes may not equal a simple union of their
-individual descriptions.
+The authority of several scopes may not equal a simple union of their individual descriptions.
 
-A resource can apply combination-dependent semantics, and a token can
-also carry claims or authorization details that affect enforcement.
+A resource can apply combination-dependent semantics, and a token can also carry claims or authorization details that affect enforcement.
 
 This specification does not define scope combination semantics.
 Consumers need applicable resource policy when evaluating combinations.
@@ -1148,12 +929,10 @@ amounts, or other parameter-defined authority.
 
 ## Requirements Are Not Enforcement
 
-Publishing sender-constraining, freshness, or single-use requirements
-does not implement them.
+Publishing sender-constraining or freshness requirements does not implement them.
 
-Resources remain responsible for enforcement. Issuing a short-lived
-token does not prove recent authentication, and sender-constraining does
-not establish single use.
+Resources remain responsible for enforcement.
+Issuing a short-lived token does not prove recent authentication.
 
 ## Relationship Processing
 
@@ -1164,32 +943,23 @@ shortcut for proving containment.
 
 ## Consent Rendering
 
-Human-readable descriptions can improve disclosure but do not prove
-comprehension.
+Human-readable descriptions can improve disclosure but do not prove comprehension.
 
-Descriptions SHOULD be displayed as untrusted text. Consumers MUST NOT
-execute markup, scripts, or instructions embedded in descriptions.
+Descriptions SHOULD be displayed as untrusted text. Consumers MUST NOT execute markup, scripts, or instructions embedded in descriptions.
 
 # Privacy Considerations
 
-Authority metadata can disclose supported operations, resource types,
-and authentication expectations.
+Authority metadata can disclose supported operations, resource types, and authentication expectations.
 
-Publishers should consider whether public metadata exposes sensitive
-operational information.
+Publishers should consider whether public metadata exposes sensitive operational information.
 
-Published profiles SHOULD describe general access requirements rather
-than user-specific authentication state or individual authorization
-decisions.
-
-This specification does not require publication of personal data.
+Published profiles SHOULD describe general access requirements rather than user-specific authentication state or individual authorization decisions.
 
 # IANA Considerations
 
 ## OAuth Authorization Server Metadata Registration
 
-This specification requests registration in the "OAuth Authorization
-Server Metadata" registry established by {{RFC8414}}:
+This specification requests registration in the "OAuth Authorization Server Metadata" registry established by {{RFC8414}}:
 
 * Metadata Name: `authority_metadata`
 * Metadata Description: JSON object describing the authorization
@@ -1199,8 +969,7 @@ Server Metadata" registry established by {{RFC8414}}:
 
 ## OAuth Protected Resource Metadata Registration
 
-This specification requests registration in the "OAuth Protected
-Resource Metadata" registry established by {{RFC9728}}:
+This specification requests registration in the "OAuth Protected Resource Metadata" registry established by {{RFC9728}}:
 
 * Metadata Name: `authority_metadata`
 * Metadata Description: JSON object describing resource-bound authority,
@@ -1208,31 +977,15 @@ Resource Metadata" registry established by {{RFC9728}}:
 * Change Controller: IETF
 * Specification Document: {{metadata-parameter}} of this document
 
-# Implementation Status
-
-This section is to be removed before publication as an RFC.
-
-No implementation status is asserted by this document.
-
 # Acknowledgments
 
-The problem framing was informed by OAuth working group discussions
-about scope semantics, RAR type semantics, agent authorization,
-Mission-bound authorization, and cross-resource workflows.
+TODO
 
 --- back
 
 # Editorial Issues
 
 This section is to be removed before publication as an RFC.
-
-* Determine whether the document title should remain
-  "Resource-Bound Authority Metadata" or use "OAuth Authority Metadata"
-  to reflect both publication contexts.
-
-* Determine whether interoperable application action and resource
-  vocabularies should be defined separately or remain entirely
-  deployment-specific.
 
 * Evaluate whether sender-constraining mechanism identifiers are needed
   in access requirement profiles.
@@ -1244,10 +997,7 @@ This section is to be removed before publication as an RFC.
   access profiles and attenuation transformations.
 
 * Determine whether extension registries are needed for authority
-  kinds, relationship names, and access requirement members.
-
-* Confirm the preferred versioned references for the AuthZEN OAuth
-  issuance and exchange profiles before publication.
+  kinds, relationship names, and access requirement attributes.
 
 # Document History
 
