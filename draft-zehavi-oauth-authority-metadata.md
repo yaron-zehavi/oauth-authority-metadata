@@ -382,8 +382,6 @@ The following AS publishes its local understanding of profile scopes.
 }
 ~~~
 
-There is no authority `id`, resource selector, access requirement profile, or attenuation relationship.
-
 ### Attenuation Decision
 
 A client requests:
@@ -821,14 +819,6 @@ Where an AS changes granted authority, it remains responsible for the applicable
 No new error code or remediation response is defined here.
 
 # Security Considerations
-
-## Metadata Authenticity
-
-Consumers need to validate metadata using the discovery and security requirements of {{RFC8414}} or {{RFC9728}}, as applicable.
-
-Obtaining a document over TLS is not sufficient if the document's issuer or resource identity does not match the expected identity.
-
-Metadata publication does not independently establish a trusted authorization server and resource relationship.
 
 ## Untrusted Resource Locations
 
