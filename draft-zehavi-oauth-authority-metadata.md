@@ -53,11 +53,11 @@ informative:
 
 --- abstract
 
-While OAuth metadata advertises supported scopes and authorization details types, no metadata describes the **authority** those values represent.
+OAuth metadata advertises supported scopes and authorization details types, but does not define a common metadata structure for describing **the authority** those values represent.
 
 This specification defines authority metadata extensions for OAuth 2.0 Protected Resource Metadata and OAuth 2.0 Authorization Server Metadata.
 
-A protected resource can describe the authority it associates with scopes and RAR types, reusable access requirements profiles, and relationships identifying lower-authority alternatives.
+A protected resource can describe the authority it associates with scopes and Rich Authorization Requests (RAR) types, reusable access requirement profiles, and relationships identifying lower-authority alternatives.
 
 An authorization server can publish a simpler description of its local authority vocabulary.
 
@@ -72,7 +72,7 @@ OAuth 2.0 Rich Authorization Requests (RAR) {{RFC9396}} provides the `authorizat
 
 OAuth 2.0 Authorization Server Metadata {{RFC8414}} and OAuth 2.0 Protected Resource Metadata {{RFC9728}} enable discovery of information about authorization servers and protected resources. Supported scope values and RAR types can be advertised using `scopes_supported` and `authorization_details_types_supported`.
 
-Supported scope values and RAR types are only identifiers, which do not provide a description of their authority: the operations, resources, or effects they authorizes.
+Supported scope values and RAR types are only identifiers, which do not provide a description of their authority: the operations, resources, or effects they authorize.
 
 For example, a scope named `payments.manage` might permit reading, creating, executing, or deleting payment instructions. Its name alone does not establish which operations are permitted.
 
@@ -479,7 +479,7 @@ Protected resource authority entries additionally use:
 
 A referenced access requirement profile MUST exist in the same `authority_metadata` object.
 
-This document supports one profile reference per authority entry.
+This specification defines one profile reference per authority entry.
 Profile inheritance and composition are not defined.
 
 ## Authorization Server attributes
@@ -634,7 +634,7 @@ A boolean value of `false` means that this profile does not require the property
 
 ### Sender-Constraining
 
-`sender_constrained: true` means the resource will reject a token that is not sender-constrained.
+`sender_constrained: true` means the resource will reject a request using a token that is not sender-constrained or if its associated presentation proof is not successfully validated under the applicable mechanism.
 
 This attribute does not select a mechanism. Mechanism selection depends on the token profile, applicable discovery metadata, and deployment agreement.
 
