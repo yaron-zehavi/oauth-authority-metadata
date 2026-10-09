@@ -3,6 +3,7 @@ title: OAuth 2.0 Resource-Bound Authority Metadata
 abbrev: OAuth Authority Metadata
 docname: draft-zehavi-oauth-authority-metadata-latest
 category: std
+ipr: trust200902
 submissiontype: IETF
 area: Security
 workgroup: OAuth
