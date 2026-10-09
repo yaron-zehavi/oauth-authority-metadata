@@ -5,8 +5,8 @@ docname: draft-zehavi-oauth-authority-metadata-latest
 category: std
 ipr: trust200902
 submissiontype: IETF
-area: Security
-workgroup: OAuth
+area: "Security"
+workgroup: "Web Authorization Protocol"
 keyword:
   - OAuth
   - authority metadata
