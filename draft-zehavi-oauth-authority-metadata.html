@@ -7,9 +7,9 @@
 <title>OAuth 2.0 Authority Metadata</title>
 <meta content="Yaron Zehavi" name="author">
 <meta content="
-       While OAuth metadata advertises supported scopes and authorization details types, no metadata describes the  authority  those values represent. 
+       OAuth metadata advertises supported scopes and authorization details types, but does not define a common metadata structure for describing  the authority  those values represent. 
        This specification defines authority metadata extensions for OAuth 2.0 Protected Resource Metadata and OAuth 2.0 Authorization Server Metadata. 
-       A protected resource can describe the authority it associates with scopes and RAR types, reusable access requirements profiles, and relationships identifying lower-authority alternatives. 
+       A protected resource can describe the authority it associates with scopes and Rich Authorization Requests (RAR) types, reusable access requirement profiles, and relationships identifying lower-authority alternatives. 
        An authorization server can publish a simpler description of its local authority vocabulary. 
        This metadata can inform authentication and authorization decisions before token issuance and exchange, as well as support authority attenuation. 
     " name="description">
@@ -1086,9 +1086,9 @@ svg {
 <h1 id="title">OAuth 2.0 Authority Metadata</h1>
 <section id="section-abstract">
       <h2 id="abstract"><a href="#abstract" class="selfRef">Abstract</a></h2>
-<p id="section-abstract-1">While OAuth metadata advertises supported scopes and authorization details types, no metadata describes the <strong>authority</strong> those values represent.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
+<p id="section-abstract-1">OAuth metadata advertises supported scopes and authorization details types, but does not define a common metadata structure for describing <strong>the authority</strong> those values represent.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
 <p id="section-abstract-2">This specification defines authority metadata extensions for OAuth 2.0 Protected Resource Metadata and OAuth 2.0 Authorization Server Metadata.<a href="#section-abstract-2" class="pilcrow">¶</a></p>
-<p id="section-abstract-3">A protected resource can describe the authority it associates with scopes and RAR types, reusable access requirements profiles, and relationships identifying lower-authority alternatives.<a href="#section-abstract-3" class="pilcrow">¶</a></p>
+<p id="section-abstract-3">A protected resource can describe the authority it associates with scopes and Rich Authorization Requests (RAR) types, reusable access requirement profiles, and relationships identifying lower-authority alternatives.<a href="#section-abstract-3" class="pilcrow">¶</a></p>
 <p id="section-abstract-4">An authorization server can publish a simpler description of its local authority vocabulary.<a href="#section-abstract-4" class="pilcrow">¶</a></p>
 <p id="section-abstract-5">This metadata can inform authentication and authorization decisions before token issuance and exchange, as well as support authority attenuation.<a href="#section-abstract-5" class="pilcrow">¶</a></p>
 </section>
@@ -1384,7 +1384,7 @@ svg {
 <p id="section-1-1">OAuth 2.0 <span>[<a href="#RFC6749" class="cite xref">RFC6749</a>]</span> uses scope values to express requested and granted access.
 OAuth 2.0 Rich Authorization Requests (RAR) <span>[<a href="#RFC9396" class="cite xref">RFC9396</a>]</span> provides the <code>authorization_details</code> parameter for structured authorization requests.<a href="#section-1-1" class="pilcrow">¶</a></p>
 <p id="section-1-2">OAuth 2.0 Authorization Server Metadata <span>[<a href="#RFC8414" class="cite xref">RFC8414</a>]</span> and OAuth 2.0 Protected Resource Metadata <span>[<a href="#RFC9728" class="cite xref">RFC9728</a>]</span> enable discovery of information about authorization servers and protected resources. Supported scope values and RAR types can be advertised using <code>scopes_supported</code> and <code>authorization_details_types_supported</code>.<a href="#section-1-2" class="pilcrow">¶</a></p>
-<p id="section-1-3">Supported scope values and RAR types are only identifiers, which do not provide a description of their authority: the operations, resources, or effects they authorizes.<a href="#section-1-3" class="pilcrow">¶</a></p>
+<p id="section-1-3">Supported scope values and RAR types are only identifiers, which do not provide a description of their authority: the operations, resources, or effects they authorize.<a href="#section-1-3" class="pilcrow">¶</a></p>
 <p id="section-1-4">For example, a scope named <code>payments.manage</code> might permit reading, creating, executing, or deleting payment instructions. Its name alone does not establish which operations are permitted.<a href="#section-1-4" class="pilcrow">¶</a></p>
 <p id="section-1-5">These gaps matter when an authorization server or policy decision point evaluates whether requested authority:<a href="#section-1-5" class="pilcrow">¶</a></p>
 <ul class="normal">
@@ -1953,7 +1953,7 @@ document. Every <code>id</code> <span class="bcp14">MUST</span> be unique within
         <dd class="break"></dd>
 </dl>
 <p id="section-3.2-3">A referenced access requirement profile <span class="bcp14">MUST</span> exist in the same <code>authority_metadata</code> object.<a href="#section-3.2-3" class="pilcrow">¶</a></p>
-<p id="section-3.2-4">This document supports one profile reference per authority entry.
+<p id="section-3.2-4">This specification defines one profile reference per authority entry.
 Profile inheritance and composition are not defined.<a href="#section-3.2-4" class="pilcrow">¶</a></p>
 </section>
 </div>
@@ -2171,7 +2171,7 @@ applicable sender-constraining mechanism.<a href="#section-5.2-2.6.1" class="pil
           <h4 id="name-sender-constraining">
 <a href="#section-5.2.1" class="section-number selfRef">5.2.1. </a><a href="#name-sender-constraining" class="section-name selfRef">Sender-Constraining</a>
           </h4>
-<p id="section-5.2.1-1"><code>sender_constrained: true</code> means the resource will reject a token that is not sender-constrained.<a href="#section-5.2.1-1" class="pilcrow">¶</a></p>
+<p id="section-5.2.1-1"><code>sender_constrained: true</code> means the resource will reject a request using a token that is not sender-constrained or if its associated presentation proof is not successfully validated under the applicable mechanism.<a href="#section-5.2.1-1" class="pilcrow">¶</a></p>
 <p id="section-5.2.1-2">This attribute does not select a mechanism. Mechanism selection depends on the token profile, applicable discovery metadata, and deployment agreement.<a href="#section-5.2.1-2" class="pilcrow">¶</a></p>
 </section>
 </div>

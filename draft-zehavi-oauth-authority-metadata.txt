@@ -13,17 +13,18 @@ Expires: 12 April 2027
 
 Abstract
 
-   While OAuth metadata advertises supported scopes and authorization
-   details types, no metadata describes the *authority* those values
-   represent.
+   OAuth metadata advertises supported scopes and authorization details
+   types, but does not define a common metadata structure for describing
+   *the authority* those values represent.
 
    This specification defines authority metadata extensions for OAuth
    2.0 Protected Resource Metadata and OAuth 2.0 Authorization Server
    Metadata.
 
    A protected resource can describe the authority it associates with
-   scopes and RAR types, reusable access requirements profiles, and
-   relationships identifying lower-authority alternatives.
+   scopes and Rich Authorization Requests (RAR) types, reusable access
+   requirement profiles, and relationships identifying lower-authority
+   alternatives.
 
    An authorization server can publish a simpler description of its
    local authority vocabulary.
@@ -157,7 +158,7 @@ Table of Contents
 
    Supported scope values and RAR types are only identifiers, which do
    not provide a description of their authority: the operations,
-   resources, or effects they authorizes.
+   resources, or effects they authorize.
 
    For example, a scope named payments.manage might permit reading,
    creating, executing, or deleting payment instructions.  Its name
@@ -625,7 +626,7 @@ Table of Contents
    A referenced access requirement profile MUST exist in the same
    authority_metadata object.
 
-   This document supports one profile reference per authority entry.
+   This specification defines one profile reference per authority entry.
    Profile inheritance and composition are not defined.
 
 3.3.  Authorization Server attributes
@@ -798,8 +799,10 @@ Table of Contents
 
 5.2.1.  Sender-Constraining
 
-   sender_constrained: true means the resource will reject a token that
-   is not sender-constrained.
+   sender_constrained: true means the resource will reject a request
+   using a token that is not sender-constrained or if its associated
+   presentation proof is not successfully validated under the applicable
+   mechanism.
 
    This attribute does not select a mechanism.  Mechanism selection
    depends on the token profile, applicable discovery metadata, and
