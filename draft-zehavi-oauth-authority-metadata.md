@@ -612,8 +612,6 @@ For example:
 }
 ~~~
 
-An omitted requirement means that the profile makes no assertion about that property. It does not remove requirements established by other resource policy.
-
 ## Token Requirements
 
 The `token` object can contain:
