@@ -7,7 +7,7 @@
 <title>OAuth 2.0 Authority Metadata</title>
 <meta content="Yaron Zehavi" name="author">
 <meta content="
-       OAuth metadata advertises supported scopes and authorization details types, but does not define a common metadata structure for describing  the authority  those values represent. 
+       OAuth metadata advertises supported scopes and authorization details types, but advertised scope values and RAR type identifiers do not themselves describe the  authority  associated with them. 
        This specification defines authority metadata extensions for OAuth 2.0 Protected Resource Metadata and OAuth 2.0 Authorization Server Metadata. 
        A protected resource can describe the authority it associates with scopes and Rich Authorization Requests (RAR) types, reusable access requirement profiles, and relationships identifying lower-authority alternatives. 
        An authorization server can publish a simpler description of its local authority vocabulary. 
@@ -1055,7 +1055,7 @@ svg {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Zehavi</td>
-<td class="center">Expires 12 April 2027</td>
+<td class="center">Expires 13 April 2027</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1068,12 +1068,12 @@ svg {
 <dd class="internet-draft">draft-zehavi-oauth-authority-metadata-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-10-09" class="published">9 October 2026</time>
+<time datetime="2026-10-10" class="published">10 October 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2027-04-12">12 April 2027</time></dd>
+<dd class="expires"><time datetime="2027-04-13">13 April 2027</time></dd>
 <dt class="label-authors">Author:</dt>
 <dd class="authors">
 <div class="author">
@@ -1086,7 +1086,7 @@ svg {
 <h1 id="title">OAuth 2.0 Authority Metadata</h1>
 <section id="section-abstract">
       <h2 id="abstract"><a href="#abstract" class="selfRef">Abstract</a></h2>
-<p id="section-abstract-1">OAuth metadata advertises supported scopes and authorization details types, but does not define a common metadata structure for describing <strong>the authority</strong> those values represent.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
+<p id="section-abstract-1">OAuth metadata advertises supported scopes and authorization details types, but advertised scope values and RAR type identifiers do not themselves describe the <strong>authority</strong> associated with them.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
 <p id="section-abstract-2">This specification defines authority metadata extensions for OAuth 2.0 Protected Resource Metadata and OAuth 2.0 Authorization Server Metadata.<a href="#section-abstract-2" class="pilcrow">¶</a></p>
 <p id="section-abstract-3">A protected resource can describe the authority it associates with scopes and Rich Authorization Requests (RAR) types, reusable access requirement profiles, and relationships identifying lower-authority alternatives.<a href="#section-abstract-3" class="pilcrow">¶</a></p>
 <p id="section-abstract-4">An authorization server can publish a simpler description of its local authority vocabulary.<a href="#section-abstract-4" class="pilcrow">¶</a></p>
@@ -1122,7 +1122,7 @@ svg {
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 12 April 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 13 April 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1389,7 +1389,7 @@ OAuth 2.0 Rich Authorization Requests (RAR) <span>[<a href="#RFC9396" class="cit
           <p id="section-1-6.1.1">is permitted by an existing grant or local policy;<a href="#section-1-6.1.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-1-6.2">
-          <p id="section-1-6.2.1">aligns with an approved task, purpose, or Mission;<a href="#section-1-6.2.1" class="pilcrow">¶</a></p>
+          <p id="section-1-6.2.1">aligns with an approved task, purpose, or mission;<a href="#section-1-6.2.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-1-6.3">
           <p id="section-1-6.3.1">is broader than necessary;<a href="#section-1-6.3.1" class="pilcrow">¶</a></p>
@@ -1642,6 +1642,7 @@ that the authority is unsupported or unrestricted.<a href="#section-2.3-2.5.1" c
     "documents.read",
     "documents.manage"
   ],
+  "authorization_details_types_supported": ["document-access"],
   "authority_metadata": {
     "access_requirement_profiles": {
       "standard_access": {
@@ -1657,7 +1658,7 @@ that the authority is unsupported or unrestricted.<a href="#section-2.3-2.5.1" c
         },
         "authentication": {
           "acr_values": [
-            "urn:example:acr:phishing-resistant"
+            "phishing-resistant"
           ],
           "max_age": 300
         }
@@ -1673,12 +1674,12 @@ that the authority is unsupported or unrestricted.<a href="#section-2.3-2.5.1" c
         "rank": 10,
         "authority": [
           {
-            "resource_type": "urn:example:resource-type:document",
+            "resource_type": "document",
             "actions": [
-              "urn:example:action:document:read"
+              "document:read"
             ],
             "effects": [
-              "urn:example:effect:data-disclosure"
+              "data-disclosure"
             ],
             "risk": "low"
           }
@@ -1694,14 +1695,14 @@ that the authority is unsupported or unrestricted.<a href="#section-2.3-2.5.1" c
         "rank": 20,
         "authority": [
           {
-            "resource_type": "urn:example:resource-type:document",
+            "resource_type": "document",
             "actions": [
-              "urn:example:action:document:read",
-              "urn:example:action:document:update"
+              "document:read",
+              "document:update"
             ],
             "effects": [
-              "urn:example:effect:data-disclosure",
-              "urn:example:effect:state-change"
+              "data-disclosure",
+              "state-change"
             ],
             "risk": "medium"
           }
@@ -1717,23 +1718,20 @@ that the authority is unsupported or unrestricted.<a href="#section-2.3-2.5.1" c
       {
         "id": "document_access.rar",
         "kind": "authorization_details_type",
-        "value": "urn:example:authorization-details:document-access",
+        "value": "document-access",
         "description": "Access to specified documents under type-specific restrictions.",
         "family": "document_access",
         "authority": [
           {
-            "resource_type": "urn:example:resource-type:document",
+            "resource_type": "document",
             "actions": [
-              "urn:example:action:document:read",
-              "urn:example:action:document:update"
+              "document:read",
+              "document:update"
             ],
             "effects": [
-              "urn:example:effect:data-disclosure",
-              "urn:example:effect:state-change"
-            ],
-            "properties": {
-              "semantics": "urn:example:semantics:document-access:v1"
-            }
+              "data-disclosure",
+              "state-change"
+            ]
           }
         ],
         "access_requirement_profile": "sensitive_access"
@@ -1751,8 +1749,9 @@ that the authority is unsupported or unrestricted.<a href="#section-2.3-2.5.1" c
           <h4 id="name-authorization-server-metadat">
 <a href="#section-2.4.2" class="section-number selfRef">2.4.2. </a><a href="#name-authorization-server-metadat" class="section-name selfRef">Authorization Server Metadata</a>
           </h4>
-<p id="section-2.4.2-1">The following AS publishes its local understanding of profile scopes.<a href="#section-2.4.2-1" class="pilcrow">¶</a></p>
-<div class="breakable lang-json sourcecode" id="section-2.4.2-2">
+<p id="section-2.4.2-1">The following AS publishes its local understanding of profile scopes and the document-access RAR type also described in the protected resource example.<a href="#section-2.4.2-1" class="pilcrow">¶</a></p>
+<p id="section-2.4.2-2">In this example, the AS and protected resource publish matching type-level descriptions. Matching descriptions do not establish trust, imply comparable family rankings across documents, or guarantee acceptance of an issued token.<a href="#section-2.4.2-2" class="pilcrow">¶</a></p>
+<div class="breakable lang-json sourcecode" id="section-2.4.2-3">
 <pre>
 {
   "issuer": "https://as.example.com",
@@ -1760,6 +1759,7 @@ that the authority is unsupported or unrestricted.<a href="#section-2.3-2.5.1" c
     "profile.read",
     "profile.manage"
   ],
+  "authorization_details_types_supported": ["document-access"],
   "authority_metadata": {
     "authorities": [
       {
@@ -1770,12 +1770,12 @@ that the authority is unsupported or unrestricted.<a href="#section-2.3-2.5.1" c
         "rank": 10,
         "authority": [
           {
-            "resource_type": "urn:example:resource-type:profile",
+            "resource_type": "profile",
             "actions": [
-              "urn:example:action:profile:read"
+              "profile:read"
             ],
             "effects": [
-              "urn:example:effect:data-disclosure"
+              "data-disclosure"
             ],
             "risk": "low"
           }
@@ -1789,24 +1789,44 @@ that the authority is unsupported or unrestricted.<a href="#section-2.3-2.5.1" c
         "rank": 20,
         "authority": [
           {
-            "resource_type": "urn:example:resource-type:profile",
+            "resource_type": "profile",
             "actions": [
-              "urn:example:action:profile:read",
-              "urn:example:action:profile:update"
+              "profile:read",
+              "profile:update"
             ],
             "effects": [
-              "urn:example:effect:data-disclosure",
-              "urn:example:effect:state-change"
+              "data-disclosure",
+              "state-change"
             ],
             "risk": "medium"
+          }
+        ]
+      },
+      {
+        "kind": "authorization_details_type",
+        "value": "document-access",
+        "description": "Access to specified documents under type-specific restrictions.",
+        "family": "document_access",
+        "authority": [
+          {
+            "resource_type": "document",
+            "actions": [
+              "document:read",
+              "document:update"
+            ],
+            "effects": [
+              "data-disclosure",
+              "state-change"
+            ]
           }
         ]
       }
     ]
   }
 }
-</pre><a href="#section-2.4.2-2" class="pilcrow">¶</a>
+</pre><a href="#section-2.4.2-3" class="pilcrow">¶</a>
 </div>
+<p id="section-2.4.2-4">The RAR entry describes operations the type can express. It does not imply that every authorization details object of this type grants all listed operations. Concrete authority depends on the object's values and the applicable type semantics.<a href="#section-2.4.2-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="attenuation-decision">
@@ -1905,6 +1925,8 @@ the specified <code>family</code>.<a href="#section-3.1.5-1" class="pilcrow">¶<
 <p id="section-3.1.5-2">An entry containing <code>rank</code> <span class="bcp14">MUST</span> also contain <code>family</code>.<a href="#section-3.1.5-2" class="pilcrow">¶</a></p>
 <p id="section-3.1.5-3">Lower values express the publisher's preferred ordering toward lower authority within that family. Equal values do not imply equivalent authority.<a href="#section-3.1.5-3" class="pilcrow">¶</a></p>
 <p id="section-3.1.5-4">Rank does not prove containment, interchangeability, or suitability for a task. See <a href="#ordering" class="auto internal xref">Section 7</a>.<a href="#section-3.1.5-4" class="pilcrow">¶</a></p>
+<p id="section-3.1.5-5">For a RAR type entry, <code>rank</code> is an advisory ordering of the type-level authority description. It does not rank individual authorization details objects.<a href="#section-3.1.5-5" class="pilcrow">¶</a></p>
+<p id="section-3.1.5-6">Publishers <span class="bcp14">MAY</span> omit <code>rank</code> when parameter-dependent authority makes a type-level ordering unhelpful.<a href="#section-3.1.5-6" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="authority">
@@ -1916,7 +1938,8 @@ the specified <code>family</code>.<a href="#section-3.1.5-1" class="pilcrow">¶<
 <p id="section-3.1.6-2">Each element describes an aspect of the authority represented by the entry.
 Multiple elements describe the combined authority of the entry;
 they are not alternative choices.<a href="#section-3.1.6-2" class="pilcrow">¶</a></p>
-<p id="section-3.1.6-3">The authority descriptions are defined in <a href="#structured-authority" class="auto internal xref">Section 4</a>.<a href="#section-3.1.6-3" class="pilcrow">¶</a></p>
+<p id="section-3.1.6-3">For a RAR type entry, the combined description characterizes authority expressible by the type, not authority necessarily granted by an individual authorization details object.<a href="#section-3.1.6-3" class="pilcrow">¶</a></p>
+<p id="section-3.1.6-4">The authority descriptions are defined in <a href="#structured-authority" class="auto internal xref">Section 4</a>.<a href="#section-3.1.6-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -1984,7 +2007,11 @@ to which the described authority applies.<a href="#section-4-2.2.1" class="pilcr
 <code>actions</code>:</dt>
         <dd style="margin-left: 1.5em" id="section-4-2.4">
           <p id="section-4-2.4.1"><span class="bcp14">REQUIRED</span>. A non-empty array of non-empty strings identifying permitted
-application actions.<a href="#section-4-2.4.1" class="pilcrow">¶</a></p>
+application actions. For a scope entry, <code>actions</code> describes the operations
+authorized by that scope, subject to applicable resource restrictions.
+For a RAR type entry, <code>actions</code> describes operations the type can
+express. The authority of a concrete authorization details object
+depends on its values and the type-specific semantics.<a href="#section-4-2.4.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
 <dt id="section-4-2.5">
@@ -2000,26 +2027,19 @@ side effects associated with the authority.<a href="#section-4-2.6.1" class="pil
           <p id="section-4-2.8.1"><span class="bcp14">OPTIONAL</span>. A non-empty string identifying a publisher-defined risk
 classification.<a href="#section-4-2.8.1" class="pilcrow">¶</a></p>
 </dd>
-        <dd class="break"></dd>
-<dt id="section-4-2.9">
-<code>properties</code>:</dt>
-        <dd style="margin-left: 1.5em" id="section-4-2.10">
-          <p id="section-4-2.10.1"><span class="bcp14">OPTIONAL</span>. A JSON object containing additional domain-specific semantic
-attributes.<a href="#section-4-2.10.1" class="pilcrow">¶</a></p>
-</dd>
       <dd class="break"></dd>
 </dl>
 <p id="section-4-3">For example:<a href="#section-4-3" class="pilcrow">¶</a></p>
 <div class="lang-json sourcecode" id="section-4-4">
 <pre>
 {
-  "resource_type": "urn:example:resource-type:payment",
+  "resource_type": "payment",
   "actions": [
-    "urn:example:action:payment:read",
-    "urn:example:action:payment:execute"
+    "payment:read",
+    "payment:execute"
   ],
   "effects": [
-    "urn:example:effect:external-transfer"
+    "external-transfer"
   ],
   "risk": "high"
 }
@@ -2049,9 +2069,6 @@ authority.<a href="#section-4.1-3.3.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-4.1-3.4">
             <p id="section-4.1-3.4.1">A risk label does not establish an ordering of access rights.<a href="#section-4.1-3.4.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-4.1-3.5">
-            <p id="section-4.1-3.5.1">Missing <code>properties</code> do not mean that no restrictions exist.<a href="#section-4.1-3.5.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 <p id="section-4.1-4">A consumer performing semantic authorization evaluation needs the applicable vocabulary definitions, RAR type semantics, request values, and local policy.<a href="#section-4.1-4" class="pilcrow">¶</a></p>
@@ -2120,7 +2137,7 @@ authority.<a href="#section-4.1-3.3.1" class="pilcrow">¶</a></p>
       },
       "authentication": {
         "acr_values": [
-          "urn:example:acr:phishing-resistant"
+          "phishing-resistant"
         ],
         "max_age": 300
       }
@@ -2149,7 +2166,7 @@ acceptable elapsed time since the access token was issued.<a href="#section-5.2-
 <code>max_lifetime</code>:</dt>
           <dd style="margin-left: 1.5em" id="section-5.2-2.4">
             <p id="section-5.2-2.4.1"><span class="bcp14">OPTIONAL</span>. A positive integer expressing, in seconds, the maximum
-acceptable total lifetime of the access token.<a href="#section-5.2-2.4.1" class="pilcrow">¶</a></p>
+acceptable total lifetime of the access token, from issuance to expiration.<a href="#section-5.2-2.4.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
 <dt id="section-5.2-2.5">
@@ -2189,9 +2206,7 @@ reference values.<a href="#section-5.3-2.2.1" class="pilcrow">¶</a></p>
 <dt id="section-5.3-2.3">
 <code>max_age</code>:</dt>
           <dd style="margin-left: 1.5em" id="section-5.3-2.4">
-            <p id="section-5.3-2.4.1"><span class="bcp14">OPTIONAL</span>. A positive integer expressing, in seconds, the maximum
-acceptable elapsed time since the relevant end-user authentication
-event, represented in the token's introspection response's <code>auth_time</code> claim.<a href="#section-5.3-2.4.1" class="pilcrow">¶</a></p>
+            <p id="section-5.3-2.4.1"><span class="bcp14">OPTIONAL</span>. A positive integer expressing, in seconds, the maximum acceptable elapsed time since the relevant end-user authentication event. The resource determines that event's time from validated authentication information associated with the access token, such as an auth_time claim in a validated JWT access token or a trusted token introspection response, as described in <span>[<a href="#RFC9470" class="cite xref">RFC9470</a>]</span>.<a href="#section-5.3-2.4.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
 </dl>
@@ -2269,11 +2284,13 @@ This document defines one relationship:<a href="#section-6-3" class="pilcrow">¶
 </pre><a href="#section-6.1-2" class="pilcrow">¶</a>
 </div>
 <p id="section-6.1-3">asserts that the target represents no greater authority than the source under the protected resource's authority semantics.<a href="#section-6.1-3" class="pilcrow">¶</a></p>
-<p id="section-6.1-4">This is a containment assertion, not merely a statement that the target is lower risk or belongs to an earlier workflow phase.<a href="#section-6.1-4" class="pilcrow">¶</a></p>
-<p id="section-6.1-5">For example, if <code>documents.manage</code> authorizes both reading and modifying documents, it can declare attenuation to a scope that authorizes reading the same documents.<a href="#section-6.1-5" class="pilcrow">¶</a></p>
-<p id="section-6.1-6">Conversely, a payment execution authority does not automatically contain payment preparation or payment status access. Those are different operations. A relationship is valid only if the resource's actual semantics establish the asserted containment.<a href="#section-6.1-6" class="pilcrow">¶</a></p>
-<p id="section-6.1-7">A publisher <span class="bcp14">MUST NOT</span> declare this relationship based solely on rank, risk, or perceived similarity.<a href="#section-6.1-7" class="pilcrow">¶</a></p>
-<p id="section-6.1-8">The relationship does not assert that the target satisfies the client's task, purpose, or Mission.<a href="#section-6.1-8" class="pilcrow">¶</a></p>
+<p id="section-6.1-4">For relationships between scope entries, this relationship asserts that the target represents no greater authority than the source under the protected resource's applicable semantics and restrictions.<a href="#section-6.1-4" class="pilcrow">¶</a></p>
+<p id="section-6.1-5">Where either entry describes a RAR type, the relationship identifies a candidate attenuation target. It does not establish containment between concrete authorization details objects or between a concrete object and a scope grant. A consumer <span class="bcp14">MUST</span> establish concrete containment using applicable type semantics, parameter restrictions, and policy before substitution.<a href="#section-6.1-5" class="pilcrow">¶</a></p>
+<p id="section-6.1-6">For example, if <code>documents.manage</code> authorizes both reading and modifying documents, it can declare attenuation to a scope that authorizes reading the same documents.<a href="#section-6.1-6" class="pilcrow">¶</a></p>
+<p id="section-6.1-7">Conversely, a payment execution authority does not automatically contain payment preparation or payment status access. Those are different operations. A relationship is valid only if the resource's actual semantics establish the asserted containment.<a href="#section-6.1-7" class="pilcrow">¶</a></p>
+<p id="section-6.1-8">A publisher <span class="bcp14">MUST NOT</span> declare this relationship based solely on rank, risk, or perceived similarity.
+The relationship does not assert that the target satisfies the client's task, purpose, or Mission.<a href="#section-6.1-8" class="pilcrow">¶</a></p>
+<p id="section-6.1-9">For parameterized authorities such as Rich Authorization Requests (RAR) types, the relationship identifies a potential attenuation target. It does not assert containment between arbitrary instances of the source and target types. Concrete containment requires the applicable type semantics and parameter restrictions.<a href="#section-6.1-9" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="rar-and-cross-kind-relationships">
@@ -2293,10 +2310,10 @@ This document defines one relationship:<a href="#section-6-3" class="pilcrow">¶
         <h3 id="name-relationship-interpretation">
 <a href="#section-6.3" class="section-number selfRef">6.3. </a><a href="#name-relationship-interpretation" class="section-name selfRef">Relationship Interpretation</a>
         </h3>
-<p id="section-6.3-1">Containment is transitive when the same resource context and compatible semantic restrictions apply.<a href="#section-6.3-1" class="pilcrow">¶</a></p>
-<p id="section-6.3-2">A consumer is not required to compute a transitive closure, select a target, or perform substitution.<a href="#section-6.3-2" class="pilcrow">¶</a></p>
-<p id="section-6.3-3">Unrecognized relationship names <span class="bcp14">MUST NOT</span> be interpreted as <code>can_be_attenuated_to</code>.<a href="#section-6.3-3" class="pilcrow">¶</a></p>
-<p id="section-6.3-4">Consumers traversing relationships <span class="bcp14">SHOULD</span> apply limits to traversal depth and visited entries to avoid unbounded processing.<a href="#section-6.3-4" class="pilcrow">¶</a></p>
+<p id="section-6.3-1">Containment is transitive when the same resource context and compatible semantic restrictions apply.
+A consumer is not required to compute a transitive closure, select a target, or perform substitution.
+Unrecognized relationship names <span class="bcp14">MUST NOT</span> be interpreted as <code>can_be_attenuated_to</code>.
+Consumers traversing relationships <span class="bcp14">SHOULD</span> apply limits to traversal depth and visited entries to avoid unbounded processing.<a href="#section-6.3-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -2400,9 +2417,10 @@ This document defines one relationship:<a href="#section-6-3" class="pilcrow">¶
 <a href="#section-8.2" class="section-number selfRef">8.2. </a><a href="#name-metadata-sources-and-confli" class="section-name selfRef">Metadata Sources and Conflicts</a>
         </h3>
 <p id="section-8.2-1">An authorization server may use local policy or configuration when protected resource metadata is unavailable.<a href="#section-8.2-1" class="pilcrow">¶</a></p>
-<p id="section-8.2-2">AS-published metadata expresses the AS's local understanding. It does not override the protected resource's enforcement semantics.<a href="#section-8.2-2" class="pilcrow">¶</a></p>
-<p id="section-8.2-3">If AS and resource descriptions conflict, this specification does not mandate a precedence algorithm or require issuance. The conflict is an input to trust configuration and local policy.<a href="#section-8.2-3" class="pilcrow">¶</a></p>
-<p id="section-8.2-4">A consumer <span class="bcp14">MUST NOT</span> treat an unresolved semantic conflict as proof of safe attenuation or authority alignment.<a href="#section-8.2-4" class="pilcrow">¶</a></p>
+<p id="section-8.2-2">AS authority metadata describes the AS's local interpretation of its authority vocabulary. Protected resource authority metadata describes the resource's enforcement semantics.<a href="#section-8.2-2" class="pilcrow">¶</a></p>
+<p id="section-8.2-3">An authorization server <span class="bcp14">MUST NOT</span> use protected resource metadata, by itself, to relax its issuance restrictions or minimum security requirements. An omitted requirement, lower risk classification, lower rank, or narrower authority description does not override AS policy.<a href="#section-8.2-3" class="pilcrow">¶</a></p>
+<p id="section-8.2-4">Where the authority descriptions differ, the AS determines their applicability through trusted configuration and local policy. The difference <span class="bcp14">MUST NOT</span> be resolved merely by selecting the interpretation that permits issuance.<a href="#section-8.2-4" class="pilcrow">¶</a></p>
+<p id="section-8.2-5">This specification does not require an AS to issue a token when the descriptions or requirements cannot be reconciled.<a href="#section-8.2-5" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="attenuation-options">
@@ -2481,15 +2499,15 @@ An old description must not be assumed to remain valid indefinitely.<a href="#se
         </h3>
 <p id="section-9.4-1">A malicious client can select an attacker-controlled resource whose metadata understates the authority represented by a scope or authorization details type, or declares weaker access requirements.<a href="#section-9.4-1" class="pilcrow">¶</a></p>
 <p id="section-9.4-2">If an authorization server applies that metadata outside its resource context, the client might obtain a token usable at another resource under weaker policy.<a href="#section-9.4-2" class="pilcrow">¶</a></p>
-<p id="section-9.4-3">An authorization server <span class="bcp14">MUST</span> bind authority metadata used in an issuance decision to the protected resource for which that metadata was validated.
-Scope values, authority identifiers, families, and ranks from one resource <span class="bcp14">MUST NOT</span> be used to establish authority semantics for another resource.<a href="#section-9.4-3" class="pilcrow">¶</a></p>
-<p id="section-9.4-4">An authorization server <span class="bcp14">MUST NOT</span> treat resource metadata as authorization to weaken existing grant restrictions, client policy, subject authority, or AS-local minimum security requirements.<a href="#section-9.4-4" class="pilcrow">¶</a></p>
-<p id="section-9.4-5">Omitted or weaker access requirements do not override those requirements.<a href="#section-9.4-5" class="pilcrow">¶</a></p>
-<p id="section-9.4-6">When protected resource authority metadata informs token issuance, the authorization server <span class="bcp14">MUST</span> audience-restrict the resulting token to the resource or resources independently evaluated for that issuance decision, using the mechanisms described in <span>[<a href="#RFC8707" class="cite xref">RFC8707</a>]</span>.<a href="#section-9.4-6" class="pilcrow">¶</a></p>
-<p id="section-9.4-7">A protected resource <span class="bcp14">MUST</span> reject an access token that is not intended for that resource.<a href="#section-9.4-7" class="pilcrow">¶</a></p>
-<p id="section-9.4-8">An attacker-controlled resource <span class="bcp14">MUST NOT</span> be able to select an audience mapping that makes its tokens acceptable to another resource.<a href="#section-9.4-8" class="pilcrow">¶</a></p>
-<p id="section-9.4-9">Publication of metadata, including an <code>authorization_servers</code> member naming an AS, does not establish that the publisher is trusted by that AS.<a href="#section-9.4-9" class="pilcrow">¶</a></p>
-<p id="section-9.4-10">Token refresh or exchange that changes the target resource requires evaluation in the new resource context. A previous issuance decision based on another resource's metadata does not establish authority for the new target.<a href="#section-9.4-10" class="pilcrow">¶</a></p>
+<p id="section-9.4-3">An authorization server <span class="bcp14">MUST</span> bind protected resource authority metadata used in an issuance decision to the protected resource for which that metadata was validated. Protected resource authority metadata <span class="bcp14">MUST</span> be associated with the expected resource identity, not merely with the location from which the document was retrieved.<a href="#section-9.4-3" class="pilcrow">¶</a></p>
+<p id="section-9.4-4">Scope values, authority identifiers, families, and ranks from one resource <span class="bcp14">MUST NOT</span> be used to establish authority semantics for another resource.<a href="#section-9.4-4" class="pilcrow">¶</a></p>
+<p id="section-9.4-5">An authorization server <span class="bcp14">MUST NOT</span> treat resource metadata as authorization to weaken existing grant restrictions, client policy, subject authority, or AS-local minimum security requirements.<a href="#section-9.4-5" class="pilcrow">¶</a></p>
+<p id="section-9.4-6">Omitted or weaker access requirements do not override those requirements.<a href="#section-9.4-6" class="pilcrow">¶</a></p>
+<p id="section-9.4-7">When protected resource authority metadata informs token issuance, the authorization server <span class="bcp14">MUST</span> audience-restrict the resulting token to the resource or resources independently evaluated for that issuance decision, using the mechanisms described in <span>[<a href="#RFC8707" class="cite xref">RFC8707</a>]</span>.<a href="#section-9.4-7" class="pilcrow">¶</a></p>
+<p id="section-9.4-8">A protected resource <span class="bcp14">MUST</span> reject an access token that is not intended for that resource.<a href="#section-9.4-8" class="pilcrow">¶</a></p>
+<p id="section-9.4-9">An attacker-controlled resource <span class="bcp14">MUST NOT</span> be able to select an audience mapping that makes its tokens acceptable to another resource.<a href="#section-9.4-9" class="pilcrow">¶</a></p>
+<p id="section-9.4-10">Publication of metadata, including an <code>authorization_servers</code> member naming an AS, does not establish that the publisher is trusted by that AS.<a href="#section-9.4-10" class="pilcrow">¶</a></p>
+<p id="section-9.4-11">Token refresh or exchange that changes the target resource requires evaluation in the new resource context. A previous issuance decision based on another resource's metadata does not establish authority for the new target.<a href="#section-9.4-11" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="requests-naming-multiple-resources">
@@ -2695,6 +2713,10 @@ reusable access requirement profiles, and attenuation relationships.<a href="#se
 <dt id="RFC9449">[RFC9449]</dt>
         <dd>
 <span class="refAuthor">Fett, D.</span>, <span class="refAuthor">Campbell, B.</span>, <span class="refAuthor">Bradley, J.</span>, <span class="refAuthor">Lodderstedt, T.</span>, <span class="refAuthor">Jones, M.</span>, and <span class="refAuthor">D. Waite</span>, <span class="refTitle">"OAuth 2.0 Demonstrating Proof of Possession (DPoP)"</span>, <span class="seriesInfo">RFC 9449</span>, <span class="seriesInfo">DOI 10.17487/RFC9449</span>, <time datetime="2023-09" class="refDate">September 2023</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc9449">https://www.rfc-editor.org/info/rfc9449</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC9470">[RFC9470]</dt>
+        <dd>
+<span class="refAuthor">Bertocci, V.</span> and <span class="refAuthor">B. Campbell</span>, <span class="refTitle">"OAuth 2.0 Step Up Authentication Challenge Protocol"</span>, <span class="seriesInfo">RFC 9470</span>, <span class="seriesInfo">DOI 10.17487/RFC9470</span>, <time datetime="2023-09" class="refDate">September 2023</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc9470">https://www.rfc-editor.org/info/rfc9470</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="AUTHZEN-ISSUANCE">[AUTHZEN-ISSUANCE]</dt>
         <dd>
