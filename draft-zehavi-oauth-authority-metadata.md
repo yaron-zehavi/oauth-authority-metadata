@@ -36,6 +36,7 @@ informative:
   RFC8705:
   RFC9068:
   RFC9449:
+  RFC9470:
 
   AUTHZEN-ISSUANCE:
     title: AuthZEN Profile for OAuth 2.0 Token Issuance
@@ -53,7 +54,7 @@ informative:
 
 --- abstract
 
-OAuth metadata advertises supported scopes and authorization details types, but does not define a common metadata structure for describing **the authority** those values represent.
+OAuth metadata advertises supported scopes and authorization details types, but advertised scope values and RAR type identifiers do not themselves describe the **authority** associated with them.
 
 This specification defines authority metadata extensions for OAuth 2.0 Protected Resource Metadata and OAuth 2.0 Authorization Server Metadata.
 
@@ -79,7 +80,7 @@ For example, a scope named `payments.manage` might permit reading, creating, exe
 These gaps matter when an authorization server or policy decision point evaluates whether requested authority:
 
 * is permitted by an existing grant or local policy;
-* aligns with an approved task, purpose, or Mission;
+* aligns with an approved task, purpose, or mission;
 * is broader than necessary;
 * has a lower-authority alternative;
 * requires particular token presentation or authentication properties.
@@ -221,6 +222,7 @@ The following resource accepts a read scope, a management scope that includes re
     "documents.read",
     "documents.manage"
   ],
+  "authorization_details_types_supported": ["document-access"],
   "authority_metadata": {
     "access_requirement_profiles": {
       "standard_access": {
@@ -236,7 +238,7 @@ The following resource accepts a read scope, a management scope that includes re
         },
         "authentication": {
           "acr_values": [
-            "urn:example:acr:phishing-resistant"
+            "phishing-resistant"
           ],
           "max_age": 300
         }
@@ -252,12 +254,12 @@ The following resource accepts a read scope, a management scope that includes re
         "rank": 10,
         "authority": [
           {
-            "resource_type": "urn:example:resource-type:document",
+            "resource_type": "document",
             "actions": [
-              "urn:example:action:document:read"
+              "document:read"
             ],
             "effects": [
-              "urn:example:effect:data-disclosure"
+              "data-disclosure"
             ],
             "risk": "low"
           }
@@ -273,14 +275,14 @@ The following resource accepts a read scope, a management scope that includes re
         "rank": 20,
         "authority": [
           {
-            "resource_type": "urn:example:resource-type:document",
+            "resource_type": "document",
             "actions": [
-              "urn:example:action:document:read",
-              "urn:example:action:document:update"
+              "document:read",
+              "document:update"
             ],
             "effects": [
-              "urn:example:effect:data-disclosure",
-              "urn:example:effect:state-change"
+              "data-disclosure",
+              "state-change"
             ],
             "risk": "medium"
           }
@@ -296,23 +298,20 @@ The following resource accepts a read scope, a management scope that includes re
       {
         "id": "document_access.rar",
         "kind": "authorization_details_type",
-        "value": "urn:example:authorization-details:document-access",
+        "value": "document-access",
         "description": "Access to specified documents under type-specific restrictions.",
         "family": "document_access",
         "authority": [
           {
-            "resource_type": "urn:example:resource-type:document",
+            "resource_type": "document",
             "actions": [
-              "urn:example:action:document:read",
-              "urn:example:action:document:update"
+              "document:read",
+              "document:update"
             ],
             "effects": [
-              "urn:example:effect:data-disclosure",
-              "urn:example:effect:state-change"
-            ],
-            "properties": {
-              "semantics": "urn:example:semantics:document-access:v1"
-            }
+              "data-disclosure",
+              "state-change"
+            ]
           }
         ],
         "access_requirement_profile": "sensitive_access"
@@ -326,7 +325,9 @@ The RAR entry does not receive a fixed rank in this example because its concrete
 
 ### Authorization Server Metadata
 
-The following AS publishes its local understanding of profile scopes.
+The following AS publishes its local understanding of profile scopes and the document-access RAR type also described in the protected resource example.
+
+In this example, the AS and protected resource publish matching type-level descriptions. Matching descriptions do not establish trust, imply comparable family rankings across documents, or guarantee acceptance of an issued token.
 
 ~~~ json
 {
@@ -335,6 +336,7 @@ The following AS publishes its local understanding of profile scopes.
     "profile.read",
     "profile.manage"
   ],
+  "authorization_details_types_supported": ["document-access"],
   "authority_metadata": {
     "authorities": [
       {
@@ -345,12 +347,12 @@ The following AS publishes its local understanding of profile scopes.
         "rank": 10,
         "authority": [
           {
-            "resource_type": "urn:example:resource-type:profile",
+            "resource_type": "profile",
             "actions": [
-              "urn:example:action:profile:read"
+              "profile:read"
             ],
             "effects": [
-              "urn:example:effect:data-disclosure"
+              "data-disclosure"
             ],
             "risk": "low"
           }
@@ -364,16 +366,35 @@ The following AS publishes its local understanding of profile scopes.
         "rank": 20,
         "authority": [
           {
-            "resource_type": "urn:example:resource-type:profile",
+            "resource_type": "profile",
             "actions": [
-              "urn:example:action:profile:read",
-              "urn:example:action:profile:update"
+              "profile:read",
+              "profile:update"
             ],
             "effects": [
-              "urn:example:effect:data-disclosure",
-              "urn:example:effect:state-change"
+              "data-disclosure",
+              "state-change"
             ],
             "risk": "medium"
+          }
+        ]
+      },
+      {
+        "kind": "authorization_details_type",
+        "value": "document-access",
+        "description": "Access to specified documents under type-specific restrictions.",
+        "family": "document_access",
+        "authority": [
+          {
+            "resource_type": "document",
+            "actions": [
+              "document:read",
+              "document:update"
+            ],
+            "effects": [
+              "data-disclosure",
+              "state-change"
+            ]
           }
         ]
       }
@@ -381,6 +402,8 @@ The following AS publishes its local understanding of profile scopes.
   }
 }
 ~~~
+
+The RAR entry describes operations the type can express. It does not imply that every authorization details object of this type grants all listed operations. Concrete authority depends on the object's values and the applicable type semantics.
 
 ### Attenuation Decision
 
@@ -451,6 +474,10 @@ Lower values express the publisher's preferred ordering toward lower authority w
 
 Rank does not prove containment, interchangeability, or suitability for a task. See {{ordering}}.
 
+For a RAR type entry, `rank` is an advisory ordering of the type-level authority description. It does not rank individual authorization details objects.
+
+Publishers MAY omit `rank` when parameter-dependent authority makes a type-level ordering unhelpful.
+
 ### authority
 
 REQUIRED. A non-empty array of structured authority descriptions.
@@ -458,6 +485,8 @@ REQUIRED. A non-empty array of structured authority descriptions.
 Each element describes an aspect of the authority represented by the entry.
 Multiple elements describe the combined authority of the entry;
 they are not alternative choices.
+
+For a RAR type entry, the combined description characterizes authority expressible by the type, not authority necessarily granted by an individual authorization details object.
 
 The authority descriptions are defined in {{structured-authority}}.
 
@@ -500,7 +529,11 @@ Each object in an entry's `authority` array contains:
 
 `actions`:
 : REQUIRED. A non-empty array of non-empty strings identifying permitted
-  application actions.
+  application actions. For a scope entry, `actions` describes the operations
+  authorized by that scope, subject to applicable resource restrictions.
+  For a RAR type entry, `actions` describes operations the type can
+  express. The authority of a concrete authorization details object
+  depends on its values and the type-specific semantics.
 
 `effects`:
 : OPTIONAL. An array of non-empty strings describing consequences or
@@ -510,21 +543,17 @@ Each object in an entry's `authority` array contains:
 : OPTIONAL. A non-empty string identifying a publisher-defined risk
   classification.
 
-`properties`:
-: OPTIONAL. A JSON object containing additional domain-specific semantic
-  attributes.
-
 For example:
 
 ~~~ json
 {
-  "resource_type": "urn:example:resource-type:payment",
+  "resource_type": "payment",
   "actions": [
-    "urn:example:action:payment:read",
-    "urn:example:action:payment:execute"
+    "payment:read",
+    "payment:execute"
   ],
   "effects": [
-    "urn:example:effect:external-transfer"
+    "external-transfer"
   ],
   "risk": "high"
 }
@@ -548,7 +577,6 @@ In particular:
 * An effect describes consequences; it does not confer additional
   authority.
 * A risk label does not establish an ordering of access rights.
-* Missing `properties` do not mean that no restrictions exist.
 
 A consumer performing semantic authorization evaluation needs the applicable vocabulary definitions, RAR type semantics, request values, and local policy.
 
@@ -601,7 +629,7 @@ For example:
       },
       "authentication": {
         "acr_values": [
-          "urn:example:acr:phishing-resistant"
+          "phishing-resistant"
         ],
         "max_age": 300
       }
@@ -620,7 +648,7 @@ The `token` object can contain:
 
 `max_lifetime`:
 : OPTIONAL. A positive integer expressing, in seconds, the maximum
-  acceptable total lifetime of the access token.
+  acceptable total lifetime of the access token, from issuance to expiration.
 
 `sender_constrained`:
 : OPTIONAL. A boolean. If `true`, presentation must satisfy an
@@ -643,9 +671,7 @@ The `authentication` object can contain:
   reference values.
 
 `max_age`:
-: OPTIONAL. A positive integer expressing, in seconds, the maximum
-  acceptable elapsed time since the relevant end-user authentication
-  event, represented in the token's introspection response's `auth_time` claim.
+: OPTIONAL. A positive integer expressing, in seconds, the maximum acceptable elapsed time since the relevant end-user authentication event. The resource determines that event's time from validated authentication information associated with the access token, such as an auth_time claim in a validated JWT access token or a trusted token introspection response, as described in {{RFC9470}}.
 
 If both attributes are present, both requirements apply.
 
@@ -705,15 +731,18 @@ The relationship:
 
 asserts that the target represents no greater authority than the source under the protected resource's authority semantics.
 
-This is a containment assertion, not merely a statement that the target is lower risk or belongs to an earlier workflow phase.
+For relationships between scope entries, this relationship asserts that the target represents no greater authority than the source under the protected resource's applicable semantics and restrictions.
+
+Where either entry describes a RAR type, the relationship identifies a candidate attenuation target. It does not establish containment between concrete authorization details objects or between a concrete object and a scope grant. A consumer MUST establish concrete containment using applicable type semantics, parameter restrictions, and policy before substitution.
 
 For example, if `documents.manage` authorizes both reading and modifying documents, it can declare attenuation to a scope that authorizes reading the same documents.
 
 Conversely, a payment execution authority does not automatically contain payment preparation or payment status access. Those are different operations. A relationship is valid only if the resource's actual semantics establish the asserted containment.
 
 A publisher MUST NOT declare this relationship based solely on rank, risk, or perceived similarity.
-
 The relationship does not assert that the target satisfies the client's task, purpose, or Mission.
+
+For parameterized authorities such as Rich Authorization Requests (RAR) types, the relationship identifies a potential attenuation target. It does not assert containment between arbitrary instances of the source and target types. Concrete containment requires the applicable type semantics and parameter restrictions.
 
 ## RAR and Cross-Kind Relationships
 
@@ -730,11 +759,8 @@ If containment cannot be established for the concrete request, the relationship 
 ## Relationship Interpretation
 
 Containment is transitive when the same resource context and compatible semantic restrictions apply.
-
 A consumer is not required to compute a transitive closure, select a target, or perform substitution.
-
 Unrecognized relationship names MUST NOT be interpreted as `can_be_attenuated_to`.
-
 Consumers traversing relationships SHOULD apply limits to traversal depth and visited entries to avoid unbounded processing.
 
 # Authority Ordering {#ordering}
@@ -793,11 +819,13 @@ Existing grant restrictions, client policy, subject authority, and applicable pr
 
 An authorization server may use local policy or configuration when protected resource metadata is unavailable.
 
-AS-published metadata expresses the AS's local understanding. It does not override the protected resource's enforcement semantics.
+AS authority metadata describes the AS's local interpretation of its authority vocabulary. Protected resource authority metadata describes the resource's enforcement semantics.
 
-If AS and resource descriptions conflict, this specification does not mandate a precedence algorithm or require issuance. The conflict is an input to trust configuration and local policy.
+An authorization server MUST NOT use protected resource metadata, by itself, to relax its issuance restrictions or minimum security requirements. An omitted requirement, lower risk classification, lower rank, or narrower authority description does not override AS policy.
 
-A consumer MUST NOT treat an unresolved semantic conflict as proof of safe attenuation or authority alignment.
+Where the authority descriptions differ, the AS determines their applicability through trusted configuration and local policy. The difference MUST NOT be resolved merely by selecting the interpretation that permits issuance.
+
+This specification does not require an AS to issue a token when the descriptions or requirements cannot be reconciled.
 
 ## Attenuation Options
 
@@ -849,7 +877,8 @@ A malicious client can select an attacker-controlled resource whose metadata und
 
 If an authorization server applies that metadata outside its resource context, the client might obtain a token usable at another resource under weaker policy.
 
-An authorization server MUST bind authority metadata used in an issuance decision to the protected resource for which that metadata was validated.
+An authorization server MUST bind protected resource authority metadata used in an issuance decision to the protected resource for which that metadata was validated. Protected resource authority metadata MUST be associated with the expected resource identity, not merely with the location from which the document was retrieved.
+
 Scope values, authority identifiers, families, and ranks from one resource MUST NOT be used to establish authority semantics for another resource.
 
 An authorization server MUST NOT treat resource metadata as authorization to weaken existing grant restrictions, client policy, subject authority, or AS-local minimum security requirements.
