@@ -151,13 +151,12 @@ Table of Contents
 
    OAuth 2.0 Authorization Server Metadata [RFC8414] and OAuth 2.0
    Protected Resource Metadata [RFC9728] enable discovery of information
-   about authorization servers and protected resources.  Supported scope
-   values and RAR types can be advertised using scopes_supported and
-   authorization_details_types_supported.
+   about authorization servers and protected resources.
 
-   Supported scope values and RAR types are only identifiers, which do
-   not provide a description of their authority: the operations,
-   resources, or effects they authorize.
+   Supported scope values and RAR types can be advertised using
+   scopes_supported and authorization_details_types_supported, but these
+   are only identifiers, which do not provide a description of their
+   authority: the operations, resources, or effects they authorize.
 
    For example, a scope named payments.manage might permit reading,
    creating, executing, or deleting payment instructions.  Its name
@@ -178,7 +177,7 @@ Table of Contents
       properties.
 
    This specification defines a common metadata structure to describe
-   authority.  It supports both scope values and RAR types.
+   the authority of scope values and RAR types.
 
 1.1.  Publication Roles
 
@@ -209,7 +208,7 @@ Table of Contents
 
    *  reusable protected resource access requirement profiles;
 
-   *  inline attenuation relationships;
+   *  attenuation relationships;
 
    *  advisory authority ordering through family and rank.
 
@@ -234,8 +233,9 @@ Table of Contents
 1.3.  Relationship to AuthZEN
 
    The AuthZEN OAuth token issuance profile [AUTHZEN-ISSUANCE] and token
-   exchange binding [AUTHZEN-EXCHANGE] provide mechanisms for policy
-   evaluation in authorization server issuance and exchange flows.
+   exchange binding [AUTHZEN-EXCHANGE] drafts provide mechanisms for
+   policy evaluation in authorization server issuance and exchange
+   flows.
 
    This document provides semantic information which can be used in
    those evaluations.  For example, a deployment can resolve a requested
@@ -457,10 +457,6 @@ Table of Contents
    restrictions.
 
 2.4.2.  Authorization Server Metadata
-
-   The following AS publishes its local understanding of profile scopes
-   and the document-access RAR type also described in the protected
-   resource example.
 
    In this example, the AS and protected resource publish matching type-
    level descriptions.  Matching descriptions do not establish trust,
