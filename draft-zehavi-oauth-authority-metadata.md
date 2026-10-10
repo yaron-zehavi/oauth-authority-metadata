@@ -71,9 +71,9 @@ This metadata can inform authentication and authorization decisions before token
 OAuth 2.0 {{RFC6749}} uses scope values to express requested and granted access.
 OAuth 2.0 Rich Authorization Requests (RAR) {{RFC9396}} provides the `authorization_details` parameter for structured authorization requests.
 
-OAuth 2.0 Authorization Server Metadata {{RFC8414}} and OAuth 2.0 Protected Resource Metadata {{RFC9728}} enable discovery of information about authorization servers and protected resources. Supported scope values and RAR types can be advertised using `scopes_supported` and `authorization_details_types_supported`.
+OAuth 2.0 Authorization Server Metadata {{RFC8414}} and OAuth 2.0 Protected Resource Metadata {{RFC9728}} enable discovery of information about authorization servers and protected resources.
 
-Supported scope values and RAR types are only identifiers, which do not provide a description of their authority: the operations, resources, or effects they authorize.
+Supported scope values and RAR types can be advertised using `scopes_supported` and `authorization_details_types_supported`, but these are only identifiers, which do not provide a description of their authority: the operations, resources, or effects they authorize.
 
 For example, a scope named `payments.manage` might permit reading, creating, executing, or deleting payment instructions. Its name alone does not establish which operations are permitted.
 
@@ -85,7 +85,7 @@ These gaps matter when an authorization server or policy decision point evaluate
 * has a lower-authority alternative;
 * requires particular token presentation or authentication properties.
 
-This specification defines a common metadata structure to describe authority. It supports both scope values and RAR types.
+This specification defines a common metadata structure to describe the authority of scope values and RAR types.
 
 ## Publication Roles
 
@@ -106,8 +106,9 @@ This specification defines:
 * an `authority_metadata` parameter for authorization server metadata;
 * a common authority description model for scopes and RAR types;
 * reusable protected resource access requirement profiles;
-* inline attenuation relationships;
+* attenuation relationships;
 * advisory authority ordering through `family` and `rank`.
+
 
 This specification does not define:
 
@@ -122,7 +123,7 @@ This specification does not define:
 
 ## Relationship to AuthZEN
 
-The AuthZEN OAuth token issuance profile {{AUTHZEN-ISSUANCE}} and token exchange binding {{AUTHZEN-EXCHANGE}} provide mechanisms for policy evaluation in authorization server issuance and exchange flows.
+The AuthZEN OAuth token issuance profile {{AUTHZEN-ISSUANCE}} and token exchange binding {{AUTHZEN-EXCHANGE}} drafts provide mechanisms for policy evaluation in authorization server issuance and exchange flows.
 
 This document provides semantic information which can be used in those evaluations. For example, a deployment can resolve a requested scope into an authority description before consulting a policy decision point.
 
@@ -324,8 +325,6 @@ The following resource accepts a read scope, a management scope that includes re
 The RAR entry does not receive a fixed rank in this example because its concrete authority varies with the requested actions and document restrictions.
 
 ### Authorization Server Metadata
-
-The following AS publishes its local understanding of profile scopes and the document-access RAR type also described in the protected resource example.
 
 In this example, the AS and protected resource publish matching type-level descriptions. Matching descriptions do not establish trust, imply comparable family rankings across documents, or guarantee acceptance of an issued token.
 
