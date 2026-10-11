@@ -4,8 +4,8 @@
 
 Web Authorization Protocol                                     Y. Zehavi
 Internet-Draft                             Raiffeisen Bank International
-Intended status: Standards Track                         10 October 2026
-Expires: 13 April 2027
+Intended status: Standards Track                         11 October 2026
+Expires: 14 April 2027
 
 
                       OAuth 2.0 Authority Metadata
@@ -59,7 +59,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 13 April 2027.
+   This Internet-Draft will expire on 14 April 2027.
 
 Copyright Notice
 
@@ -195,6 +195,14 @@ Table of Contents
    Authorization server metadata describes an issuer-local authority
    vocabulary.  It does not establish how a resource enforces an issued
    authority.
+
+   Authorization server authority metadata enables clients,
+   independently operated interfaces, policy services, and
+   administrative tools to discover the issuer's declared interpretation
+   of its scope values and authorization details types.  It does not
+   publish issuance policy or predict authorization decisions.  An
+   authorization server can maintain the same information privately
+   without publishing this metadata.
 
 1.2.  Scope
 
