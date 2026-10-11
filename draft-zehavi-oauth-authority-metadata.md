@@ -98,6 +98,8 @@ Protected resource metadata is resource-bound through the `resource` attribute d
 
 Authorization server metadata describes an issuer-local authority vocabulary. It does not establish how a resource enforces an issued authority.
 
+Authorization server authority metadata enables clients, independently operated interfaces, policy services, and administrative tools to discover the issuer's declared interpretation of its scope values and authorization details types. It does not publish issuance policy or predict authorization decisions. An authorization server can maintain the same information privately without publishing this metadata.
+
 ## Scope
 
 This specification defines:
