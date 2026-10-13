@@ -4,8 +4,8 @@
 
 Web Authorization Protocol                                     Y. Zehavi
 Internet-Draft                             Raiffeisen Bank International
-Intended status: Standards Track                         11 October 2026
-Expires: 14 April 2027
+Intended status: Standards Track                         13 October 2026
+Expires: 16 April 2027
 
 
                       OAuth 2.0 Authority Metadata
@@ -33,6 +33,10 @@ Abstract
    before token issuance and exchange, as well as support authority
    attenuation.
 
+   An optional access token attribute allows an authorization server to
+   assert application of protected resource authority metadata and
+   identify the applied snapshot through a resource-bound digest.
+
 Discussion Venues
 
    This note is to be removed before publishing as an RFC.
@@ -59,7 +63,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 14 April 2027.
+   This Internet-Draft will expire on 16 April 2027.
 
 Copyright Notice
 
@@ -119,25 +123,36 @@ Table of Contents
      8.1.  Publication Is Not an Issuance Decision
      8.2.  Metadata Sources and Conflicts
      8.3.  Attenuation Options
-   9.  Security Considerations
-     9.1.  Untrusted Resource Locations
-     9.2.  Semantic Misrepresentation
-     9.3.  Stale Metadata
-     9.4.  Malicious Resource Metadata and Policy Downgrade
-     9.5.  Requests Naming Multiple Resources
-     9.6.  Scope Combinations
-     9.7.  RAR Parameter Restrictions
-     9.8.  Requirements Are Not Enforcement
-     9.9.  Relationship Processing
-     9.10. Consent Rendering
-   10. Privacy Considerations
-   11. IANA Considerations
-     11.1.  OAuth Authorization Server Metadata Registration
-     11.2.  OAuth Protected Resource Metadata Registration
-   12. Acknowledgments
-   13. References
-     13.1.  Normative References
-     13.2.  Informative References
+   9.  Authority Metadata Binding
+     9.1.  Attribute Values
+     9.2.  Issuer Assertion
+     9.3.  Digest Construction
+     9.4.  Resource Association
+     9.5.  Token Conveyance
+     9.6.  Binding Interpretation
+     9.7.  Refresh and Token Exchange
+   10. Security Considerations
+     10.1.  Untrusted Resource Locations
+     10.2.  Semantic Misrepresentation
+     10.3.  Stale Metadata
+     10.4.  Malicious Resource Metadata and Policy Downgrade
+     10.5.  Requests Naming Multiple Resources
+     10.6.  Scope Combinations
+     10.7.  RAR Parameter Restrictions
+     10.8.  Requirements Are Not Enforcement
+     10.9.  Relationship Processing
+     10.10. Consent Rendering
+     10.11. External Semantic Dependencies
+   11. Privacy Considerations
+   12. IANA Considerations
+     12.1.  OAuth Authorization Server Metadata Registration
+     12.2.  OAuth Protected Resource Metadata Registration
+     12.3.  JSON Web Token Claim Registration
+     12.4.  OAuth Token Introspection Response Registration
+   13. Acknowledgments
+   14. References
+     14.1.  Normative References
+     14.2.  Informative References
    Appendix A.  Editorial Issues
    Appendix B.  Document History
    Author's Address
@@ -204,6 +219,11 @@ Table of Contents
    authorization server can maintain the same information privately
    without publishing this metadata.
 
+   Publication of authorization server authority metadata does not
+   constitute a commitment to apply protected resource metadata.  The
+   optional amb attribute provides a per-token assertion as defined in
+   Section 9.
+
 1.2.  Scope
 
    This specification defines:
@@ -219,6 +239,9 @@ Table of Contents
    *  attenuation relationships;
 
    *  advisory authority ordering through family and rank.
+
+   *  an optional authority metadata binding attribute for access tokens
+      and token introspection responses.
 
    This specification does not define:
 
@@ -1058,6 +1081,11 @@ Table of Contents
    Existing grant restrictions, client policy, subject authority, and
    applicable protocol rules remain in effect.
 
+   An authority metadata binding does not authorize issuance or
+   guarantee resource acceptance.  It identifies the metadata applied by
+   the authorization server; the resource remains responsible for
+   validating the token and enforcing current policy.
+
 8.2.  Metadata Sources and Conflicts
 
    An authorization server may use local policy or configuration when
@@ -1111,9 +1139,179 @@ Table of Contents
 
    No new error code or remediation response is defined here.
 
-9.  Security Considerations
+9.  Authority Metadata Binding
 
-9.1.  Untrusted Resource Locations
+   This specification defines the optional amb (authority metadata
+   binding) attribute for access tokens and token introspection
+   responses.
+
+   The attribute communicates whether the authorization server applied
+   protected resource authority metadata when evaluating issuance and,
+   if so, identifies the metadata snapshot it applied.
+
+   Publication of authorization server authority metadata does not
+   require issuance of amb.  Conversely, an authorization server can
+   issue amb without publishing its own authority metadata.
+
+9.1.  Attribute Values
+
+   amb MUST be a JSON string.  This specification defines two forms:
+
+   local:  The authorization server evaluated issuance using its local
+      authority definitions and policy.  This value makes no assertion
+      that protected resource authority metadata was applied.
+
+   s256:<digest>:  The authorization server applied the protected
+      resource authority metadata snapshot identified by the digest when
+      evaluating the granted authority and applicable access
+      requirements.
+
+   The s256 identifier denotes SHA-256.  The digest MUST be encoded
+   using base64url without padding.  The digest input is defined in
+   Section 9.3.
+
+   For example:
+
+   {
+     "amb": "local"
+   }
+
+   A digest-valued attribute has the following form, where the
+   placeholder is replaced with the encoded digest:
+
+   "amb": "s256:<base64url-encoded SHA-256 digest>"
+
+   An absent amb makes no assertion about authority metadata processing.
+   Consumers MUST NOT interpret an absent attribute, local, or an
+   unrecognized value as a protected resource authority metadata
+   binding.
+
+9.2.  Issuer Assertion
+
+   An authorization server issuing a digest-valued amb MUST have applied
+   the identified metadata when evaluating the token's granted authority
+   and applicable access requirements.
+
+   Retrieving, caching, or hashing metadata without applying it is
+   insufficient grounds for issuing a digest-valued amb.
+
+   The authorization server MUST preserve its own issuance restrictions
+   and minimum security requirements.  A binding does not authorize
+   issuance, require selection of an attenuation target, or establish
+   that the granted authority satisfies the client's task.
+
+   A binding identifies the applied metadata snapshot.  It does not
+   assert that the metadata is complete or that concrete RAR authority
+   can be determined without applicable type semantics and request
+   values.
+
+9.3.  Digest Construction
+
+   The digest input is a JSON object containing exactly these members:
+
+   resource:  The exact protected resource identifier from the validated
+      protected resource metadata document.
+
+   authority_metadata:  The complete authority_metadata object from that
+      document, including access requirement profiles, relationships,
+      and any extension attributes.
+
+   For example, the input has this structure:
+
+   {
+     "resource": "<validated protected resource identifier>",
+     "authority_metadata": <complete authority_metadata object>
+   }
+
+   The publisher and consumer MUST:
+
+   1.  Construct this object without adding default values, resolving
+       external references, or removing attributes.
+
+   2.  Canonicalize it using the JSON Canonicalization Scheme defined by
+       [RFC8785].
+
+   3.  Compute SHA-256 over the resulting UTF-8 bytes.
+
+   4.  Encode the digest using base64url without padding.
+
+   5.  Prefix the encoded digest with s256:.
+
+   The input MUST satisfy the requirements of [RFC8785].  An
+   implementation MUST NOT issue a digest-valued binding for an input
+   that cannot be canonicalized under those requirements.
+
+   Other protected resource metadata members are excluded from the
+   digest.
+
+   Array order is retained.  Changes to descriptions, extension
+   attributes, or array order can therefore change the digest even when
+   authorization semantics remain unchanged.
+
+9.4.  Resource Association
+
+   This specification defines the string-valued binding only for a token
+   associated with one protected resource.
+
+   The resource MUST be unambiguously determined from validated token
+   audience information and trusted resource mapping.  The authorization
+   server MUST NOT issue a digest-valued amb for a token intended for
+   multiple protected resources.
+
+   The resource identifier included in the digest MUST identify that
+   protected resource.
+
+9.5.  Token Conveyance
+
+   For JWT access tokens, amb is conveyed as a claim protected by the
+   token's integrity mechanism.  A protected resource MUST validate the
+   token under the applicable token profile before relying on amb.
+
+   For tokens validated through introspection, the authorization server
+   MAY return amb as an attribute of an active token's introspection
+   response under [RFC7662].
+
+   An introspection response MUST describe the metadata applied during
+   issuance of the token.  The authorization server MUST NOT substitute
+   a digest of its current metadata merely because introspection occurs
+   after a metadata change.
+
+9.6.  Binding Interpretation
+
+   A protected resource can compare a digest-valued amb with its
+   authority metadata snapshots to determine which snapshot the
+   authorization server identifies as the basis for the granted
+   authority.
+
+   A matching digest indicates snapshot agreement, not when the metadata
+   was retrieved or proof that it was correctly applied.  An absent
+   attribute or the value local provides no protected resource metadata
+   binding.
+
+   Whether a resource requires a binding, accepts previous snapshots, or
+   acts on a mismatch is determined by resource policy and is outside
+   the scope of this specification.
+
+9.7.  Refresh and Token Exchange
+
+   When refreshing access under the same grant without changing the
+   target resource or granted authority, the authorization server MAY
+   retain the grant’s authority metadata binding.  Retaining the binding
+   does not require retrieving current protected resource metadata or
+   recomputing the digest.
+
+   If the authorization server reevaluates the authority using a
+   different metadata snapshot, a digest-valued amb MUST identify that
+   snapshot.
+
+   Token exchange requires establishing the binding for the resulting
+   token’s resource and authority context.  A change of target resource
+   requires a new resource-specific binding; the source token’s binding
+   MUST NOT be carried over as the binding for the new resource.
+
+10.  Security Considerations
+
+10.1.  Untrusted Resource Locations
 
    An AS that fetches metadata in response to a client-supplied resource
    indicator can be exposed to server-side request forgery.
@@ -1122,7 +1320,7 @@ Table of Contents
    control access to internal addresses, and apply request size and
    timeout limits.
 
-9.2.  Semantic Misrepresentation
+10.2.  Semantic Misrepresentation
 
    A publisher can incorrectly describe a scope, type, or containment
    relationship.
@@ -1133,7 +1331,7 @@ Table of Contents
    Consumers should rely only on trusted publishers and understood
    vocabularies when using metadata for authorization decisions.
 
-9.3.  Stale Metadata
+10.3.  Stale Metadata
 
    Authority semantics and access requirements may change.
 
@@ -1141,10 +1339,18 @@ Table of Contents
    strategy.  An old description must not be assumed to remain valid
    indefinitely.
 
-   This specification does not define semantic version negotiation or
-   bind a token to a metadata version.
+   This specification defines an optional digest binding to an authority
+   metadata snapshot.  It does not define semantic version negotiation,
+   guarantee that the snapshot was current at issuance, or bind external
+   vocabulary definitions unless their identifying information is
+   included in the hashed metadata.
 
-9.4.  Malicious Resource Metadata and Policy Downgrade
+   A resource accepting only its current snapshot can invalidate
+   otherwise unexpired tokens whenever the hashed metadata changes.
+   Deployments SHOULD coordinate metadata updates and token issuance,
+   and define any transition period explicitly.
+
+10.4.  Malicious Resource Metadata and Policy Downgrade
 
    A malicious client can select an attacker-controlled resource whose
    metadata understates the authority represented by a scope or
@@ -1192,7 +1398,7 @@ Table of Contents
    based on another resource's metadata does not establish authority for
    the new target.
 
-9.5.  Requests Naming Multiple Resources
+10.5.  Requests Naming Multiple Resources
 
    An OAuth request can identify more than one protected resource.  Each
    resource's authority metadata and access requirements apply only
@@ -1210,7 +1416,7 @@ Table of Contents
 
    This specification does not define a profile-merging algorithm.
 
-9.6.  Scope Combinations
+10.6.  Scope Combinations
 
    The authority of several scopes may not equal a simple union of their
    individual descriptions.
@@ -1222,7 +1428,7 @@ Table of Contents
    Consumers need applicable resource policy when evaluating
    combinations.
 
-9.7.  RAR Parameter Restrictions
+10.7.  RAR Parameter Restrictions
 
    Type-level metadata must not cause a consumer to ignore restrictions
    in a concrete authorization details object.
@@ -1230,7 +1436,7 @@ Table of Contents
    Unsafe transformations can widen document access, payment
    destinations, amounts, or other parameter-defined authority.
 
-9.8.  Requirements Are Not Enforcement
+10.8.  Requirements Are Not Enforcement
 
    Publishing sender-constraining or freshness requirements does not
    implement them.
@@ -1238,7 +1444,12 @@ Table of Contents
    Resources remain responsible for enforcement.  Issuing a short-lived
    token does not prove recent authentication.
 
-9.9.  Relationship Processing
+   A digest-valued amb is an assertion by the authorization server, not
+   proof of correct processing.  A matching digest MUST NOT replace
+   enforcement of token presentation, authentication, freshness, or
+   other resource requirements.
+
+10.9.  Relationship Processing
 
    Relationship graphs can contain cycles or excessive numbers of
    entries.
@@ -1246,7 +1457,7 @@ Table of Contents
    Consumers SHOULD bound graph processing.  Rank must not be used as a
    shortcut for proving containment.
 
-9.10.  Consent Rendering
+10.10.  Consent Rendering
 
    Human-readable descriptions can improve disclosure but do not prove
    comprehension.
@@ -1255,7 +1466,21 @@ Table of Contents
    NOT execute markup, scripts, or instructions embedded in
    descriptions.
 
-10.  Privacy Considerations
+10.11.  External Semantic Dependencies
+
+   A binding covers the metadata representation, not the contents of
+   external vocabulary definitions, RAR type definitions, or other
+   referenced documents.
+
+   An external definition can change without changing the binding.
+   Deployments relying on binding for semantic consistency SHOULD use
+   immutable or versioned definitions and include their identifying
+   information in the authority metadata.
+
+   A matching digest MUST NOT be treated as proof that external semantic
+   dependencies remain unchanged.
+
+11.  Privacy Considerations
 
    Authority metadata can disclose supported operations, resource types,
    and authentication expectations.
@@ -1267,9 +1492,9 @@ Table of Contents
    than user-specific authentication state or individual authorization
    decisions.
 
-11.  IANA Considerations
+12.  IANA Considerations
 
-11.1.  OAuth Authorization Server Metadata Registration
+12.1.  OAuth Authorization Server Metadata Registration
 
    This specification requests registration in the "OAuth Authorization
    Server Metadata" registry established by [RFC8414]:
@@ -1283,7 +1508,7 @@ Table of Contents
 
    *  Specification Document: Section 2 of this document
 
-11.2.  OAuth Protected Resource Metadata Registration
+12.2.  OAuth Protected Resource Metadata Registration
 
    This specification requests registration in the "OAuth Protected
    Resource Metadata" registry established by [RFC9728]:
@@ -1298,26 +1523,73 @@ Table of Contents
 
    *  Specification Document: Section 2 of this document
 
-12.  Acknowledgments
+12.3.  JSON Web Token Claim Registration
+
+   This specification requests registration in the "JSON Web Token
+   Claims" registry:
+
+   *  Claim Name: amb
+
+   *  Claim Description: Authority metadata processing mode or resource-
+      bound digest identifying the authority metadata snapshot applied
+      during token issuance.
+
+   *  Change Controller: IETF
+
+   *  Specification Document: Section 9
+
+12.4.  OAuth Token Introspection Response Registration
+
+   This specification requests registration in the "OAuth Token
+   Introspection Response" registry:
+
+   *  Name: amb
+
+   *  Description: Authority metadata processing mode or resource-bound
+      digest identifying the authority metadata snapshot applied during
+      token issuance.
+
+   *  Change Controller: IETF
+
+   *  Specification Document: Section 9
+
+13.  Acknowledgments
 
    TODO
 
-13.  References
+14.  References
 
-13.1.  Normative References
+14.1.  Normative References
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119,
               DOI 10.17487/RFC2119, March 1997,
               <https://www.rfc-editor.org/info/rfc2119>.
 
-   [RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC
-              2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
-              May 2017, <https://www.rfc-editor.org/info/rfc8174>.
+   [RFC4648]  Josefsson, S., "The Base16, Base32, and Base64 Data
+              Encodings", RFC 4648, DOI 10.17487/RFC4648, October 2006,
+              <https://www.rfc-editor.org/info/rfc4648>.
+
+   [RFC6234]  Eastlake 3rd, D. and T. Hansen, "US Secure Hash Algorithms
+              (SHA and SHA-based HMAC and HKDF)", RFC 6234,
+              DOI 10.17487/RFC6234, May 2011,
+              <https://www.rfc-editor.org/info/rfc6234>.
 
    [RFC6749]  Hardt, D., Ed., "The OAuth 2.0 Authorization Framework",
               RFC 6749, DOI 10.17487/RFC6749, October 2012,
               <https://www.rfc-editor.org/info/rfc6749>.
+
+   [RFC7519]  Jones, M., Bradley, J., and N. Sakimura, "JSON Web Token
+              (JWT)", RFC 7519, DOI 10.17487/RFC7519, May 2015,
+              <https://www.rfc-editor.org/info/rfc7519>.
+
+   [RFC7662]  Richer, J., Ed., "OAuth 2.0 Token Introspection",
+              RFC 7662, DOI 10.17487/RFC7662, October 2015,
+              <https://www.rfc-editor.org/info/rfc7662>.
+
+   [RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC
+              2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
+              May 2017, <https://www.rfc-editor.org/info/rfc8174>.
 
    [RFC8414]  Jones, M., Sakimura, N., and J. Bradley, "OAuth 2.0
               Authorization Server Metadata", RFC 8414,
@@ -1327,6 +1599,15 @@ Table of Contents
    [RFC8707]  Campbell, B., Bradley, J., and H. Tschofenig, "Resource
               Indicators for OAuth 2.0", RFC 8707, DOI 10.17487/RFC8707,
               February 2020, <https://www.rfc-editor.org/info/rfc8707>.
+
+   [RFC8785]  Rundgren, A., Jordan, B., and S. Erdtman, "JSON
+              Canonicalization Scheme (JCS)", RFC 8785,
+              DOI 10.17487/RFC8785, June 2020,
+              <https://www.rfc-editor.org/info/rfc8785>.
+
+   [RFC9068]  Bertocci, V., "JSON Web Token (JWT) Profile for OAuth 2.0
+              Access Tokens", RFC 9068, DOI 10.17487/RFC9068, October
+              2021, <https://www.rfc-editor.org/info/rfc9068>.
 
    [RFC9396]  Lodderstedt, T., Richer, J., and B. Campbell, "OAuth 2.0
               Rich Authorization Requests", RFC 9396,
@@ -1338,11 +1619,7 @@ Table of Contents
               DOI 10.17487/RFC9728, April 2025,
               <https://www.rfc-editor.org/info/rfc9728>.
 
-13.2.  Informative References
-
-   [RFC7662]  Richer, J., Ed., "OAuth 2.0 Token Introspection",
-              RFC 7662, DOI 10.17487/RFC7662, October 2015,
-              <https://www.rfc-editor.org/info/rfc7662>.
+14.2.  Informative References
 
    [RFC8693]  Jones, M., Nadalin, A., Campbell, B., Ed., Bradley, J.,
               and C. Mortimore, "OAuth 2.0 Token Exchange", RFC 8693,
@@ -1354,10 +1631,6 @@ Table of Contents
               and Certificate-Bound Access Tokens", RFC 8705,
               DOI 10.17487/RFC8705, February 2020,
               <https://www.rfc-editor.org/info/rfc8705>.
-
-   [RFC9068]  Bertocci, V., "JSON Web Token (JWT) Profile for OAuth 2.0
-              Access Tokens", RFC 9068, DOI 10.17487/RFC9068, October
-              2021, <https://www.rfc-editor.org/info/rfc9068>.
 
    [RFC9449]  Fett, D., Campbell, B., Bradley, J., Lodderstedt, T.,
               Jones, M., and D. Waite, "OAuth 2.0 Demonstrating Proof of
@@ -1389,9 +1662,6 @@ Appendix A.  Editorial Issues
    *  Evaluate whether additional metadata is needed to associate type-
       specific semantic definitions with RAR entries.
 
-   *  Determine whether future revisions should support parameter-
-      dependent access profiles and attenuation transformations.
-
    *  Determine whether extension registries are needed for authority
       kinds, relationship names, and access requirement attributes.
 
@@ -1413,6 +1683,10 @@ Appendix B.  Document History
       flag, resource selectors, or authority identifiers.
 
    *  Left attenuation response behavior to AS policy.
+
+   *  Defined optional amb token and introspection bindings, including
+      local processing indication and resource-bound authority metadata
+      snapshot digests.
 
 Author's Address
 
