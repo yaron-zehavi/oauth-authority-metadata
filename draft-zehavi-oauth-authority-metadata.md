@@ -23,18 +23,22 @@ author:
 
 normative:
   RFC2119:
-  RFC8174:
+  RFC4648:
+  RFC6234:
   RFC6749:
+  RFC7519:
+  RFC7662:
+  RFC8174:
   RFC8414:
   RFC8707:
+  RFC8785:
+  RFC9068:
   RFC9396:
   RFC9728:
 
 informative:
-  RFC7662:
   RFC8693:
   RFC8705:
-  RFC9068:
   RFC9449:
   RFC9470:
 
@@ -63,6 +67,8 @@ A protected resource can describe the authority it associates with scopes and Ri
 An authorization server can publish a simpler description of its local authority vocabulary.
 
 This metadata can inform authentication and authorization decisions before token issuance and exchange, as well as support authority attenuation.
+
+An optional access token attribute allows an authorization server to assert application of protected resource authority metadata and identify the applied snapshot through a resource-bound digest.
 
 --- middle
 
@@ -100,6 +106,8 @@ Authorization server metadata describes an issuer-local authority vocabulary. It
 
 Authorization server authority metadata enables clients, independently operated interfaces, policy services, and administrative tools to discover the issuer's declared interpretation of its scope values and authorization details types. It does not publish issuance policy or predict authorization decisions. An authorization server can maintain the same information privately without publishing this metadata.
 
+Publication of authorization server authority metadata does not constitute a commitment to apply protected resource metadata. The optional amb attribute provides a per-token assertion as defined in {{authority-metadata-binding}}.
+
 ## Scope
 
 This specification defines:
@@ -110,6 +118,7 @@ This specification defines:
 * reusable protected resource access requirement profiles;
 * attenuation relationships;
 * advisory authority ordering through `family` and `rank`.
+* an optional authority metadata binding attribute for access tokens and token introspection responses.
 
 
 This specification does not define:
@@ -816,6 +825,8 @@ Similarly, a resource's published authority description does not authorize issua
 
 Existing grant restrictions, client policy, subject authority, and applicable protocol rules remain in effect.
 
+An authority metadata binding does not authorize issuance or guarantee resource acceptance. It identifies the metadata applied by the authorization server; the resource remains responsible for validating the token and enforcing current policy.
+
 ## Metadata Sources and Conflicts
 
 An authorization server may use local policy or configuration when protected resource metadata is unavailable.
@@ -847,6 +858,128 @@ Where an AS changes granted authority, it remains responsible for the applicable
 
 No new error code or remediation response is defined here.
 
+# Authority Metadata Binding {#authority-metadata-binding}
+
+This specification defines the optional `amb` (authority metadata binding) attribute for access tokens and token introspection responses.
+
+The attribute communicates whether the authorization server applied protected resource authority metadata when evaluating issuance and, if so, identifies the metadata snapshot it applied.
+
+Publication of authorization server authority metadata does not require issuance of `amb`.
+Conversely, an authorization server can issue `amb` without publishing its own authority metadata.
+
+## Attribute Values
+
+`amb` MUST be a JSON string. This specification defines two forms:
+
+`local`:
+: The authorization server evaluated issuance using its local
+  authority definitions and policy. This value makes no assertion
+  that protected resource authority metadata was applied.
+
+`s256:<digest>`:
+: The authorization server applied the protected resource authority
+  metadata snapshot identified by the digest when evaluating the
+  granted authority and applicable access requirements.
+
+The `s256` identifier denotes SHA-256. The digest MUST be encoded using base64url without padding. The digest input is defined in {{binding-digest}}.
+
+For example:
+
+~~~ json
+{
+  "amb": "local"
+}
+~~~
+
+A digest-valued attribute has the following form, where the placeholder is replaced with the encoded digest:
+
+~~~ text
+"amb": "s256:<base64url-encoded SHA-256 digest>"
+~~~
+
+An absent `amb` makes no assertion about authority metadata processing. Consumers MUST NOT interpret an absent attribute,
+`local`, or an unrecognized value as a protected resource authority metadata binding.
+
+## Issuer Assertion
+
+An authorization server issuing a digest-valued `amb` MUST have applied the identified metadata when evaluating the token's granted authority and applicable access requirements.
+
+Retrieving, caching, or hashing metadata without applying it is insufficient grounds for issuing a digest-valued `amb`.
+
+The authorization server MUST preserve its own issuance restrictions and minimum security requirements. A binding does not authorize issuance, require selection of an attenuation target, or establish that the granted authority satisfies the client's task.
+
+A binding identifies the applied metadata snapshot. It does not assert that the metadata is complete or that concrete RAR authority can be determined without applicable type semantics and request values.
+
+## Digest Construction {#binding-digest}
+
+The digest input is a JSON object containing exactly these members:
+
+`resource`:
+: The exact protected resource identifier from the validated
+  protected resource metadata document.
+
+`authority_metadata`:
+: The complete `authority_metadata` object from that document,
+  including access requirement profiles, relationships, and any
+  extension attributes.
+
+For example, the input has this structure:
+
+~~~ text
+{
+  "resource": "<validated protected resource identifier>",
+  "authority_metadata": <complete authority_metadata object>
+}
+~~~
+
+The publisher and consumer MUST:
+
+1. Construct this object without adding default values, resolving
+   external references, or removing attributes.
+2. Canonicalize it using the JSON Canonicalization Scheme defined
+   by {{RFC8785}}.
+3. Compute SHA-256 over the resulting UTF-8 bytes.
+4. Encode the digest using base64url without padding.
+5. Prefix the encoded digest with `s256:`.
+
+The input MUST satisfy the requirements of {{RFC8785}}. An implementation MUST NOT issue a digest-valued binding for an input that cannot be canonicalized under those requirements.
+
+Other protected resource metadata members are excluded from the digest.
+
+Array order is retained. Changes to descriptions, extension attributes, or array order can therefore change the digest even when authorization semantics remain unchanged.
+
+## Resource Association
+
+This specification defines the string-valued binding only for a token associated with one protected resource.
+
+The resource MUST be unambiguously determined from validated token audience information and trusted resource mapping. The authorization server MUST NOT issue a digest-valued `amb` for a token intended for multiple protected resources.
+
+The resource identifier included in the digest MUST identify that protected resource.
+
+## Token Conveyance
+
+For JWT access tokens, `amb` is conveyed as a claim protected by the token's integrity mechanism. A protected resource MUST validate the token under the applicable token profile before relying on `amb`.
+
+For tokens validated through introspection, the authorization server MAY return `amb` as an attribute of an active token's introspection response under {{RFC7662}}.
+
+An introspection response MUST describe the metadata applied during issuance of the token. The authorization server MUST NOT substitute a digest of its current metadata merely because introspection occurs after a metadata change.
+
+## Binding Interpretation
+
+A protected resource can compare a digest-valued amb with its authority metadata snapshots to determine which snapshot the authorization server identifies as the basis for the granted authority.
+
+A matching digest indicates snapshot agreement, not when the metadata was retrieved or proof that it was correctly applied. An absent attribute or the value local provides no protected resource metadata binding.
+
+Whether a resource requires a binding, accepts previous snapshots, or acts on a mismatch is determined by resource policy and is outside the scope of this specification.
+
+## Refresh and Token Exchange
+
+When refreshing access under the same grant without changing the target resource or granted authority, the authorization server MAY retain the grant’s authority metadata binding. Retaining the binding does not require retrieving current protected resource metadata or recomputing the digest.
+
+If the authorization server reevaluates the authority using a different metadata snapshot, a digest-valued amb MUST identify that snapshot.
+
+Token exchange requires establishing the binding for the resulting token’s resource and authority context. A change of target resource requires a new resource-specific binding; the source token’s binding MUST NOT be carried over as the binding for the new resource.
+
 # Security Considerations
 
 ## Untrusted Resource Locations
@@ -870,7 +1003,9 @@ Authority semantics and access requirements may change.
 Consumers SHOULD use bounded caching and an appropriate refresh strategy.
 An old description must not be assumed to remain valid indefinitely.
 
-This specification does not define semantic version negotiation or bind a token to a metadata version.
+This specification defines an optional digest binding to an authority metadata snapshot. It does not define semantic version negotiation, guarantee that the snapshot was current at issuance, or bind external vocabulary definitions unless their identifying information is included in the hashed metadata.
+
+A resource accepting only its current snapshot can invalidate otherwise unexpired tokens whenever the hashed metadata changes. Deployments SHOULD coordinate metadata updates and token issuance, and define any transition period explicitly.
 
 ## Malicious Resource Metadata and Policy Downgrade
 
@@ -931,6 +1066,8 @@ Publishing sender-constraining or freshness requirements does not implement them
 Resources remain responsible for enforcement.
 Issuing a short-lived token does not prove recent authentication.
 
+A digest-valued amb is an assertion by the authorization server, not proof of correct processing. A matching digest MUST NOT replace enforcement of token presentation, authentication, freshness, or other resource requirements.
+
 ## Relationship Processing
 
 Relationship graphs can contain cycles or excessive numbers of entries.
@@ -943,6 +1080,14 @@ shortcut for proving containment.
 Human-readable descriptions can improve disclosure but do not prove comprehension.
 
 Descriptions SHOULD be displayed as untrusted text. Consumers MUST NOT execute markup, scripts, or instructions embedded in descriptions.
+
+## External Semantic Dependencies
+
+A binding covers the metadata representation, not the contents of external vocabulary definitions, RAR type definitions, or other referenced documents.
+
+An external definition can change without changing the binding. Deployments relying on binding for semantic consistency SHOULD use immutable or versioned definitions and include their identifying information in the authority metadata.
+
+A matching digest MUST NOT be treated as proof that external semantic dependencies remain unchanged.
 
 # Privacy Considerations
 
@@ -974,6 +1119,28 @@ This specification requests registration in the "OAuth Protected Resource Metada
 * Change Controller: IETF
 * Specification Document: {{metadata-parameter}} of this document
 
+## JSON Web Token Claim Registration
+
+This specification requests registration in the "JSON Web Token Claims" registry:
+
+* Claim Name: `amb`
+* Claim Description: Authority metadata processing mode or
+  resource-bound digest identifying the authority metadata snapshot
+  applied during token issuance.
+* Change Controller: IETF
+* Specification Document: {{authority-metadata-binding}}
+
+## OAuth Token Introspection Response Registration
+
+This specification requests registration in the "OAuth Token Introspection Response" registry:
+
+* Name: `amb`
+* Description: Authority metadata processing mode or resource-bound
+  digest identifying the authority metadata snapshot applied during
+  token issuance.
+* Change Controller: IETF
+* Specification Document: {{authority-metadata-binding}}
+
 # Acknowledgments
 
 TODO
@@ -990,9 +1157,6 @@ This section is to be removed before publication as an RFC.
 * Evaluate whether additional metadata is needed to associate
   type-specific semantic definitions with RAR entries.
 
-* Determine whether future revisions should support parameter-dependent
-  access profiles and attenuation transformations.
-
 * Determine whether extension registries are needed for authority
   kinds, relationship names, and access requirement attributes.
 
@@ -1008,3 +1172,4 @@ This section is to be removed before publication as an RFC.
 * Defined simpler AS-local authority metadata without a support flag,
   resource selectors, or authority identifiers.
 * Left attenuation response behavior to AS policy.
+* Defined optional amb token and introspection bindings, including local processing indication and resource-bound authority metadata snapshot digests.
