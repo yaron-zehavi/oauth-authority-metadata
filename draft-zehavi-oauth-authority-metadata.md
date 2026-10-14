@@ -902,11 +902,13 @@ An absent `amb` makes no assertion about authority metadata processing. Consumer
 
 ## Issuer Assertion
 
-An authorization server issuing a digest-valued `amb` MUST have applied the identified metadata when evaluating the token's granted authority and applicable access requirements.
+An authorization server issuing a digest-valued `amb` MUST have applied the identified metadata, either directly or through a policy decision point whose decision it used, when evaluating the token's granted authority and applicable access requirements.
 
-Retrieving, caching, or hashing metadata without applying it is insufficient grounds for issuing a digest-valued `amb`.
+Retrieving, caching, or hashing metadata without applying it in that evaluation is insufficient grounds for issuing a digest-valued `amb`.
 
-Issuing amb does not relax the authorization server's issuance restrictions or minimum security requirements.
+A policy decision point can supply the binding value for inclusion in the token. The authorization server remains responsible for the assertion conveyed by issuing `amb`.
+
+Issuing `amb` does not relax the authorization server's issuance restrictions or minimum security requirements.
 
 A binding identifies the applied metadata snapshot. It does not assert that the metadata is complete or that concrete RAR authority can be determined without applicable type semantics and request values.
 
