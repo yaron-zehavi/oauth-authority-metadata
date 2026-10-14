@@ -1056,7 +1056,7 @@ svg {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Zehavi</td>
-<td class="center">Expires 16 April 2027</td>
+<td class="center">Expires 17 April 2027</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1069,12 +1069,12 @@ svg {
 <dd class="internet-draft">draft-zehavi-oauth-authority-metadata-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-10-13" class="published">13 October 2026</time>
+<time datetime="2026-10-14" class="published">14 October 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2027-04-16">16 April 2027</time></dd>
+<dd class="expires"><time datetime="2027-04-17">17 April 2027</time></dd>
 <dt class="label-authors">Author:</dt>
 <dd class="authors">
 <div class="author">
@@ -1124,7 +1124,7 @@ svg {
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 16 April 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 17 April 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -2224,7 +2224,7 @@ applicable sender-constraining mechanism.<a href="#section-5.2-2.6.1" class="pil
           <h4 id="name-sender-constraining">
 <a href="#section-5.2.1" class="section-number selfRef">5.2.1. </a><a href="#name-sender-constraining" class="section-name selfRef">Sender-Constraining</a>
           </h4>
-<p id="section-5.2.1-1"><code>sender_constrained: true</code> means the resource will reject a request using a token that is not sender-constrained or if its associated presentation proof is not successfully validated under the applicable mechanism.<a href="#section-5.2.1-1" class="pilcrow">¶</a></p>
+<p id="section-5.2.1-1"><code>sender_constrained: true</code> declares that access using the associated authority requires sender-constrained token presentation under an applicable mechanism.<a href="#section-5.2.1-1" class="pilcrow">¶</a></p>
 <p id="section-5.2.1-2">This attribute does not select a mechanism. Mechanism selection depends on the token profile, applicable discovery metadata, and deployment agreement.<a href="#section-5.2.1-2" class="pilcrow">¶</a></p>
 </section>
 </div>
@@ -2273,7 +2273,7 @@ reference values.<a href="#section-5.3-2.2.1" class="pilcrow">¶</a></p>
         </h3>
 <p id="section-5.5-1">An access token may carry more than one authority.<a href="#section-5.5-1" class="pilcrow">¶</a></p>
 <p id="section-5.5-2">This specification does not prescribe how an authorization server combines the associated profiles. It may satisfy a common set of requirements, or decline a request according to policy.<a href="#section-5.5-2" class="pilcrow">¶</a></p>
-<p id="section-5.5-3">At enforcement time, the resource applies the requirements relevant to the authority used for the operation.<a href="#section-5.5-3" class="pilcrow">¶</a></p>
+<p id="section-5.5-3">A profile reference describes requirements associated with use of that authority. Where an operation requires multiple authorities, their declared requirements are cumulative; a weaker profile does not negate a stronger requirement.<a href="#section-5.5-3" class="pilcrow">¶</a></p>
 <p id="section-5.5-4">If an operation requires multiple authorities, all applicable requirements must be satisfied. A weaker profile cannot cancel a stronger requirement.<a href="#section-5.5-4" class="pilcrow">¶</a></p>
 </section>
 </div>
@@ -2558,7 +2558,7 @@ granted authority and applicable access requirements.<a href="#section-9.1-2.4.1
         </h3>
 <p id="section-9.2-1">An authorization server issuing a digest-valued <code>amb</code> <span class="bcp14">MUST</span> have applied the identified metadata when evaluating the token's granted authority and applicable access requirements.<a href="#section-9.2-1" class="pilcrow">¶</a></p>
 <p id="section-9.2-2">Retrieving, caching, or hashing metadata without applying it is insufficient grounds for issuing a digest-valued <code>amb</code>.<a href="#section-9.2-2" class="pilcrow">¶</a></p>
-<p id="section-9.2-3">The authorization server <span class="bcp14">MUST</span> preserve its own issuance restrictions and minimum security requirements. A binding does not authorize issuance, require selection of an attenuation target, or establish that the granted authority satisfies the client's task.<a href="#section-9.2-3" class="pilcrow">¶</a></p>
+<p id="section-9.2-3">Issuing amb does not relax the authorization server's issuance restrictions or minimum security requirements.<a href="#section-9.2-3" class="pilcrow">¶</a></p>
 <p id="section-9.2-4">A binding identifies the applied metadata snapshot. It does not assert that the metadata is complete or that concrete RAR authority can be determined without applicable type semantics and request values.<a href="#section-9.2-4" class="pilcrow">¶</a></p>
 </section>
 </div>
@@ -2594,7 +2594,7 @@ extension attributes.<a href="#section-9.3-2.4.1" class="pilcrow">¶</a></p>
 }
 </pre><a href="#section-9.3-4" class="pilcrow">¶</a>
 </div>
-<p id="section-9.3-5">The publisher and consumer <span class="bcp14">MUST</span>:<a href="#section-9.3-5" class="pilcrow">¶</a></p>
+<p id="section-9.3-5">An implementation computing an s256 binding <span class="bcp14">MUST</span> perform the following steps:<a href="#section-9.3-5" class="pilcrow">¶</a></p>
 <ol start="1" type="1" class="normal type-1" id="section-9.3-6">
 <li id="section-9.3-6.1">
             <p id="section-9.3-6.1.1">Construct this object without adding default values, resolving
@@ -2636,7 +2636,7 @@ by <span>[<a href="#RFC8785" class="cite xref">RFC8785</a>]</span>.<a href="#sec
         </h3>
 <p id="section-9.5-1">For JWT access tokens, <code>amb</code> is conveyed as a claim protected by the token's integrity mechanism. A protected resource <span class="bcp14">MUST</span> validate the token under the applicable token profile before relying on <code>amb</code>.<a href="#section-9.5-1" class="pilcrow">¶</a></p>
 <p id="section-9.5-2">For tokens validated through introspection, the authorization server <span class="bcp14">MAY</span> return <code>amb</code> as an attribute of an active token's introspection response under <span>[<a href="#RFC7662" class="cite xref">RFC7662</a>]</span>.<a href="#section-9.5-2" class="pilcrow">¶</a></p>
-<p id="section-9.5-3">An introspection response <span class="bcp14">MUST</span> describe the metadata applied during issuance of the token. The authorization server <span class="bcp14">MUST NOT</span> substitute a digest of its current metadata merely because introspection occurs after a metadata change.<a href="#section-9.5-3" class="pilcrow">¶</a></p>
+<p id="section-9.5-3">When an introspection response includes amb, its value <span class="bcp14">MUST</span> represent the authority metadata binding associated with that token. The authorization server <span class="bcp14">MUST NOT</span> substitute a digest of current metadata solely because the metadata changed after issuance.<a href="#section-9.5-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="binding-interpretation">
@@ -2654,9 +2654,9 @@ by <span>[<a href="#RFC8785" class="cite xref">RFC8785</a>]</span>.<a href="#sec
         <h3 id="name-refresh-and-token-exchange">
 <a href="#section-9.7" class="section-number selfRef">9.7. </a><a href="#name-refresh-and-token-exchange" class="section-name selfRef">Refresh and Token Exchange</a>
         </h3>
-<p id="section-9.7-1">When refreshing access under the same grant without changing the target resource or granted authority, the authorization server <span class="bcp14">MAY</span> retain the grant’s authority metadata binding. Retaining the binding does not require retrieving current protected resource metadata or recomputing the digest.<a href="#section-9.7-1" class="pilcrow">¶</a></p>
-<p id="section-9.7-2">If the authorization server reevaluates the authority using a different metadata snapshot, a digest-valued amb <span class="bcp14">MUST</span> identify that snapshot.<a href="#section-9.7-2" class="pilcrow">¶</a></p>
-<p id="section-9.7-3">Token exchange requires establishing the binding for the resulting token’s resource and authority context. A change of target resource requires a new resource-specific binding; the source token’s binding <span class="bcp14">MUST NOT</span> be carried over as the binding for the new resource.<a href="#section-9.7-3" class="pilcrow">¶</a></p>
+<p id="section-9.7-1">When refresh or token exchange preserves the target resource and granted authority, the authorization server <span class="bcp14">MAY</span> retain the existing authority metadata binding. Retaining the binding does not assert that current protected resource metadata was retrieved or reevaluated.<a href="#section-9.7-1" class="pilcrow">¶</a></p>
+<p id="section-9.7-2">If a different metadata snapshot is applied, any digest-valued amb issued for the resulting token <span class="bcp14">MUST</span> identify that snapshot.<a href="#section-9.7-2" class="pilcrow">¶</a></p>
+<p id="section-9.7-3">If the target resource changes, any digest-valued amb issued for the resulting token <span class="bcp14">MUST</span> identify metadata applied in the new resource context. The previous resource's binding <span class="bcp14">MUST NOT</span> be reused.<a href="#section-9.7-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -2708,9 +2708,9 @@ An old description must not be assumed to remain valid indefinitely.<a href="#se
 <p id="section-10.4-4">Scope values, authority identifiers, families, and ranks from one resource <span class="bcp14">MUST NOT</span> be used to establish authority semantics for another resource.<a href="#section-10.4-4" class="pilcrow">¶</a></p>
 <p id="section-10.4-5">An authorization server <span class="bcp14">MUST NOT</span> treat resource metadata as authorization to weaken existing grant restrictions, client policy, subject authority, or AS-local minimum security requirements.<a href="#section-10.4-5" class="pilcrow">¶</a></p>
 <p id="section-10.4-6">Omitted or weaker access requirements do not override those requirements.<a href="#section-10.4-6" class="pilcrow">¶</a></p>
-<p id="section-10.4-7">When protected resource authority metadata informs token issuance, the authorization server <span class="bcp14">MUST</span> audience-restrict the resulting token to the resource or resources independently evaluated for that issuance decision, using the mechanisms described in <span>[<a href="#RFC8707" class="cite xref">RFC8707</a>]</span>.<a href="#section-10.4-7" class="pilcrow">¶</a></p>
-<p id="section-10.4-8">A protected resource <span class="bcp14">MUST</span> reject an access token that is not intended for that resource.<a href="#section-10.4-8" class="pilcrow">¶</a></p>
-<p id="section-10.4-9">An attacker-controlled resource <span class="bcp14">MUST NOT</span> be able to select an audience mapping that makes its tokens acceptable to another resource.<a href="#section-10.4-9" class="pilcrow">¶</a></p>
+<p id="section-10.4-7">When protected resource authority metadata informs issuance of an access token for use at a protected resource, the authorization server <span class="bcp14">MUST</span> audience-restrict that access token to the resource or resources independently evaluated for that issuance decision, using the mechanisms described in <span>[<a href="#RFC8707" class="cite xref">RFC8707</a>]</span>.<a href="#section-10.4-7" class="pilcrow">¶</a></p>
+<p id="section-10.4-8">When protected resource authority metadata informs issuance of an intermediate authorization grant, the grant's audience identifies its intended consumer as required by the applicable grant profile, rather than the target protected resource. The issuing authorization server <span class="bcp14">MUST</span> bind the evaluated protected resource identifiers and corresponding granted authority to the grant through integrity-protected claims or an equivalent mechanism defined by that profile. The redeeming authorization server remains responsible for evaluating the requested authority and audience-restricting the resulting access token to the resource or resources evaluated for the final issuance decision.<a href="#section-10.4-8" class="pilcrow">¶</a></p>
+<p id="section-10.4-9">An authorization server <span class="bcp14">MUST NOT</span> use an audience mapping supplied by untrusted resource metadata to extend the resulting token's audience beyond the resource or resources independently evaluated for issuance.<a href="#section-10.4-9" class="pilcrow">¶</a></p>
 <p id="section-10.4-10">Publication of metadata, including an <code>authorization_servers</code> member naming an AS, does not establish that the publisher is trusted by that AS.<a href="#section-10.4-10" class="pilcrow">¶</a></p>
 <p id="section-10.4-11">Token refresh or exchange that changes the target resource requires evaluation in the new resource context. A previous issuance decision based on another resource's metadata does not establish authority for the new target.<a href="#section-10.4-11" class="pilcrow">¶</a></p>
 </section>
@@ -2757,7 +2757,7 @@ amounts, or other parameter-defined authority.<a href="#section-10.7-2" class="p
 <p id="section-10.8-1">Publishing sender-constraining or freshness requirements does not implement them.<a href="#section-10.8-1" class="pilcrow">¶</a></p>
 <p id="section-10.8-2">Resources remain responsible for enforcement.
 Issuing a short-lived token does not prove recent authentication.<a href="#section-10.8-2" class="pilcrow">¶</a></p>
-<p id="section-10.8-3">A digest-valued amb is an assertion by the authorization server, not proof of correct processing. A matching digest <span class="bcp14">MUST NOT</span> replace enforcement of token presentation, authentication, freshness, or other resource requirements.<a href="#section-10.8-3" class="pilcrow">¶</a></p>
+<p id="section-10.8-3">A digest-valued amb is an assertion by the authorization server, not proof of correct processing. A matching digest establishes agreement with a metadata snapshot. It does not establish that token presentation, authentication, freshness, or other resource requirements have been satisfied.<a href="#section-10.8-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="relationship-processing">
