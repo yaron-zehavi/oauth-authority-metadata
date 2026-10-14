@@ -2556,10 +2556,11 @@ granted authority and applicable access requirements.<a href="#section-9.1-2.4.1
         <h3 id="name-issuer-assertion">
 <a href="#section-9.2" class="section-number selfRef">9.2. </a><a href="#name-issuer-assertion" class="section-name selfRef">Issuer Assertion</a>
         </h3>
-<p id="section-9.2-1">An authorization server issuing a digest-valued <code>amb</code> <span class="bcp14">MUST</span> have applied the identified metadata when evaluating the token's granted authority and applicable access requirements.<a href="#section-9.2-1" class="pilcrow">¶</a></p>
-<p id="section-9.2-2">Retrieving, caching, or hashing metadata without applying it is insufficient grounds for issuing a digest-valued <code>amb</code>.<a href="#section-9.2-2" class="pilcrow">¶</a></p>
-<p id="section-9.2-3">Issuing amb does not relax the authorization server's issuance restrictions or minimum security requirements.<a href="#section-9.2-3" class="pilcrow">¶</a></p>
-<p id="section-9.2-4">A binding identifies the applied metadata snapshot. It does not assert that the metadata is complete or that concrete RAR authority can be determined without applicable type semantics and request values.<a href="#section-9.2-4" class="pilcrow">¶</a></p>
+<p id="section-9.2-1">An authorization server issuing a digest-valued <code>amb</code> <span class="bcp14">MUST</span> have applied the identified metadata, either directly or through a policy decision point whose decision it used, when evaluating the token's granted authority and applicable access requirements.<a href="#section-9.2-1" class="pilcrow">¶</a></p>
+<p id="section-9.2-2">Retrieving, caching, or hashing metadata without applying it in that evaluation is insufficient grounds for issuing a digest-valued <code>amb</code>.<a href="#section-9.2-2" class="pilcrow">¶</a></p>
+<p id="section-9.2-3">A policy decision point can supply the binding value for inclusion in the token. The authorization server remains responsible for the assertion conveyed by issuing <code>amb</code>.<a href="#section-9.2-3" class="pilcrow">¶</a></p>
+<p id="section-9.2-4">Issuing <code>amb</code> does not relax the authorization server's issuance restrictions or minimum security requirements.<a href="#section-9.2-4" class="pilcrow">¶</a></p>
+<p id="section-9.2-5">A binding identifies the applied metadata snapshot. It does not assert that the metadata is complete or that concrete RAR authority can be determined without applicable type semantics and request values.<a href="#section-9.2-5" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="binding-digest">
