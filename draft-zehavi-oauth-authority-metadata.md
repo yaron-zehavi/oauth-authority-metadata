@@ -668,7 +668,7 @@ A boolean value of `false` means that this profile does not require the property
 
 ### Sender-Constraining
 
-`sender_constrained: true` means the resource will reject a request using a token that is not sender-constrained or if its associated presentation proof is not successfully validated under the applicable mechanism.
+`sender_constrained: true` declares that access using the associated authority requires sender-constrained token presentation under an applicable mechanism.
 
 This attribute does not select a mechanism. Mechanism selection depends on the token profile, applicable discovery metadata, and deployment agreement.
 
@@ -703,7 +703,7 @@ An access token may carry more than one authority.
 
 This specification does not prescribe how an authorization server combines the associated profiles. It may satisfy a common set of requirements, or decline a request according to policy.
 
-At enforcement time, the resource applies the requirements relevant to the authority used for the operation.
+A profile reference describes requirements associated with use of that authority. Where an operation requires multiple authorities, their declared requirements are cumulative; a weaker profile does not negate a stronger requirement.
 
 If an operation requires multiple authorities, all applicable requirements must be satisfied. A weaker profile cannot cancel a stronger requirement.
 
@@ -906,7 +906,7 @@ An authorization server issuing a digest-valued `amb` MUST have applied the iden
 
 Retrieving, caching, or hashing metadata without applying it is insufficient grounds for issuing a digest-valued `amb`.
 
-The authorization server MUST preserve its own issuance restrictions and minimum security requirements. A binding does not authorize issuance, require selection of an attenuation target, or establish that the granted authority satisfies the client's task.
+Issuing amb does not relax the authorization server's issuance restrictions or minimum security requirements.
 
 A binding identifies the applied metadata snapshot. It does not assert that the metadata is complete or that concrete RAR authority can be determined without applicable type semantics and request values.
 
@@ -932,7 +932,7 @@ For example, the input has this structure:
 }
 ~~~
 
-The publisher and consumer MUST:
+An implementation computing an s256 binding MUST perform the following steps:
 
 1. Construct this object without adding default values, resolving
    external references, or removing attributes.
@@ -962,7 +962,7 @@ For JWT access tokens, `amb` is conveyed as a claim protected by the token's int
 
 For tokens validated through introspection, the authorization server MAY return `amb` as an attribute of an active token's introspection response under {{RFC7662}}.
 
-An introspection response MUST describe the metadata applied during issuance of the token. The authorization server MUST NOT substitute a digest of its current metadata merely because introspection occurs after a metadata change.
+When an introspection response includes amb, its value MUST represent the authority metadata binding associated with that token. The authorization server MUST NOT substitute a digest of current metadata solely because the metadata changed after issuance.
 
 ## Binding Interpretation
 
@@ -974,11 +974,11 @@ Whether a resource requires a binding, accepts previous snapshots, or acts on a 
 
 ## Refresh and Token Exchange
 
-When refreshing access under the same grant without changing the target resource or granted authority, the authorization server MAY retain the grant’s authority metadata binding. Retaining the binding does not require retrieving current protected resource metadata or recomputing the digest.
+When refresh or token exchange preserves the target resource and granted authority, the authorization server MAY retain the existing authority metadata binding. Retaining the binding does not assert that current protected resource metadata was retrieved or reevaluated.
 
-If the authorization server reevaluates the authority using a different metadata snapshot, a digest-valued amb MUST identify that snapshot.
+If a different metadata snapshot is applied, any digest-valued amb issued for the resulting token MUST identify that snapshot.
 
-Token exchange requires establishing the binding for the resulting token’s resource and authority context. A change of target resource requires a new resource-specific binding; the source token’s binding MUST NOT be carried over as the binding for the new resource.
+If the target resource changes, any digest-valued amb issued for the resulting token MUST identify metadata applied in the new resource context. The previous resource's binding MUST NOT be reused.
 
 # Security Considerations
 
@@ -1021,11 +1021,11 @@ An authorization server MUST NOT treat resource metadata as authorization to wea
 
 Omitted or weaker access requirements do not override those requirements.
 
-When protected resource authority metadata informs token issuance, the authorization server MUST audience-restrict the resulting token to the resource or resources independently evaluated for that issuance decision, using the mechanisms described in {{RFC8707}}.
+When protected resource authority metadata informs issuance of an access token for use at a protected resource, the authorization server MUST audience-restrict that access token to the resource or resources independently evaluated for that issuance decision, using the mechanisms described in {{RFC8707}}.
 
-A protected resource MUST reject an access token that is not intended for that resource.
+When protected resource authority metadata informs issuance of an intermediate authorization grant, the grant's audience identifies its intended consumer as required by the applicable grant profile, rather than the target protected resource. The issuing authorization server MUST bind the evaluated protected resource identifiers and corresponding granted authority to the grant through integrity-protected claims or an equivalent mechanism defined by that profile. The redeeming authorization server remains responsible for evaluating the requested authority and audience-restricting the resulting access token to the resource or resources evaluated for the final issuance decision.
 
-An attacker-controlled resource MUST NOT be able to select an audience mapping that makes its tokens acceptable to another resource.
+An authorization server MUST NOT use an audience mapping supplied by untrusted resource metadata to extend the resulting token's audience beyond the resource or resources independently evaluated for issuance.
 
 Publication of metadata, including an `authorization_servers` member naming an AS, does not establish that the publisher is trusted by that AS.
 
@@ -1066,7 +1066,7 @@ Publishing sender-constraining or freshness requirements does not implement them
 Resources remain responsible for enforcement.
 Issuing a short-lived token does not prove recent authentication.
 
-A digest-valued amb is an assertion by the authorization server, not proof of correct processing. A matching digest MUST NOT replace enforcement of token presentation, authentication, freshness, or other resource requirements.
+A digest-valued amb is an assertion by the authorization server, not proof of correct processing. A matching digest establishes agreement with a metadata snapshot. It does not establish that token presentation, authentication, freshness, or other resource requirements have been satisfied.
 
 ## Relationship Processing
 
