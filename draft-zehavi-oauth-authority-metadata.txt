@@ -4,8 +4,8 @@
 
 Web Authorization Protocol                                     Y. Zehavi
 Internet-Draft                             Raiffeisen Bank International
-Intended status: Standards Track                         14 October 2026
-Expires: 17 April 2027
+Intended status: Standards Track                         6 November 2026
+Expires: 10 May 2027
 
 
                       OAuth 2.0 Authority Metadata
@@ -63,7 +63,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 17 April 2027.
+   This Internet-Draft will expire on 10 May 2027.
 
 Copyright Notice
 
@@ -100,7 +100,7 @@ Table of Contents
        3.1.2.  value
        3.1.3.  description
        3.1.4.  family
-       3.1.5.  rank
+       3.1.5.  version
        3.1.6.  authority
      3.2.  Protected Resource attributes
      3.3.  Authorization Server attributes
@@ -111,6 +111,7 @@ Table of Contents
      5.1.  Profile Structure
      5.2.  Token Requirements
        5.2.1.  Sender-Constraining
+       5.2.2.  Relationship to Resource-Wide Metadata
      5.3.  Authentication Requirements
      5.4.  Default Resource Policy
      5.5.  Multiple Authorities in a Token
@@ -118,43 +119,44 @@ Table of Contents
      6.1.  can_be_attenuated_to
      6.2.  RAR and Cross-Kind Relationships
      6.3.  Relationship Interpretation
-   7.  Authority Ordering
-   8.  Authorization Server Use
-     8.1.  Publication Is Not an Issuance Decision
-     8.2.  Metadata Sources and Conflicts
-     8.3.  Attenuation Options
-   9.  Authority Metadata Binding
-     9.1.  Attribute Values
-     9.2.  Issuer Assertion
-     9.3.  Digest Construction
-     9.4.  Resource Association
-     9.5.  Token Conveyance
-     9.6.  Binding Interpretation
-     9.7.  Refresh and Token Exchange
-   10. Security Considerations
-     10.1.  Untrusted Resource Locations
-     10.2.  Semantic Misrepresentation
-     10.3.  Stale Metadata
-     10.4.  Malicious Resource Metadata and Policy Downgrade
-     10.5.  Requests Naming Multiple Resources
-     10.6.  Scope Combinations
-     10.7.  RAR Parameter Restrictions
-     10.8.  Requirements Are Not Enforcement
-     10.9.  Relationship Processing
-     10.10. Consent Rendering
-     10.11. External Semantic Dependencies
-   11. Privacy Considerations
-   12. IANA Considerations
-     12.1.  OAuth Authorization Server Metadata Registration
-     12.2.  OAuth Protected Resource Metadata Registration
-     12.3.  JSON Web Token Claim Registration
-     12.4.  OAuth Token Introspection Response Registration
-   13. Acknowledgments
-   14. References
-     14.1.  Normative References
-     14.2.  Informative References
-   Appendix A.  Editorial Issues
-   Appendix B.  Document History
+   7.  Authorization Server Use
+     7.1.  Publication Is Not an Issuance Decision
+     7.2.  Metadata Sources and Conflicts
+       7.2.1.  Example: Conflicting Descriptions
+     7.3.  Attenuation Options
+   8.  Authority Metadata Binding
+     8.1.  Attribute Values
+     8.2.  Issuer Assertion
+     8.3.  Digest Construction
+     8.4.  Resource Association
+     8.5.  Token Conveyance
+     8.6.  Binding Interpretation
+     8.7.  Refresh and Token Exchange
+   9.  Security Considerations
+     9.1.  Untrusted Resource Locations
+     9.2.  Semantic Misrepresentation
+     9.3.  Stale Metadata
+     9.4.  Malicious Resource Metadata and Policy Downgrade
+     9.5.  Requests Naming Multiple Resources
+     9.6.  Scope Combinations
+     9.7.  RAR Parameter Restrictions
+     9.8.  Requirements Are Not Enforcement
+     9.9.  Relationship Processing
+     9.10. Consent Rendering
+     9.11. External Semantic Dependencies
+   10. Privacy Considerations
+   11. IANA Considerations
+     11.1.  OAuth Authorization Server Metadata Registration
+     11.2.  OAuth Protected Resource Metadata Registration
+     11.3.  JSON Web Token Claim Registration
+     11.4.  OAuth Token Introspection Response Registration
+   12. Acknowledgments
+   13. References
+     13.1.  Normative References
+     13.2.  Informative References
+   Appendix A.  Linking Authority to API Operations
+   Appendix B.  Editorial Issues
+   Appendix C.  Document History
    Author's Address
 
 1.  Introduction
@@ -222,7 +224,7 @@ Table of Contents
    Publication of authorization server authority metadata does not
    constitute a commitment to apply protected resource metadata.  The
    optional amb attribute provides a per-token assertion as defined in
-   Section 9.
+   Section 8.
 
 1.2.  Scope
 
@@ -238,7 +240,9 @@ Table of Contents
 
    *  attenuation relationships;
 
-   *  advisory authority ordering through family and rank.
+   *  optional authority grouping through family;
+
+   *  optional per-entry semantic versioning through version;
 
    *  an optional authority metadata binding attribute for access tokens
       and token introspection responses.
@@ -309,8 +313,11 @@ Table of Contents
    Attenuation:  Replacement or restriction of authority with authority
       that grants no greater access.
 
-   Authority family:  A publisher-defined grouping within which
-      authority ranks have a common interpretation.
+   Authority family:  A publisher-defined grouping of related authority
+      entries.
+
+   Authority entry version:  A publisher-assigned identifier for the
+      current semantics of an authority entry.
 
 2.  Metadata Parameter
 
@@ -386,6 +393,7 @@ Table of Contents
        "documents.manage"
      ],
      "authorization_details_types_supported": ["document-access"],
+     "dpop_signing_alg_values_supported": ["ES256"],
      "authority_metadata": {
        "access_requirement_profiles": {
          "standard_access": {
@@ -397,7 +405,7 @@ Table of Contents
            "token": {
              "max_age": 300,
              "max_lifetime": 600,
-             "sender_constrained": true
+             "sender_constraining_methods": ["dpop"]
            },
            "authentication": {
              "acr_values": [
@@ -414,7 +422,7 @@ Table of Contents
            "value": "documents.read",
            "description": "Read documents accessible to the subject.",
            "family": "document_access",
-           "rank": 10,
+           "version": "1",
            "authority": [
              {
                "resource_type": "document",
@@ -435,7 +443,7 @@ Table of Contents
            "value": "documents.manage",
            "description": "Read and update documents accessible to the subject.",
            "family": "document_access",
-           "rank": 20,
+           "version": "2",
            "authority": [
              {
                "resource_type": "document",
@@ -483,16 +491,20 @@ Table of Contents
      }
    }
 
-   The RAR entry does not receive a fixed rank in this example because
-   its concrete authority varies with the requested actions and document
-   restrictions.
+   The documents.manage entry is at version 2, indicating that the
+   publisher has changed its semantics since an earlier publication.
+   Only the current description is published.
+
+   The sensitive_access profile requires DPoP-bound tokens, a mechanism
+   the resource advertises through dpop_signing_alg_values_supported
+   [RFC9449].
 
 2.4.2.  Authorization Server Metadata
 
    In this example, the AS and protected resource publish matching type-
    level descriptions.  Matching descriptions do not establish trust,
-   imply comparable family rankings across documents, or guarantee
-   acceptance of an issued token.
+   imply comparable groupings across documents, or guarantee acceptance
+   of an issued token.
 
    {
      "issuer": "https://as.example.com",
@@ -508,7 +520,6 @@ Table of Contents
            "value": "profile.read",
            "description": "Read profile information.",
            "family": "profile_access",
-           "rank": 10,
            "authority": [
              {
                "resource_type": "profile",
@@ -527,7 +538,6 @@ Table of Contents
            "value": "profile.manage",
            "description": "Read and update profile information.",
            "family": "profile_access",
-           "rank": 20,
            "authority": [
              {
                "resource_type": "profile",
@@ -639,26 +649,56 @@ Table of Contents
    document.  The same string in another publisher's metadata does not
    establish a shared vocabulary.
 
-3.1.5.  rank
+   A family groups related entries, for example for display or
+   administrative review.  Membership in a family does not establish
+   ordering, containment, or equivalent authority between its entries.
 
-   OPTIONAL.  A non-negative integer providing an advisory ordering
-   within the specified family.
+3.1.5.  version
 
-   An entry containing rank MUST also contain family.
+   OPTIONAL.  A non-empty string identifying the current semantics of
+   the authority entry.
 
-   Lower values express the publisher's preferred ordering toward lower
-   authority within that family.  Equal values do not imply equivalent
-   authority.
+   The value is opaque.  Consumers MUST compare versions only for
+   equality and MUST NOT infer ordering, compatibility, or the extent of
+   change from their values.
 
-   Rank does not prove containment, interchangeability, or suitability
-   for a task.  See Section 7.
+   A metadata document publishes only the current description of each
+   authority.  A publisher MUST NOT publish more than one entry for the
+   same kind and value to represent different versions.
 
-   For a RAR type entry, rank is an advisory ordering of the type-level
-   authority description.  It does not rank individual authorization
-   details objects.
+   A publisher MUST change the version of an entry when it changes the
+   semantics the entry describes, including when it changes:
 
-   Publishers MAY omit rank when parameter-dependent authority makes a
-   type-level ordering unhelpful.
+   *  the entry's authority descriptions;
+
+   *  the referenced access requirement profile, or the contents of that
+      profile;
+
+   *  the entry's relationships;
+
+   *  the definition of a vocabulary value used by the entry, where the
+      publisher controls that definition.
+
+   A publisher SHOULD NOT change the version for changes that do not
+   affect semantics, such as edits to description or reordering of
+   entries.
+
+   Once a publisher includes version in an entry, it SHOULD continue to
+   include it in later publications of that entry.
+
+   A consumer that observes a changed version, or the addition or
+   removal of version, MUST NOT rely on cached evaluations, consent, or
+   attenuation decisions derived from the previous description of that
+   entry when making new decisions.  It SHOULD re-evaluate them against
+   the current description.
+
+   A changed version does not, by itself, invalidate previously issued
+   tokens.  Their acceptance remains subject to resource policy; see
+   Section 8.
+
+   An absent version provides no signal about change.  Consumers relying
+   on change detection for an unversioned entry need to compare its
+   descriptions directly.
 
 3.1.6.  authority
 
@@ -750,6 +790,14 @@ Table of Contents
    URI identifiers are RECOMMENDED when vocabulary values are intended
    to be understood across independently operated systems.
 
+   Existing operation vocabularies can help link authority descriptions
+   to concrete API operations.  For example, AAuth Rich Resource
+   Requests [I-D.hardt-aauth-r3] defines vocabularies identifying MCP
+   tools, OpenAPI operations, gRPC methods, and other API description
+   formats.  Appendix A illustrates how a publisher might reference such
+   operations.  This specification does not define a member for that
+   purpose.
+
    A consumer MUST NOT assume that identical local strings from
    different publishers have identical semantics.
 
@@ -828,7 +876,7 @@ Table of Contents
          "token": {
            "max_age": 300,
            "max_lifetime": 600,
-           "sender_constrained": true
+           "sender_constraining_methods": ["dpop", "mtls"]
          },
          "authentication": {
            "acr_values": [
@@ -851,22 +899,65 @@ Table of Contents
       the maximum acceptable total lifetime of the access token, from
       issuance to expiration.
 
-   sender_constrained:  OPTIONAL.  A boolean.  If true, presentation
-      must satisfy an applicable sender-constraining mechanism.
-
-   A boolean value of false means that this profile does not require the
-   property.  It does not prohibit the property or override stricter
-   policy.
+   sender_constraining_methods:  OPTIONAL.  A non-empty array of strings
+      identifying the sender-constraining mechanisms acceptable for
+      access using the associated authority.  See Section 5.2.1.
 
 5.2.1.  Sender-Constraining
 
-   sender_constrained: true declares that access using the associated
-   authority requires sender-constrained token presentation under an
-   applicable mechanism.
+   sender_constraining_methods declares that access using the associated
+   authority requires a sender-constrained access token, bound using one
+   of the listed mechanisms.
 
-   This attribute does not select a mechanism.  Mechanism selection
-   depends on the token profile, applicable discovery metadata, and
-   deployment agreement.
+   This specification defines the following values:
+
+   dpop:  The access token is bound to a DPoP proof-of-possession key
+      and presented as defined in [RFC9449].
+
+   mtls:  The access token is bound to a client certificate and
+      presented over mutual TLS as defined in [RFC8705].
+
+   The listed values are alternatives.  The resource accepts a token
+   bound and presented using at least one listed mechanism.  A consumer
+   MUST ignore unrecognized values.  If no listed value is recognized,
+   the consumer cannot satisfy the requirement and MUST NOT treat it as
+   absent.
+
+   Absence of sender_constraining_methods means that this profile does
+   not require sender-constraining.  It does not prohibit sender-
+   constrained tokens or override stricter resource-wide policy.
+
+5.2.2.  Relationship to Resource-Wide Metadata
+
+   [RFC9728] defines resource-wide metadata for sender-constrained
+   access tokens.  That metadata and access requirement profiles have
+   distinct roles:
+
+   *  dpop_signing_alg_values_supported and
+      tls_client_certificate_bound_access_tokens describe mechanisms the
+      resource supports.
+
+   *  dpop_bound_access_tokens_required describes a requirement applying
+      to all access at the resource.
+
+   *  sender_constraining_methods describes a requirement applying to
+      access using a particular authority.
+
+   A profile MUST list only mechanisms the resource advertises as
+   supported in its resource-wide metadata.  A consumer MUST NOT treat a
+   listed mechanism that the resource does not advertise as supported as
+   satisfiable.
+
+   Resource-wide requirements apply in addition to profile requirements.
+   If the resource sets dpop_bound_access_tokens_required to true, a
+   DPoP-bound token is required for all access, regardless of whether a
+   profile lists mtls or omits sender_constraining_methods.
+
+   An authorization server satisfying a profile requirement needs to
+   issue a token bound using a listed mechanism that it supports, as
+   advertised in its own metadata under [RFC9449] or [RFC8705].  If no
+   listed mechanism is supported by both the AS and the resource, the AS
+   cannot satisfy the profile.
 
 5.3.  Authentication Requirements
 
@@ -915,9 +1006,9 @@ Table of Contents
    their declared requirements are cumulative; a weaker profile does not
    negate a stronger requirement.
 
-   If an operation requires multiple authorities, all applicable
-   requirements must be satisfied.  A weaker profile cannot cancel a
-   stronger requirement.
+   Where the profiles of multiple authorities list different
+   sender_constraining_methods, a single token satisfies them only if it
+   is bound using a mechanism listed by every applicable profile.
 
 6.  Authority Relationships
 
@@ -937,8 +1028,6 @@ Table of Contents
    The target MUST exist, MUST differ from the source, and MUST be in
    the same metadata document.
 
-   Both entries MUST declare the same family.
-
 6.1.  can_be_attenuated_to
 
    The relationship:
@@ -949,11 +1038,8 @@ Table of Contents
    }
 
    asserts that the target represents no greater authority than the
-   source under the protected resource's authority semantics.
-
-   For relationships between scope entries, this relationship asserts
-   that the target represents no greater authority than the source under
-   the protected resource's applicable semantics and restrictions.
+   source under the protected resource's applicable semantics and
+   restrictions.
 
    Where either entry describes a RAR type, the relationship identifies
    a candidate attenuation target.  It does not establish containment
@@ -971,15 +1057,10 @@ Table of Contents
    different operations.  A relationship is valid only if the resource's
    actual semantics establish the asserted containment.
 
-   A publisher MUST NOT declare this relationship based solely on rank,
-   risk, or perceived similarity.  The relationship does not assert that
-   the target satisfies the client's task, purpose, or Mission.
-
-   For parameterized authorities such as Rich Authorization Requests
-   (RAR) types, the relationship identifies a potential attenuation
-   target.  It does not assert containment between arbitrary instances
-   of the source and target types.  Concrete containment requires the
-   applicable type semantics and parameter restrictions.
+   A publisher MUST NOT declare this relationship based solely on family
+   membership, risk, or perceived similarity.  The relationship does not
+   assert that the target satisfies the client's task, purpose, or
+   Mission.
 
 6.2.  RAR and Cross-Kind Relationships
 
@@ -1009,37 +1090,7 @@ Table of Contents
    relationships SHOULD apply limits to traversal depth and visited
    entries to avoid unbounded processing.
 
-7.  Authority Ordering
-
-   family and rank provide advisory ordering.
-
-   A consumer can use them to:
-
-   *  display authorities in a publisher-defined order;
-
-   *  prioritize evaluation of lower-authority candidates;
-
-   *  organize authority choices for human review.
-
-   Ranks can be compared only within the same family and metadata
-   document.
-
-   Rank MUST NOT be used by itself to establish:
-
-   *  authority containment;
-
-   *  equivalent authority;
-
-   *  safe attenuation;
-
-   *  satisfaction of a purpose or Mission;
-
-   *  comparable security or risk across publishers.
-
-   Where an attenuation relationship and ranks are both published, the
-   target rank SHOULD be no greater than the source rank.
-
-8.  Authorization Server Use
+7.  Authorization Server Use
 
    An authorization server can use this metadata when processing an
    authorization request, token request, or token exchange request.
@@ -1064,7 +1115,7 @@ Table of Contents
 
    This specification does not require a particular processing sequence.
 
-8.1.  Publication Is Not an Issuance Decision
+7.1.  Publication Is Not an Issuance Decision
 
    An AS-published authority description does not imply that:
 
@@ -1087,7 +1138,7 @@ Table of Contents
    the authorization server; the resource remains responsible for
    validating the token and enforcing current policy.
 
-8.2.  Metadata Sources and Conflicts
+7.2.  Metadata Sources and Conflicts
 
    An authorization server may use local policy or configuration when
    protected resource metadata is unavailable.
@@ -1098,9 +1149,8 @@ Table of Contents
 
    An authorization server MUST NOT use protected resource metadata, by
    itself, to relax its issuance restrictions or minimum security
-   requirements.  An omitted requirement, lower risk classification,
-   lower rank, or narrower authority description does not override AS
-   policy.
+   requirements.  An omitted requirement, lower risk classification, or
+   narrower authority description does not override AS policy.
 
    Where the authority descriptions differ, the AS determines their
    applicability through trusted configuration and local policy.  The
@@ -1110,7 +1160,74 @@ Table of Contents
    This specification does not require an AS to issue a token when the
    descriptions or requirements cannot be reconciled.
 
-8.3.  Attenuation Options
+7.2.1.  Example: Conflicting Descriptions
+
+   An AS publishes the following description of documents.read:
+
+   {
+     "kind": "scope",
+     "value": "documents.read",
+     "authority": [
+       {
+         "resource_type": "document",
+         "actions": ["document:read"],
+         "effects": ["data-disclosure"],
+         "risk": "low"
+       }
+     ]
+   }
+
+   The protected resource https://documents.example.com publishes a
+   description of the same scope that also permits bulk export, without
+   an access requirement profile:
+
+   {
+     "id": "documents.read",
+     "kind": "scope",
+     "value": "documents.read",
+     "authority": [
+       {
+         "resource_type": "document",
+         "actions": ["document:read", "document:export"],
+         "effects": ["data-disclosure", "bulk-data-disclosure"],
+         "risk": "high"
+       }
+     ]
+   }
+
+   A client requests documents.read for that resource.  The AS's policy
+   permits low-risk read access for this client without step-up
+   authentication.
+
+   The resource enforces its own description, so a token carrying
+   documents.read permits export at that resource.  The AS therefore
+   cannot rely on its narrower local description when evaluating the
+   request.
+
+   Conversely, the resource's omission of an access requirement profile
+   does not relax any requirement the AS applies to bulk data access.
+
+   Depending on its policy and configuration, the AS can:
+
+   *  evaluate the request against the resource's broader description,
+      applying the policy and authentication requirements it associates
+      with bulk export;
+
+   *  decline to issue documents.read for that resource until the
+      descriptions are reconciled;
+
+   *  issue authority whose enforcement semantics at that resource it
+      has established through other means, such as a RAR type
+      restricting the permitted actions.
+
+   The AS MUST NOT issue the token on the basis that its own description
+   treats documents.read as low risk.
+
+   If the AS's description were the broader one, the AS would also not
+   be required to treat the resource's narrower description as
+   permitting issuance under a weaker policy.
+
+7.3.  Attenuation Options
 
    Attenuation handling is determined by AS policy.
 
@@ -1131,7 +1248,7 @@ Table of Contents
    *  requiring the client to submit a revised request.
 
    This specification does not require an AS to search relationships,
-   select the lowest rank, or issue an attenuated token.
+   select a particular target, or issue an attenuated token.
 
    Where an AS changes granted authority, it remains responsible for the
    applicable response requirements of [RFC6749], [RFC9396], and the
@@ -1140,7 +1257,7 @@ Table of Contents
 
    No new error code or remediation response is defined here.
 
-9.  Authority Metadata Binding
+8.  Authority Metadata Binding
 
    This specification defines the optional amb (authority metadata
    binding) attribute for access tokens and token introspection
@@ -1154,7 +1271,7 @@ Table of Contents
    require issuance of amb.  Conversely, an authorization server can
    issue amb without publishing its own authority metadata.
 
-9.1.  Attribute Values
+8.1.  Attribute Values
 
    amb MUST be a JSON string.  This specification defines two forms:
 
@@ -1169,7 +1286,7 @@ Table of Contents
 
    The s256 identifier denotes SHA-256.  The digest MUST be encoded
    using base64url without padding.  The digest input is defined in
-   Section 9.3.
+   Section 8.3.
 
    For example:
 
@@ -1187,7 +1304,7 @@ Table of Contents
    unrecognized value as a protected resource authority metadata
    binding.
 
-9.2.  Issuer Assertion
+8.2.  Issuer Assertion
 
    An authorization server issuing a digest-valued amb MUST have applied
    the identified metadata, either directly or through a policy decision
@@ -1209,7 +1326,7 @@ Table of Contents
    can be determined without applicable type semantics and request
    values.
 
-9.3.  Digest Construction
+8.3.  Digest Construction
 
    The digest input is a JSON object containing exactly these members:
 
@@ -1253,7 +1370,7 @@ Table of Contents
    attributes, or array order can therefore change the digest even when
    authorization semantics remain unchanged.
 
-9.4.  Resource Association
+8.4.  Resource Association
 
    This specification defines the string-valued binding only for a token
    associated with one protected resource.
@@ -1266,7 +1383,7 @@ Table of Contents
    The resource identifier included in the digest MUST identify that
    protected resource.
 
-9.5.  Token Conveyance
+8.5.  Token Conveyance
 
    For JWT access tokens, amb is conveyed as a claim protected by the
    token's integrity mechanism.  A protected resource MUST validate the
@@ -1281,7 +1398,7 @@ Table of Contents
    authorization server MUST NOT substitute a digest of current metadata
    solely because the metadata changed after issuance.
 
-9.6.  Binding Interpretation
+8.6.  Binding Interpretation
 
    A protected resource can compare a digest-valued amb with its
    authority metadata snapshots to determine which snapshot the
@@ -1297,7 +1414,7 @@ Table of Contents
    acts on a mismatch is determined by resource policy and is outside
    the scope of this specification.
 
-9.7.  Refresh and Token Exchange
+8.7.  Refresh and Token Exchange
 
    When refresh or token exchange preserves the target resource and
    granted authority, the authorization server MAY retain the existing
@@ -1312,9 +1429,9 @@ Table of Contents
    resulting token MUST identify metadata applied in the new resource
    context.  The previous resource's binding MUST NOT be reused.
 
-10.  Security Considerations
+9.  Security Considerations
 
-10.1.  Untrusted Resource Locations
+9.1.  Untrusted Resource Locations
 
    An AS that fetches metadata in response to a client-supplied resource
    indicator can be exposed to server-side request forgery.
@@ -1323,7 +1440,7 @@ Table of Contents
    control access to internal addresses, and apply request size and
    timeout limits.
 
-10.2.  Semantic Misrepresentation
+9.2.  Semantic Misrepresentation
 
    A publisher can incorrectly describe a scope, type, or containment
    relationship.
@@ -1334,7 +1451,7 @@ Table of Contents
    Consumers should rely only on trusted publishers and understood
    vocabularies when using metadata for authorization decisions.
 
-10.3.  Stale Metadata
+9.3.  Stale Metadata
 
    Authority semantics and access requirements may change.
 
@@ -1343,17 +1460,24 @@ Table of Contents
    indefinitely.
 
    This specification defines an optional digest binding to an authority
-   metadata snapshot.  It does not define semantic version negotiation,
-   guarantee that the snapshot was current at issuance, or bind external
-   vocabulary definitions unless their identifying information is
-   included in the hashed metadata.
+   metadata snapshot and an optional per-entry version signalling
+   semantic change (Section 3.1.5).  It does not define version
+   negotiation, guarantee that the snapshot was current at issuance, or
+   bind external vocabulary definitions unless their identifying
+   information is included in the hashed metadata.
+
+   Because a metadata document publishes only the current version of
+   each entry, a consumer cannot retrieve earlier descriptions from it.
+   A consumer needing to interpret tokens or decisions made under
+   earlier semantics needs to retain the relevant descriptions, or rely
+   on a digest-valued amb and the resource's own records.
 
    A resource accepting only its current snapshot can invalidate
    otherwise unexpired tokens whenever the hashed metadata changes.
    Deployments SHOULD coordinate metadata updates and token issuance,
    and define any transition period explicitly.
 
-10.4.  Malicious Resource Metadata and Policy Downgrade
+9.4.  Malicious Resource Metadata and Policy Downgrade
 
    A malicious client can select an attacker-controlled resource whose
    metadata understates the authority represented by a scope or
@@ -1369,7 +1493,7 @@ Table of Contents
    metadata MUST be associated with the expected resource identity, not
    merely with the location from which the document was retrieved.
 
-   Scope values, authority identifiers, families, and ranks from one
+   Scope values, authority identifiers, families, and versions from one
    resource MUST NOT be used to establish authority semantics for
    another resource.
 
@@ -1412,7 +1536,7 @@ Table of Contents
    based on another resource's metadata does not establish authority for
    the new target.
 
-10.5.  Requests Naming Multiple Resources
+9.5.  Requests Naming Multiple Resources
 
    An OAuth request can identify more than one protected resource.  Each
    resource's authority metadata and access requirements apply only
@@ -1430,7 +1554,7 @@ Table of Contents
 
    This specification does not define a profile-merging algorithm.
 
-10.6.  Scope Combinations
+9.6.  Scope Combinations
 
    The authority of several scopes may not equal a simple union of their
    individual descriptions.
@@ -1442,7 +1566,7 @@ Table of Contents
    Consumers need applicable resource policy when evaluating
    combinations.
 
-10.7.  RAR Parameter Restrictions
+9.7.  RAR Parameter Restrictions
 
    Type-level metadata must not cause a consumer to ignore restrictions
    in a concrete authorization details object.
@@ -1450,7 +1574,7 @@ Table of Contents
    Unsafe transformations can widen document access, payment
    destinations, amounts, or other parameter-defined authority.
 
-10.8.  Requirements Are Not Enforcement
+9.8.  Requirements Are Not Enforcement
 
    Publishing sender-constraining or freshness requirements does not
    implement them.
@@ -1464,15 +1588,15 @@ Table of Contents
    presentation, authentication, freshness, or other resource
    requirements have been satisfied.
 
-10.9.  Relationship Processing
+9.9.  Relationship Processing
 
    Relationship graphs can contain cycles or excessive numbers of
    entries.
 
-   Consumers SHOULD bound graph processing.  Rank must not be used as a
-   shortcut for proving containment.
+   Consumers SHOULD bound graph processing.  Family membership must not
+   be used as a shortcut for proving containment.
 
-10.10.  Consent Rendering
+9.10.  Consent Rendering
 
    Human-readable descriptions can improve disclosure but do not prove
    comprehension.
@@ -1481,7 +1605,7 @@ Table of Contents
    NOT execute markup, scripts, or instructions embedded in
    descriptions.
 
-10.11.  External Semantic Dependencies
+9.11.  External Semantic Dependencies
 
    A binding covers the metadata representation, not the contents of
    external vocabulary definitions, RAR type definitions, or other
@@ -1495,7 +1619,7 @@ Table of Contents
    A matching digest MUST NOT be treated as proof that external semantic
    dependencies remain unchanged.
 
-11.  Privacy Considerations
+10.  Privacy Considerations
 
    Authority metadata can disclose supported operations, resource types,
    and authentication expectations.
@@ -1507,9 +1631,9 @@ Table of Contents
    than user-specific authentication state or individual authorization
    decisions.
 
-12.  IANA Considerations
+11.  IANA Considerations
 
-12.1.  OAuth Authorization Server Metadata Registration
+11.1.  OAuth Authorization Server Metadata Registration
 
    This specification requests registration in the "OAuth Authorization
    Server Metadata" registry established by [RFC8414]:
@@ -1523,7 +1647,7 @@ Table of Contents
 
    *  Specification Document: Section 2 of this document
 
-12.2.  OAuth Protected Resource Metadata Registration
+11.2.  OAuth Protected Resource Metadata Registration
 
    This specification requests registration in the "OAuth Protected
    Resource Metadata" registry established by [RFC9728]:
@@ -1538,7 +1662,7 @@ Table of Contents
 
    *  Specification Document: Section 2 of this document
 
-12.3.  JSON Web Token Claim Registration
+11.3.  JSON Web Token Claim Registration
 
    This specification requests registration in the "JSON Web Token
    Claims" registry:
@@ -1551,9 +1675,9 @@ Table of Contents
 
    *  Change Controller: IETF
 
-   *  Specification Document: Section 9
+   *  Specification Document: Section 8
 
-12.4.  OAuth Token Introspection Response Registration
+11.4.  OAuth Token Introspection Response Registration
 
    This specification requests registration in the "OAuth Token
    Introspection Response" registry:
@@ -1566,15 +1690,15 @@ Table of Contents
 
    *  Change Controller: IETF
 
-   *  Specification Document: Section 9
+   *  Specification Document: Section 8
 
-13.  Acknowledgments
+12.  Acknowledgments
 
    TODO
 
-14.  References
+13.  References
 
-14.1.  Normative References
+13.1.  Normative References
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119,
@@ -1611,6 +1735,12 @@ Table of Contents
               DOI 10.17487/RFC8414, June 2018,
               <https://www.rfc-editor.org/info/rfc8414>.
 
+   [RFC8705]  Campbell, B., Bradley, J., Sakimura, N., and T.
+              Lodderstedt, "OAuth 2.0 Mutual-TLS Client Authentication
+              and Certificate-Bound Access Tokens", RFC 8705,
+              DOI 10.17487/RFC8705, February 2020,
+              <https://www.rfc-editor.org/info/rfc8705>.
+
    [RFC8707]  Campbell, B., Bradley, J., and H. Tschofenig, "Resource
               Indicators for OAuth 2.0", RFC 8707, DOI 10.17487/RFC8707,
               February 2020, <https://www.rfc-editor.org/info/rfc8707>.
@@ -1629,33 +1759,33 @@ Table of Contents
               DOI 10.17487/RFC9396, May 2023,
               <https://www.rfc-editor.org/info/rfc9396>.
 
+   [RFC9449]  Fett, D., Campbell, B., Bradley, J., Lodderstedt, T.,
+              Jones, M., and D. Waite, "OAuth 2.0 Demonstrating Proof of
+              Possession (DPoP)", RFC 9449, DOI 10.17487/RFC9449,
+              September 2023, <https://www.rfc-editor.org/info/rfc9449>.
+
    [RFC9728]  Jones, M.B., Hunt, P., and A. Parecki, "OAuth 2.0
               Protected Resource Metadata", RFC 9728,
               DOI 10.17487/RFC9728, April 2025,
               <https://www.rfc-editor.org/info/rfc9728>.
 
-14.2.  Informative References
+13.2.  Informative References
 
    [RFC8693]  Jones, M., Nadalin, A., Campbell, B., Ed., Bradley, J.,
               and C. Mortimore, "OAuth 2.0 Token Exchange", RFC 8693,
               DOI 10.17487/RFC8693, January 2020,
               <https://www.rfc-editor.org/info/rfc8693>.
 
-   [RFC8705]  Campbell, B., Bradley, J., Sakimura, N., and T.
-              Lodderstedt, "OAuth 2.0 Mutual-TLS Client Authentication
-              and Certificate-Bound Access Tokens", RFC 8705,
-              DOI 10.17487/RFC8705, February 2020,
-              <https://www.rfc-editor.org/info/rfc8705>.
-
-   [RFC9449]  Fett, D., Campbell, B., Bradley, J., Lodderstedt, T.,
-              Jones, M., and D. Waite, "OAuth 2.0 Demonstrating Proof of
-              Possession (DPoP)", RFC 9449, DOI 10.17487/RFC9449,
-              September 2023, <https://www.rfc-editor.org/info/rfc9449>.
-
    [RFC9470]  Bertocci, V. and B. Campbell, "OAuth 2.0 Step Up
               Authentication Challenge Protocol", RFC 9470,
               DOI 10.17487/RFC9470, September 2023,
               <https://www.rfc-editor.org/info/rfc9470>.
+
+   [I-D.hardt-aauth-r3]
+              Hardt, D., "AAuth Rich Resource Requests (R3)", Work in
+              Progress, Internet-Draft, draft-hardt-aauth-r3-00, 28
+              September 2026, <https://datatracker.ietf.org/doc/html/
+              draft-hardt-aauth-r3-00>.
 
    [AUTHZEN-ISSUANCE]
               OpenID Foundation, "AuthZEN Profile for OAuth 2.0 Token
@@ -1667,20 +1797,175 @@ Table of Contents
               Exchange", 2026, <https://openid.github.io/authzen/
               authzen-oauth-token-exchange-1_0.html>.
 
-Appendix A.  Editorial Issues
+Appendix A.  Linking Authority to API Operations
+
+   This appendix is informative.
+
+   Action identifiers in authority descriptions are publisher-defined.
+   A publisher can additionally relate an authority description to the
+   concrete API operations it covers by reusing an existing operation
+   vocabulary, such as those defined by AAuth Rich Resource Requests
+   [I-D.hardt-aauth-r3].
+
+   In the following example, a calendar resource exposes the same
+   operations through an MCP server and an OpenAPI-described HTTP API.
+   The operations member is an illustrative extension attribute of a
+   structured authority description, not a member defined by this
+   specification.  Its elements use the vocabulary URIs and operation
+   entry formats of [I-D.hardt-aauth-r3].
+
+   {
+     "resource": "https://calendar.example.com",
+     "authorization_servers": [
+       "https://as.example.com"
+     ],
+     "scopes_supported": [
+       "calendar.read",
+       "calendar.write"
+     ],
+     "authority_metadata": {
+       "authorities": [
+         {
+           "id": "calendar.write",
+           "kind": "scope",
+           "value": "calendar.write",
+           "description": "Read, create, and modify calendar events.",
+           "version": "1",
+           "authority": [
+             {
+               "resource_type": "calendar-event",
+               "actions": [
+                 "calendar-event:read",
+                 "calendar-event:create",
+                 "calendar-event:update"
+               ],
+               "effects": [
+                 "data-disclosure",
+                 "state-change",
+                 "external-notification"
+               ],
+               "operations": [
+                 {
+                   "vocabulary": "urn:aauth:vocabulary:mcp",
+                   "operations": [
+                     { "tool": "list_calendar_events" },
+                     { "tool": "create_calendar_event" },
+                     { "tool": "modify_calendar_event" }
+                   ]
+                 },
+                 {
+                   "vocabulary": "urn:aauth:vocabulary:openapi",
+                   "operations": [
+                     { "operationId": "listEvents" },
+                     { "operationId": "createEvent" },
+                     { "operationId": "updateEvent" }
+                   ]
+                 }
+               ]
+             }
+           ],
+           "relationships": [
+             {
+               "relation": "can_be_attenuated_to",
+               "target": "calendar.read"
+             }
+           ]
+         },
+         {
+           "id": "calendar.read",
+           "kind": "scope",
+           "value": "calendar.read",
+           "description": "Read calendar events.",
+           "version": "1",
+           "authority": [
+             {
+               "resource_type": "calendar-event",
+               "actions": [
+                 "calendar-event:read"
+               ],
+               "effects": [
+                 "data-disclosure"
+               ],
+               "operations": [
+                 {
+                   "vocabulary": "urn:aauth:vocabulary:mcp",
+                   "operations": [
+                     { "tool": "list_calendar_events" }
+                   ]
+                 },
+                 {
+                   "vocabulary": "urn:aauth:vocabulary:openapi",
+                   "operations": [
+                     { "operationId": "listEvents" }
+                   ]
+                 }
+               ]
+             }
+           ]
+         }
+       ]
+     }
+   }
+
+   A consumer that understands the referenced vocabularies can use such
+   links, for example, to:
+
+   *  determine which scope covers an MCP tool or OpenAPI operation an
+      agent intends to call;
+
+   *  render consent in terms of the operations the client will invoke;
+
+   *  evaluate whether a lower-authority alternative still covers the
+      operations a task requires.
+
+   Operation identifiers resolve against the vocabulary discovery
+   endpoints advertised by the resource, as described in
+   [I-D.hardt-aauth-r3].  Listing operations does not establish that a
+   concrete invocation is permitted; parameter values, resource state,
+   and resource policy continue to apply.
+
+   Because the extension attribute is part of the authority_metadata
+   object, it is covered by a digest-valued amb.  Changes to the
+   referenced API descriptions are not; see External Semantic
+   Dependencies.
+
+Appendix B.  Editorial Issues
 
    This section is to be removed before publication as an RFC.
 
-   *  Evaluate whether sender-constraining mechanism identifiers are
-      needed in access requirement profiles.
+   *  Evaluate whether a member linking authority descriptions to
+      operation vocabularies, such as those of [I-D.hardt-aauth-r3],
+      should be defined.
 
    *  Evaluate whether additional metadata is needed to associate type-
       specific semantic definitions with RAR entries.
 
    *  Determine whether extension registries are needed for authority
-      kinds, relationship names, and access requirement attributes.
+      kinds, relationship names, sender-constraining method values, and
+      access requirement attributes.
 
-Appendix B.  Document History
+Appendix C.  Document History
+
+   -01
+
+   *  Removed rank and the Authority Ordering section; family is
+      retained as an optional grouping.
+
+   *  Added optional per-entry version; documents publish only the
+      current version of each entry.
+
+   *  Replaced sender_constrained with sender_constraining_methods
+      identifying the required mechanism (dpop, mtls), and clarified
+      composition with resource-wide metadata of [RFC9728].
+
+   *  Added a worked example of conflicting AS and resource
+      descriptions.
+
+   *  Added an informative reference to [I-D.hardt-aauth-r3]
+      vocabularies and an appendix linking authority to API operations.
+
+   *  Removed duplicated text in relationship and multiple-authority
+      sections.
 
    -00
 
