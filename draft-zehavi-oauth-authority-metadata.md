@@ -30,17 +30,18 @@ normative:
   RFC7662:
   RFC8174:
   RFC8414:
+  RFC8705:
   RFC8707:
   RFC8785:
   RFC9068:
   RFC9396:
+  RFC9449:
   RFC9728:
 
 informative:
   RFC8693:
-  RFC8705:
-  RFC9449:
   RFC9470:
+  I-D.hardt-aauth-r3:
 
   AUTHZEN-ISSUANCE:
     title: AuthZEN Profile for OAuth 2.0 Token Issuance
@@ -117,7 +118,8 @@ This specification defines:
 * a common authority description model for scopes and RAR types;
 * reusable protected resource access requirement profiles;
 * attenuation relationships;
-* advisory authority ordering through `family` and `rank`.
+* optional authority grouping through `family`;
+* optional per-entry semantic versioning through `version`;
 * an optional authority metadata binding attribute for access tokens and token introspection responses.
 
 
@@ -171,8 +173,11 @@ Attenuation:
   greater access.
 
 Authority family:
-: A publisher-defined grouping within which authority ranks have a
-  common interpretation.
+: A publisher-defined grouping of related authority entries.
+
+Authority entry version:
+: A publisher-assigned identifier for the current semantics of an
+  authority entry.
 
 # Metadata Parameter {#metadata-parameter}
 
@@ -235,6 +240,7 @@ The following resource accepts a read scope, a management scope that includes re
     "documents.manage"
   ],
   "authorization_details_types_supported": ["document-access"],
+  "dpop_signing_alg_values_supported": ["ES256"],
   "authority_metadata": {
     "access_requirement_profiles": {
       "standard_access": {
@@ -246,7 +252,7 @@ The following resource accepts a read scope, a management scope that includes re
         "token": {
           "max_age": 300,
           "max_lifetime": 600,
-          "sender_constrained": true
+          "sender_constraining_methods": ["dpop"]
         },
         "authentication": {
           "acr_values": [
@@ -263,7 +269,7 @@ The following resource accepts a read scope, a management scope that includes re
         "value": "documents.read",
         "description": "Read documents accessible to the subject.",
         "family": "document_access",
-        "rank": 10,
+        "version": "1",
         "authority": [
           {
             "resource_type": "document",
@@ -284,7 +290,7 @@ The following resource accepts a read scope, a management scope that includes re
         "value": "documents.manage",
         "description": "Read and update documents accessible to the subject.",
         "family": "document_access",
-        "rank": 20,
+        "version": "2",
         "authority": [
           {
             "resource_type": "document",
@@ -333,11 +339,13 @@ The following resource accepts a read scope, a management scope that includes re
 }
 ~~~
 
-The RAR entry does not receive a fixed rank in this example because its concrete authority varies with the requested actions and document restrictions.
+The `documents.manage` entry is at version `2`, indicating that the publisher has changed its semantics since an earlier publication. Only the current description is published.
+
+The `sensitive_access` profile requires DPoP-bound tokens, a mechanism the resource advertises through `dpop_signing_alg_values_supported` {{RFC9449}}.
 
 ### Authorization Server Metadata
 
-In this example, the AS and protected resource publish matching type-level descriptions. Matching descriptions do not establish trust, imply comparable family rankings across documents, or guarantee acceptance of an issued token.
+In this example, the AS and protected resource publish matching type-level descriptions. Matching descriptions do not establish trust, imply comparable groupings across documents, or guarantee acceptance of an issued token.
 
 ~~~ json
 {
@@ -354,7 +362,6 @@ In this example, the AS and protected resource publish matching type-level descr
         "value": "profile.read",
         "description": "Read profile information.",
         "family": "profile_access",
-        "rank": 10,
         "authority": [
           {
             "resource_type": "profile",
@@ -373,7 +380,6 @@ In this example, the AS and protected resource publish matching type-level descr
         "value": "profile.manage",
         "description": "Read and update profile information.",
         "family": "profile_access",
-        "rank": 20,
         "authority": [
           {
             "resource_type": "profile",
@@ -473,20 +479,32 @@ OPTIONAL. A non-empty string identifying a publisher-defined authority family.
 
 A family identifier has meaning only within the publishing metadata document. The same string in another publisher's metadata does not establish a shared vocabulary.
 
-### rank
+A family groups related entries, for example for display or administrative review. Membership in a family does not establish ordering, containment, or equivalent authority between its entries.
 
-OPTIONAL. A non-negative integer providing an advisory ordering within
-the specified `family`.
+### version {#entry-version}
 
-An entry containing `rank` MUST also contain `family`.
+OPTIONAL. A non-empty string identifying the current semantics of the authority entry.
 
-Lower values express the publisher's preferred ordering toward lower authority within that family. Equal values do not imply equivalent authority.
+The value is opaque. Consumers MUST compare versions only for equality and MUST NOT infer ordering, compatibility, or the extent of change from their values.
 
-Rank does not prove containment, interchangeability, or suitability for a task. See {{ordering}}.
+A metadata document publishes only the current description of each authority. A publisher MUST NOT publish more than one entry for the same `kind` and `value` to represent different versions.
 
-For a RAR type entry, `rank` is an advisory ordering of the type-level authority description. It does not rank individual authorization details objects.
+A publisher MUST change the version of an entry when it changes the semantics the entry describes, including when it changes:
 
-Publishers MAY omit `rank` when parameter-dependent authority makes a type-level ordering unhelpful.
+* the entry's `authority` descriptions;
+* the referenced access requirement profile, or the contents of that profile;
+* the entry's `relationships`;
+* the definition of a vocabulary value used by the entry, where the publisher controls that definition.
+
+A publisher SHOULD NOT change the version for changes that do not affect semantics, such as edits to `description` or reordering of entries.
+
+Once a publisher includes `version` in an entry, it SHOULD continue to include it in later publications of that entry.
+
+A consumer that observes a changed version, or the addition or removal of `version`, MUST NOT rely on cached evaluations, consent, or attenuation decisions derived from the previous description of that entry when making new decisions. It SHOULD re-evaluate them against the current description.
+
+A changed version does not, by itself, invalidate previously issued tokens. Their acceptance remains subject to resource policy; see {{authority-metadata-binding}}.
+
+An absent `version` provides no signal about change. Consumers relying on change detection for an unversioned entry need to compare its descriptions directly.
 
 ### authority
 
@@ -573,6 +591,8 @@ This specification defines the structure of these descriptions, not a universal 
 
 Publishers SHOULD use stable identifiers and documented vocabularies. URI identifiers are RECOMMENDED when vocabulary values are intended to be understood across independently operated systems.
 
+Existing operation vocabularies can help link authority descriptions to concrete API operations. For example, AAuth Rich Resource Requests {{I-D.hardt-aauth-r3}} defines vocabularies identifying MCP tools, OpenAPI operations, gRPC methods, and other API description formats. {{r3-example}} illustrates how a publisher might reference such operations. This specification does not define a member for that purpose.
+
 A consumer MUST NOT assume that identical local strings from different publishers have identical semantics.
 
 ## Completeness and Interpretation
@@ -635,7 +655,7 @@ For example:
       "token": {
         "max_age": 300,
         "max_lifetime": 600,
-        "sender_constrained": true
+        "sender_constraining_methods": ["dpop", "mtls"]
       },
       "authentication": {
         "acr_values": [
@@ -660,17 +680,46 @@ The `token` object can contain:
 : OPTIONAL. A positive integer expressing, in seconds, the maximum
   acceptable total lifetime of the access token, from issuance to expiration.
 
-`sender_constrained`:
-: OPTIONAL. A boolean. If `true`, presentation must satisfy an
-  applicable sender-constraining mechanism.
+`sender_constraining_methods`:
+: OPTIONAL. A non-empty array of strings identifying the sender-constraining
+  mechanisms acceptable for access using the associated authority. See
+  {{sender-constraining}}.
 
-A boolean value of `false` means that this profile does not require the property. It does not prohibit the property or override stricter policy.
+### Sender-Constraining {#sender-constraining}
 
-### Sender-Constraining
+`sender_constraining_methods` declares that access using the associated authority requires a sender-constrained access token, bound using one of the listed mechanisms.
 
-`sender_constrained: true` declares that access using the associated authority requires sender-constrained token presentation under an applicable mechanism.
+This specification defines the following values:
 
-This attribute does not select a mechanism. Mechanism selection depends on the token profile, applicable discovery metadata, and deployment agreement.
+`dpop`:
+: The access token is bound to a DPoP proof-of-possession key and
+  presented as defined in {{RFC9449}}.
+
+`mtls`:
+: The access token is bound to a client certificate and presented over
+  mutual TLS as defined in {{RFC8705}}.
+
+The listed values are alternatives. The resource accepts a token bound and presented using at least one listed mechanism. A consumer MUST ignore unrecognized values. If no listed value is recognized, the consumer cannot satisfy the requirement and MUST NOT treat it as absent.
+
+Absence of `sender_constraining_methods` means that this profile does not require sender-constraining. It does not prohibit sender-constrained tokens or override stricter resource-wide policy.
+
+### Relationship to Resource-Wide Metadata
+
+{{RFC9728}} defines resource-wide metadata for sender-constrained access tokens. That metadata and access requirement profiles have distinct roles:
+
+* `dpop_signing_alg_values_supported` and
+  `tls_client_certificate_bound_access_tokens` describe mechanisms the
+  resource supports.
+* `dpop_bound_access_tokens_required` describes a requirement applying to
+  all access at the resource.
+* `sender_constraining_methods` describes a requirement applying to
+  access using a particular authority.
+
+A profile MUST list only mechanisms the resource advertises as supported in its resource-wide metadata. A consumer MUST NOT treat a listed mechanism that the resource does not advertise as supported as satisfiable.
+
+Resource-wide requirements apply in addition to profile requirements. If the resource sets `dpop_bound_access_tokens_required` to `true`, a DPoP-bound token is required for all access, regardless of whether a profile lists `mtls` or omits `sender_constraining_methods`.
+
+An authorization server satisfying a profile requirement needs to issue a token bound using a listed mechanism that it supports, as advertised in its own metadata under {{RFC9449}} or {{RFC8705}}. If no listed mechanism is supported by both the AS and the resource, the AS cannot satisfy the profile.
 
 ## Authentication Requirements
 
@@ -705,7 +754,7 @@ This specification does not prescribe how an authorization server combines the a
 
 A profile reference describes requirements associated with use of that authority. Where an operation requires multiple authorities, their declared requirements are cumulative; a weaker profile does not negate a stronger requirement.
 
-If an operation requires multiple authorities, all applicable requirements must be satisfied. A weaker profile cannot cancel a stronger requirement.
+Where the profiles of multiple authorities list different `sender_constraining_methods`, a single token satisfies them only if it is bound using a mechanism listed by every applicable profile.
 
 # Authority Relationships {#relationships}
 
@@ -726,8 +775,6 @@ This document defines one relationship:
 
 The target MUST exist, MUST differ from the source, and MUST be in the same metadata document.
 
-Both entries MUST declare the same `family`.
-
 ## can_be_attenuated_to
 
 The relationship:
@@ -739,9 +786,7 @@ The relationship:
 }
 ~~~
 
-asserts that the target represents no greater authority than the source under the protected resource's authority semantics.
-
-For relationships between scope entries, this relationship asserts that the target represents no greater authority than the source under the protected resource's applicable semantics and restrictions.
+asserts that the target represents no greater authority than the source under the protected resource's applicable semantics and restrictions.
 
 Where either entry describes a RAR type, the relationship identifies a candidate attenuation target. It does not establish containment between concrete authorization details objects or between a concrete object and a scope grant. A consumer MUST establish concrete containment using applicable type semantics, parameter restrictions, and policy before substitution.
 
@@ -749,10 +794,8 @@ For example, if `documents.manage` authorizes both reading and modifying documen
 
 Conversely, a payment execution authority does not automatically contain payment preparation or payment status access. Those are different operations. A relationship is valid only if the resource's actual semantics establish the asserted containment.
 
-A publisher MUST NOT declare this relationship based solely on rank, risk, or perceived similarity.
+A publisher MUST NOT declare this relationship based solely on family membership, risk, or perceived similarity.
 The relationship does not assert that the target satisfies the client's task, purpose, or Mission.
-
-For parameterized authorities such as Rich Authorization Requests (RAR) types, the relationship identifies a potential attenuation target. It does not assert containment between arbitrary instances of the source and target types. Concrete containment requires the applicable type semantics and parameter restrictions.
 
 ## RAR and Cross-Kind Relationships
 
@@ -772,28 +815,6 @@ Containment is transitive when the same resource context and compatible semantic
 A consumer is not required to compute a transitive closure, select a target, or perform substitution.
 Unrecognized relationship names MUST NOT be interpreted as `can_be_attenuated_to`.
 Consumers traversing relationships SHOULD apply limits to traversal depth and visited entries to avoid unbounded processing.
-
-# Authority Ordering {#ordering}
-
-`family` and `rank` provide advisory ordering.
-
-A consumer can use them to:
-
-* display authorities in a publisher-defined order;
-* prioritize evaluation of lower-authority candidates;
-* organize authority choices for human review.
-
-Ranks can be compared only within the same family and metadata document.
-
-Rank MUST NOT be used by itself to establish:
-
-* authority containment;
-* equivalent authority;
-* safe attenuation;
-* satisfaction of a purpose or Mission;
-* comparable security or risk across publishers.
-
-Where an attenuation relationship and ranks are both published, the target rank SHOULD be no greater than the source rank.
 
 # Authorization Server Use
 
@@ -833,11 +854,64 @@ An authorization server may use local policy or configuration when protected res
 
 AS authority metadata describes the AS's local interpretation of its authority vocabulary. Protected resource authority metadata describes the resource's enforcement semantics.
 
-An authorization server MUST NOT use protected resource metadata, by itself, to relax its issuance restrictions or minimum security requirements. An omitted requirement, lower risk classification, lower rank, or narrower authority description does not override AS policy.
+An authorization server MUST NOT use protected resource metadata, by itself, to relax its issuance restrictions or minimum security requirements. An omitted requirement, lower risk classification, or narrower authority description does not override AS policy.
 
 Where the authority descriptions differ, the AS determines their applicability through trusted configuration and local policy. The difference MUST NOT be resolved merely by selecting the interpretation that permits issuance.
 
 This specification does not require an AS to issue a token when the descriptions or requirements cannot be reconciled.
+
+### Example: Conflicting Descriptions
+
+An AS publishes the following description of `documents.read`:
+
+~~~ json
+{
+  "kind": "scope",
+  "value": "documents.read",
+  "authority": [
+    {
+      "resource_type": "document",
+      "actions": ["document:read"],
+      "effects": ["data-disclosure"],
+      "risk": "low"
+    }
+  ]
+}
+~~~
+
+The protected resource `https://documents.example.com` publishes a description of the same scope that also permits bulk export, without an access requirement profile:
+
+~~~ json
+{
+  "id": "documents.read",
+  "kind": "scope",
+  "value": "documents.read",
+  "authority": [
+    {
+      "resource_type": "document",
+      "actions": ["document:read", "document:export"],
+      "effects": ["data-disclosure", "bulk-data-disclosure"],
+      "risk": "high"
+    }
+  ]
+}
+~~~
+
+A client requests `documents.read` for that resource. The AS's policy permits low-risk read access for this client without step-up authentication.
+
+The resource enforces its own description, so a token carrying `documents.read` permits export at that resource. The AS therefore cannot rely on its narrower local description when evaluating the request.
+
+Conversely, the resource's omission of an access requirement profile does not relax any requirement the AS applies to bulk data access.
+
+Depending on its policy and configuration, the AS can:
+
+* evaluate the request against the resource's broader description, applying the policy and authentication requirements it associates with bulk export;
+* decline to issue `documents.read` for that resource until the descriptions are reconciled;
+* issue authority whose enforcement semantics at that resource it has established through other means, such as a RAR type restricting the permitted actions.
+
+The AS MUST NOT issue the token on the basis that its own description treats `documents.read` as low risk.
+
+If the AS's description were the broader one, the AS would also not be required to treat the resource's narrower description as permitting issuance under a weaker policy.
 
 ## Attenuation Options
 
@@ -852,7 +926,7 @@ Possible behaviors include:
 * requesting additional consent;
 * requiring the client to submit a revised request.
 
-This specification does not require an AS to search relationships, select the lowest rank, or issue an attenuated token.
+This specification does not require an AS to search relationships, select a particular target, or issue an attenuated token.
 
 Where an AS changes granted authority, it remains responsible for the applicable response requirements of {{RFC6749}}, {{RFC9396}}, and the relevant grant or exchange protocol, including {{RFC8693}} where applicable.
 
@@ -1005,7 +1079,9 @@ Authority semantics and access requirements may change.
 Consumers SHOULD use bounded caching and an appropriate refresh strategy.
 An old description must not be assumed to remain valid indefinitely.
 
-This specification defines an optional digest binding to an authority metadata snapshot. It does not define semantic version negotiation, guarantee that the snapshot was current at issuance, or bind external vocabulary definitions unless their identifying information is included in the hashed metadata.
+This specification defines an optional digest binding to an authority metadata snapshot and an optional per-entry `version` signalling semantic change ({{entry-version}}). It does not define version negotiation, guarantee that the snapshot was current at issuance, or bind external vocabulary definitions unless their identifying information is included in the hashed metadata.
+
+Because a metadata document publishes only the current version of each entry, a consumer cannot retrieve earlier descriptions from it. A consumer needing to interpret tokens or decisions made under earlier semantics needs to retain the relevant descriptions, or rely on a digest-valued `amb` and the resource's own records.
 
 A resource accepting only its current snapshot can invalidate otherwise unexpired tokens whenever the hashed metadata changes. Deployments SHOULD coordinate metadata updates and token issuance, and define any transition period explicitly.
 
@@ -1017,7 +1093,7 @@ If an authorization server applies that metadata outside its resource context, t
 
 An authorization server MUST bind protected resource authority metadata used in an issuance decision to the protected resource for which that metadata was validated. Protected resource authority metadata MUST be associated with the expected resource identity, not merely with the location from which the document was retrieved.
 
-Scope values, authority identifiers, families, and ranks from one resource MUST NOT be used to establish authority semantics for another resource.
+Scope values, authority identifiers, families, and versions from one resource MUST NOT be used to establish authority semantics for another resource.
 
 An authorization server MUST NOT treat resource metadata as authorization to weaken existing grant restrictions, client policy, subject authority, or AS-local minimum security requirements.
 
@@ -1074,8 +1150,8 @@ A digest-valued amb is an assertion by the authorization server, not proof of co
 
 Relationship graphs can contain cycles or excessive numbers of entries.
 
-Consumers SHOULD bound graph processing. Rank must not be used as a
-shortcut for proving containment.
+Consumers SHOULD bound graph processing. Family membership must not be
+used as a shortcut for proving containment.
 
 ## Consent Rendering
 
@@ -1149,20 +1225,149 @@ TODO
 
 --- back
 
+# Linking Authority to API Operations {#r3-example}
+
+This appendix is informative.
+
+Action identifiers in authority descriptions are publisher-defined. A publisher can additionally relate an authority description to the concrete API operations it covers by reusing an existing operation vocabulary, such as those defined by AAuth Rich Resource Requests {{I-D.hardt-aauth-r3}}.
+
+In the following example, a calendar resource exposes the same operations through an MCP server and an OpenAPI-described HTTP API. The `operations` member is an illustrative extension attribute of a structured authority description, not a member defined by this specification. Its elements use the vocabulary URIs and operation entry formats of {{I-D.hardt-aauth-r3}}.
+
+~~~ json
+{
+  "resource": "https://calendar.example.com",
+  "authorization_servers": [
+    "https://as.example.com"
+  ],
+  "scopes_supported": [
+    "calendar.read",
+    "calendar.write"
+  ],
+  "authority_metadata": {
+    "authorities": [
+      {
+        "id": "calendar.write",
+        "kind": "scope",
+        "value": "calendar.write",
+        "description": "Read, create, and modify calendar events.",
+        "version": "1",
+        "authority": [
+          {
+            "resource_type": "calendar-event",
+            "actions": [
+              "calendar-event:read",
+              "calendar-event:create",
+              "calendar-event:update"
+            ],
+            "effects": [
+              "data-disclosure",
+              "state-change",
+              "external-notification"
+            ],
+            "operations": [
+              {
+                "vocabulary": "urn:aauth:vocabulary:mcp",
+                "operations": [
+                  { "tool": "list_calendar_events" },
+                  { "tool": "create_calendar_event" },
+                  { "tool": "modify_calendar_event" }
+                ]
+              },
+              {
+                "vocabulary": "urn:aauth:vocabulary:openapi",
+                "operations": [
+                  { "operationId": "listEvents" },
+                  { "operationId": "createEvent" },
+                  { "operationId": "updateEvent" }
+                ]
+              }
+            ]
+          }
+        ],
+        "relationships": [
+          {
+            "relation": "can_be_attenuated_to",
+            "target": "calendar.read"
+          }
+        ]
+      },
+      {
+        "id": "calendar.read",
+        "kind": "scope",
+        "value": "calendar.read",
+        "description": "Read calendar events.",
+        "version": "1",
+        "authority": [
+          {
+            "resource_type": "calendar-event",
+            "actions": [
+              "calendar-event:read"
+            ],
+            "effects": [
+              "data-disclosure"
+            ],
+            "operations": [
+              {
+                "vocabulary": "urn:aauth:vocabulary:mcp",
+                "operations": [
+                  { "tool": "list_calendar_events" }
+                ]
+              },
+              {
+                "vocabulary": "urn:aauth:vocabulary:openapi",
+                "operations": [
+                  { "operationId": "listEvents" }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
+~~~
+
+A consumer that understands the referenced vocabularies can use such links, for example, to:
+
+* determine which scope covers an MCP tool or OpenAPI operation an agent intends to call;
+* render consent in terms of the operations the client will invoke;
+* evaluate whether a lower-authority alternative still covers the operations a task requires.
+
+Operation identifiers resolve against the vocabulary discovery endpoints advertised by the resource, as described in {{I-D.hardt-aauth-r3}}. Listing operations does not establish that a concrete invocation is permitted; parameter values, resource state, and resource policy continue to apply.
+
+Because the extension attribute is part of the `authority_metadata` object, it is covered by a digest-valued `amb`. Changes to the referenced API descriptions are not; see External Semantic Dependencies.
+
 # Editorial Issues
 
 This section is to be removed before publication as an RFC.
 
-* Evaluate whether sender-constraining mechanism identifiers are needed
-  in access requirement profiles.
+* Evaluate whether a member linking authority descriptions to operation
+  vocabularies, such as those of {{I-D.hardt-aauth-r3}}, should be
+  defined.
 
 * Evaluate whether additional metadata is needed to associate
   type-specific semantic definitions with RAR entries.
 
 * Determine whether extension registries are needed for authority
-  kinds, relationship names, and access requirement attributes.
+  kinds, relationship names, sender-constraining method values, and
+  access requirement attributes.
 
 # Document History
+
+-01
+
+* Removed `rank` and the Authority Ordering section; `family` is retained
+  as an optional grouping.
+* Added optional per-entry `version`; documents publish only the current
+  version of each entry.
+* Replaced `sender_constrained` with `sender_constraining_methods`
+  identifying the required mechanism (`dpop`, `mtls`), and clarified
+  composition with resource-wide metadata of {{RFC9728}}.
+* Added a worked example of conflicting AS and resource descriptions.
+* Added an informative reference to {{I-D.hardt-aauth-r3}} vocabularies
+  and an appendix linking authority to API operations.
+* Removed duplicated text in relationship and multiple-authority sections.
 
 -00
 
