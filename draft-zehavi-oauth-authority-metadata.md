@@ -756,92 +756,69 @@ Where the profiles of multiple authorities list different `sender_constraining_m
 
 ## Entity Profile Combinations (MORA Support) {#entity-profiles}
 
-If a profile includes `entity_profiles`, the RS declares support for 
-MORA entity profiles and the minimum access requirements for each 
-entity combination.
+If a profile includes `entity_profiles`, the RS declares support for MORA entity profiles and the minimum access requirements for each entity combination.
 
 `entity_profiles`:
-: OPTIONAL. A JSON object whose keys identify entity profile combinations 
-  and whose values describe minimum access requirements for that combination.
-  
-  Presence of `entity_profiles` indicates this profile follows MORA 
-  entity classification. Absence means the profile applies uniformly 
-  regardless of entity types.
-  
+: OPTIONAL. A JSON object whose keys identify entity profile combinations and whose values describe minimum access requirements for that combination.
+
+  Presence of `entity_profiles` indicates this profile follows MORA entity classification. Absence means the profile applies uniformly regardless of entity types.
+
   Keys use the format:
-  - "client_profile+sub_profile" 
+  - "client_profile+sub_profile"
   - "client_profile+sub_profile+actor_profile"
-  
+
   Example keys: "web_app+user", "web_app+user+ai_agent", "service+ai_agent"
-  
-  Entity profile identifiers correspond to values defined in MORA. 
-  Recognized values include: user, device, native_app, web_app, 
-  browser_app, service, ai_agent.
-  
-  Each key maps to a complete access requirement profile object 
-  (containing `token` and/or `authentication` members, with same 
-  structure as top-level profile members).
+
+  Entity profile identifiers correspond to values defined in MORA. Recognized values include: user, device, native_app, web_app, browser_app, service, ai_agent.
+
+  Each key maps to a complete access requirement profile object (containing `token` and/or `authentication` members, with same structure as top-level profile members).
 
 ### Authorization Server Processing
 
 **Preconditions for consulting `entity_profiles`:**
 
 An authorization server supporting MORA MUST consult `entity_profiles` only when:
-- The OAuth token request includes the `resource` parameter 
+- The OAuth token request includes the `resource` parameter
 - The PRM for that resource defines `entity_profiles`
 
 **Token issuance workflow:**
 
-1. Determine `client_profile`:
-   From client metadata/registry.
+1. Determine `client_profile`: From client metadata/registry.
 
-2. Discover `sub_profile`:
-   From subject attributes during token processing.
+2. Discover `sub_profile`: From subject attributes during token processing.
 
-3. Determine `actor_profile` (internal processing only):
-   From subject_token or actor_token in token exchange flow, or null 
-   if no delegation.
+3. Determine `actor_profile` (internal processing only): From subject_token or actor_token in token exchange flow, or null if no delegation.
 
 4. Construct combination key for PRM lookup:
    - If actor_profile is not null: "client_profile+sub_profile+actor_profile"
    - Else: "client_profile+sub_profile"
 
 5. Look up key in PRM `entity_profiles`:
-   - If not found: **MUST FAIL** the token request 
-     (combination not supported by resource)
+   - If not found: **MUST FAIL** the token request (combination not supported by resource)
 
-6. Determine intended token profile per local AS policy:
-   Lifetime, sender-constraining methods, authentication requirements, etc.
+6. Determine intended token profile per local AS policy: Lifetime, sender-constraining methods, authentication requirements, etc.
 
 7. Validate AS token profile meets PRM minimum requirements:
-   
+
    For `token` requirements:
-   - If PRM specifies `max_lifetime`: AS token lifetime MUST be 
-     ≤ PRM max_lifetime
-   - If PRM specifies `sender_constraining_methods`: AS token MUST be 
-     bound using one of the listed methods
+   - If PRM specifies `max_lifetime`: AS token lifetime MUST be ≤ PRM max_lifetime
+   - If PRM specifies `sender_constraining_methods`: AS token MUST be bound using one of the listed methods
    - If PRM omits sender-constraining: AS can optionally require it
-   
+
    For `authentication` requirements:
-   - If PRM specifies `acr_values`: AS authentication MUST satisfy 
-     at least one of the listed values
-   - If PRM specifies `max_age`: AS authentication freshness requirement 
-     MUST be ≤ PRM max_age
+   - If PRM specifies `acr_values`: AS authentication MUST satisfy at least one of the listed values
+   - If PRM specifies `max_age`: AS authentication freshness requirement MUST be ≤ PRM max_age
    - If PRM omits these requirements: AS can optionally require them
-   
-   **Principle:** AS may apply stricter (more restrictive) requirements 
-   than PRM minimum. AS MUST NOT apply looser requirements.
-   
-   If PRM requirements cannot be satisfied:
-     **MUST FAIL** the token request
+
+   **Principle:** AS may apply stricter (more restrictive) requirements than PRM minimum. AS MUST NOT apply looser requirements.
+
+   If PRM requirements cannot be satisfied: **MUST FAIL** the token request
 
 8. Issue token with entity profile claims:
    - `client_profile`: string value
    - `sub_profile`: string value
-   
-   Per MORA, only client_profile and sub_profile are included 
-   as token claims. The actor_profile is determined during processing 
-   for PRM lookup but is not persisted in the issued token.
+
+   Per MORA, only client_profile and sub_profile are included as token claims. The actor_profile is determined during processing for PRM lookup but is not persisted in the issued token.
 
 **Non-MORA Authorization Servers:**
 
@@ -867,14 +844,11 @@ When a received token includes entity profile claims:
    - If authentication max_age is specified: verify freshness
    - If acr_values are specified: verify authentication context
 
-The RS accepts tokens that meet or exceed the profile requirements.
-If the token does not meet the profile floor:
-   **MUST REJECT** the token
+The RS accepts tokens that meet or exceed the profile requirements. If the token does not meet the profile floor: **MUST REJECT** the token
 
 **Tokens without entity profile claims:**
 
-If a received token has no entity profile claims but the profile 
-defines `entity_profiles`:
+If a received token has no entity profile claims but the profile defines `entity_profiles`:
 - Treat as issued by non-MORA AS
 - Apply top-level `token`/`authentication` if present
 - Otherwise apply resource-wide policy
