@@ -26,13 +26,13 @@
 <!-- Generator version information:
   xml2rfc 3.35.0
     Python 3.14.10
-    ConfigArgParse 1.9.0
+    ConfigArgParse 1.10.1
     google-i18n-address 3.1.1
     intervaltree 3.2.1
     Jinja2 3.1.6
     lxml 6.1.1
     natsort 8.4.0
-    platformdirs 4.14.3
+    platformdirs 4.14.7
     pycountry 24.6.1
     PyYAML 6.0.3
     requests 2.33.1
@@ -1056,7 +1056,7 @@ svg {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Zehavi</td>
-<td class="center">Expires 10 May 2027</td>
+<td class="center">Expires 22 May 2027</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1069,12 +1069,12 @@ svg {
 <dd class="internet-draft">draft-zehavi-oauth-authority-metadata-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-11-06" class="published">6 November 2026</time>
+<time datetime="2026-11-18" class="published">18 November 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2027-05-10">10 May 2027</time></dd>
+<dd class="expires"><time datetime="2027-05-22">22 May 2027</time></dd>
 <dt class="label-authors">Author:</dt>
 <dd class="authors">
 <div class="author">
@@ -1124,7 +1124,7 @@ svg {
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 10 May 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 22 May 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1268,6 +1268,20 @@ svg {
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.5">
                 <p id="section-toc.1-1.5.2.5.1"><a href="#section-5.5" class="auto internal xref">5.5</a>.  <a href="#name-multiple-authorities-in-a-t" class="internal xref">Multiple Authorities in a Token</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.6">
+                <p id="section-toc.1-1.5.2.6.1"><a href="#section-5.6" class="auto internal xref">5.6</a>.  <a href="#name-entity-profile-combinations" class="internal xref">Entity Profile Combinations (MORA Support)</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.6.2.1">
+                    <p id="section-toc.1-1.5.2.6.2.1.1"><a href="#section-5.6.1" class="auto internal xref">5.6.1</a>.  <a href="#name-authorization-server-proces" class="internal xref">Authorization Server Processing</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.6.2.2">
+                    <p id="section-toc.1-1.5.2.6.2.2.1"><a href="#section-5.6.2" class="auto internal xref">5.6.2</a>.  <a href="#name-protected-resource-processi" class="internal xref">Protected Resource Processing</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.6.2.3">
+                    <p id="section-toc.1-1.5.2.6.2.3.1"><a href="#section-5.6.3" class="auto internal xref">5.6.3</a>.  <a href="#name-example" class="internal xref">Example</a></p>
+</li>
+                </ul>
 </li>
             </ul>
 </li>
@@ -2355,6 +2369,236 @@ reference values.<a href="#section-5.3-2.2.1" class="pilcrow">¶</a></p>
 <p id="section-5.5-4">Where the profiles of multiple authorities list different <code>sender_constraining_methods</code>, a single token satisfies them only if it is bound using a mechanism listed by every applicable profile.<a href="#section-5.5-4" class="pilcrow">¶</a></p>
 </section>
 </div>
+<div id="entity-profiles">
+<section id="section-5.6">
+        <h3 id="name-entity-profile-combinations">
+<a href="#section-5.6" class="section-number selfRef">5.6. </a><a href="#name-entity-profile-combinations" class="section-name selfRef">Entity Profile Combinations (MORA Support)</a>
+        </h3>
+<p id="section-5.6-1">If a profile includes <code>entity_profiles</code>, the RS declares support for MORA entity profiles and the minimum access requirements for each entity combination.<a href="#section-5.6-1" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="section-5.6-2">
+          <dt id="section-5.6-2.1">
+<code>entity_profiles</code>:</dt>
+          <dd style="margin-left: 1.5em" id="section-5.6-2.2">
+            <p id="section-5.6-2.2.1"><span class="bcp14">OPTIONAL</span>. A JSON object whose keys identify entity profile combinations and whose values describe minimum access requirements for that combination.<a href="#section-5.6-2.2.1" class="pilcrow">¶</a></p>
+<p id="section-5.6-2.2.2">Presence of <code>entity_profiles</code> indicates this profile follows MORA entity classification. Absence means the profile applies uniformly regardless of entity types.<a href="#section-5.6-2.2.2" class="pilcrow">¶</a></p>
+<p id="section-5.6-2.2.3">Keys use the format:
+- "client_profile+sub_profile"
+- "client_profile+sub_profile+actor_profile"<a href="#section-5.6-2.2.3" class="pilcrow">¶</a></p>
+<p id="section-5.6-2.2.4">Example keys: "web_app+user", "web_app+user+ai_agent", "service+ai_agent"<a href="#section-5.6-2.2.4" class="pilcrow">¶</a></p>
+<p id="section-5.6-2.2.5">Entity profile identifiers correspond to values defined in MORA. Recognized values include: user, device, native_app, web_app, browser_app, service, ai_agent.<a href="#section-5.6-2.2.5" class="pilcrow">¶</a></p>
+<p id="section-5.6-2.2.6">Each key maps to a complete access requirement profile object (containing <code>token</code> and/or <code>authentication</code> members, with same structure as top-level profile members).<a href="#section-5.6-2.2.6" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+</dl>
+<div id="authorization-server-processing">
+<section id="section-5.6.1">
+          <h4 id="name-authorization-server-proces">
+<a href="#section-5.6.1" class="section-number selfRef">5.6.1. </a><a href="#name-authorization-server-proces" class="section-name selfRef">Authorization Server Processing</a>
+          </h4>
+<p id="section-5.6.1-1"><strong>Preconditions for consulting <code>entity_profiles</code>:</strong><a href="#section-5.6.1-1" class="pilcrow">¶</a></p>
+<p id="section-5.6.1-2">An authorization server supporting MORA <span class="bcp14">MUST</span> consult <code>entity_profiles</code> only when:
+- The OAuth token request includes the <code>resource</code> parameter
+- The PRM for that resource defines <code>entity_profiles</code><a href="#section-5.6.1-2" class="pilcrow">¶</a></p>
+<p id="section-5.6.1-3"><strong>Token issuance workflow:</strong><a href="#section-5.6.1-3" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="section-5.6.1-4">
+<li id="section-5.6.1-4.1">
+              <p id="section-5.6.1-4.1.1">Determine <code>client_profile</code>: From client metadata/registry.<a href="#section-5.6.1-4.1.1" class="pilcrow">¶</a></p>
+</li>
+            <li id="section-5.6.1-4.2">
+              <p id="section-5.6.1-4.2.1">Discover <code>sub_profile</code>: From subject attributes during token processing.<a href="#section-5.6.1-4.2.1" class="pilcrow">¶</a></p>
+</li>
+            <li id="section-5.6.1-4.3">
+              <p id="section-5.6.1-4.3.1">Determine <code>actor_profile</code> (internal processing only): From subject_token or actor_token in token exchange flow, or null if no delegation.<a href="#section-5.6.1-4.3.1" class="pilcrow">¶</a></p>
+</li>
+            <li id="section-5.6.1-4.4">
+              <p id="section-5.6.1-4.4.1">Construct combination key for PRM lookup:<a href="#section-5.6.1-4.4.1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-5.6.1-4.4.2.1">
+                  <p id="section-5.6.1-4.4.2.1.1">If actor_profile is not null: "client_profile+sub_profile+actor_profile"<a href="#section-5.6.1-4.4.2.1.1" class="pilcrow">¶</a></p>
+</li>
+                <li class="normal" id="section-5.6.1-4.4.2.2">
+                  <p id="section-5.6.1-4.4.2.2.1">Else: "client_profile+sub_profile"<a href="#section-5.6.1-4.4.2.2.1" class="pilcrow">¶</a></p>
+</li>
+              </ul>
+</li>
+            <li id="section-5.6.1-4.5">
+              <p id="section-5.6.1-4.5.1">Look up key in PRM <code>entity_profiles</code>:<a href="#section-5.6.1-4.5.1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-5.6.1-4.5.2.1">
+                  <p id="section-5.6.1-4.5.2.1.1">If not found: <strong><span class="bcp14">MUST</span> FAIL</strong> the token request (combination not supported by resource)<a href="#section-5.6.1-4.5.2.1.1" class="pilcrow">¶</a></p>
+</li>
+              </ul>
+</li>
+            <li id="section-5.6.1-4.6">
+              <p id="section-5.6.1-4.6.1">Determine intended token profile per local AS policy: Lifetime, sender-constraining methods, authentication requirements, etc.<a href="#section-5.6.1-4.6.1" class="pilcrow">¶</a></p>
+</li>
+            <li id="section-5.6.1-4.7">
+              <p id="section-5.6.1-4.7.1">Validate AS token profile meets PRM minimum requirements:<a href="#section-5.6.1-4.7.1" class="pilcrow">¶</a></p>
+<p id="section-5.6.1-4.7.2">
+For <code>token</code> requirements:
+- If PRM specifies <code>max_lifetime</code>: AS token lifetime <span class="bcp14">MUST</span> be ≤ PRM max_lifetime
+- If PRM specifies <code>sender_constraining_methods</code>: AS token <span class="bcp14">MUST</span> be bound using one of the listed methods
+- If PRM omits sender-constraining: AS can optionally require it<a href="#section-5.6.1-4.7.2" class="pilcrow">¶</a></p>
+<p id="section-5.6.1-4.7.3">
+For <code>authentication</code> requirements:
+- If PRM specifies <code>acr_values</code>: AS authentication <span class="bcp14">MUST</span> satisfy at least one of the listed values
+- If PRM specifies <code>max_age</code>: AS authentication freshness requirement <span class="bcp14">MUST</span> be ≤ PRM max_age
+- If PRM omits these requirements: AS can optionally require them<a href="#section-5.6.1-4.7.3" class="pilcrow">¶</a></p>
+<p id="section-5.6.1-4.7.4"><strong>Principle:</strong> AS may apply stricter (more restrictive) requirements than PRM minimum. AS <span class="bcp14">MUST NOT</span> apply looser requirements.<a href="#section-5.6.1-4.7.4" class="pilcrow">¶</a></p>
+<p id="section-5.6.1-4.7.5">
+If PRM requirements cannot be satisfied: <strong><span class="bcp14">MUST</span> FAIL</strong> the token request<a href="#section-5.6.1-4.7.5" class="pilcrow">¶</a></p>
+</li>
+            <li id="section-5.6.1-4.8">
+              <p id="section-5.6.1-4.8.1">Issue token with entity profile claims:<a href="#section-5.6.1-4.8.1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-5.6.1-4.8.2.1">
+                  <p id="section-5.6.1-4.8.2.1.1"><code>client_profile</code>: string value<a href="#section-5.6.1-4.8.2.1.1" class="pilcrow">¶</a></p>
+</li>
+                <li class="normal" id="section-5.6.1-4.8.2.2">
+                  <p id="section-5.6.1-4.8.2.2.1"><code>sub_profile</code>: string value<a href="#section-5.6.1-4.8.2.2.1" class="pilcrow">¶</a></p>
+</li>
+              </ul>
+<p id="section-5.6.1-4.8.3">
+Per MORA, only client_profile and sub_profile are included as token claims. The actor_profile is determined during processing for PRM lookup but is not persisted in the issued token.<a href="#section-5.6.1-4.8.3" class="pilcrow">¶</a></p>
+</li>
+          </ol>
+<p id="section-5.6.1-5"><strong>Non-MORA Authorization Servers:</strong><a href="#section-5.6.1-5" class="pilcrow">¶</a></p>
+<p id="section-5.6.1-6">Ignore <code>entity_profiles</code> and apply only top-level <code>token</code> and <code>authentication</code>.<a href="#section-5.6.1-6" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="protected-resource-processing">
+<section id="section-5.6.2">
+          <h4 id="name-protected-resource-processi">
+<a href="#section-5.6.2" class="section-number selfRef">5.6.2. </a><a href="#name-protected-resource-processi" class="section-name selfRef">Protected Resource Processing</a>
+          </h4>
+<p id="section-5.6.2-1"><strong>Token validation with entity profile claims:</strong><a href="#section-5.6.2-1" class="pilcrow">¶</a></p>
+<p id="section-5.6.2-2">When a received token includes entity profile claims:<a href="#section-5.6.2-2" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="section-5.6.2-3">
+<li id="section-5.6.2-3.1">
+              <p id="section-5.6.2-3.1.1">Verify the token claims:<a href="#section-5.6.2-3.1.1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-5.6.2-3.1.2.1">
+                  <p id="section-5.6.2-3.1.2.1.1"><code>client_profile</code>: must be present<a href="#section-5.6.2-3.1.2.1.1" class="pilcrow">¶</a></p>
+</li>
+                <li class="normal" id="section-5.6.2-3.1.2.2">
+                  <p id="section-5.6.2-3.1.2.2.1"><code>sub_profile</code>: must be present<a href="#section-5.6.2-3.1.2.2.1" class="pilcrow">¶</a></p>
+</li>
+                <li class="normal" id="section-5.6.2-3.1.2.3">
+                  <p id="section-5.6.2-3.1.2.3.1">Note: no <code>actor_profile</code> claim will be present<a href="#section-5.6.2-3.1.2.3.1" class="pilcrow">¶</a></p>
+</li>
+              </ul>
+</li>
+            <li id="section-5.6.2-3.2">
+              <p id="section-5.6.2-3.2.1">Verify the combination key exists in <code>entity_profiles</code>:<a href="#section-5.6.2-3.2.1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-5.6.2-3.2.2.1">
+                  <p id="section-5.6.2-3.2.2.1.1">Construct: "client_profile+sub_profile"<a href="#section-5.6.2-3.2.2.1.1" class="pilcrow">¶</a></p>
+</li>
+                <li class="normal" id="section-5.6.2-3.2.2.2">
+                  <p id="section-5.6.2-3.2.2.2.1">If key not found: <strong><span class="bcp14">MUST</span> REJECT</strong> the token<a href="#section-5.6.2-3.2.2.2.1" class="pilcrow">¶</a></p>
+</li>
+              </ul>
+</li>
+            <li id="section-5.6.2-3.3">
+              <p id="section-5.6.2-3.3.1">Validate token presentation meets profile requirements:<a href="#section-5.6.2-3.3.1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-5.6.2-3.3.2.1">
+                  <p id="section-5.6.2-3.3.2.1.1">If token is claimed as sender-constrained: verify binding and mechanism<a href="#section-5.6.2-3.3.2.1.1" class="pilcrow">¶</a></p>
+</li>
+                <li class="normal" id="section-5.6.2-3.3.2.2">
+                  <p id="section-5.6.2-3.3.2.2.1">If authentication max_age is specified: verify freshness<a href="#section-5.6.2-3.3.2.2.1" class="pilcrow">¶</a></p>
+</li>
+                <li class="normal" id="section-5.6.2-3.3.2.3">
+                  <p id="section-5.6.2-3.3.2.3.1">If acr_values are specified: verify authentication context<a href="#section-5.6.2-3.3.2.3.1" class="pilcrow">¶</a></p>
+</li>
+              </ul>
+</li>
+          </ol>
+<p id="section-5.6.2-4">The RS accepts tokens that meet or exceed the profile requirements. If the token does not meet the profile floor: <strong><span class="bcp14">MUST</span> REJECT</strong> the token<a href="#section-5.6.2-4" class="pilcrow">¶</a></p>
+<p id="section-5.6.2-5"><strong>Tokens without entity profile claims:</strong><a href="#section-5.6.2-5" class="pilcrow">¶</a></p>
+<p id="section-5.6.2-6">If a received token has no entity profile claims but the profile defines <code>entity_profiles</code>:
+- Treat as issued by non-MORA AS
+- Apply top-level <code>token</code>/<code>authentication</code> if present
+- Otherwise apply resource-wide policy<a href="#section-5.6.2-6" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="example">
+<section id="section-5.6.3">
+          <h4 id="name-example">
+<a href="#section-5.6.3" class="section-number selfRef">5.6.3. </a><a href="#name-example" class="section-name selfRef">Example</a>
+          </h4>
+<div class="breakable lang-json sourcecode" id="section-5.6.3-1">
+<pre>
+{
+  "access_requirement_profiles": {
+    "sensitive_access": {
+      "description": "Sensitive operations with MORA support",
+      "token": {
+        "max_lifetime": 7200,
+        "sender_constraining_methods": ["dpop"]
+      },
+      "authentication": {
+        "acr_values": ["bronze"],
+        "max_age": 3600
+      },
+      "entity_profiles": {
+        "web_app+user": {
+          "token": {
+            "max_lifetime": 3600,
+            "sender_constraining_methods": ["dpop"]
+          },
+          "authentication": {
+            "acr_values": ["silver"],
+            "max_age": 1800
+          }
+        },
+        "web_app+user+ai_agent": {
+          "token": {
+            "max_lifetime": 1800,
+            "sender_constraining_methods": ["dpop"]
+          },
+          "authentication": {
+            "acr_values": ["phishing-resistant"],
+            "max_age": 300
+          }
+        },
+        "native_app+user": {
+          "token": {
+            "max_lifetime": 3600,
+            "sender_constraining_methods": ["dpop"]
+          },
+          "authentication": {
+            "acr_values": ["phishing-resistant"],
+            "max_age": 900
+          }
+        },
+        "service+ai_agent": {
+          "token": {
+            "max_lifetime": 86400,
+            "sender_constraining_methods": ["mtls"]
+          }
+        }
+      }
+    }
+  }
+}
+</pre><a href="#section-5.6.3-1" class="pilcrow">¶</a>
+</div>
+<p id="section-5.6.3-2"><strong>Authorization Server Issuance Examples:</strong><a href="#section-5.6.3-2" class="pilcrow">¶</a></p>
+<p id="section-5.6.3-3">For "web_app+user" (PRM: max_lifetime 3600, ACR silver, max_age 1800):
+- Issuing 3600s token, ACR silver, max_age 1800 ✓
+- Issuing 1800s token, ACR phishing-resistant, max_age 900 ✓ (stricter)
+- Issuing 7200s token, ACR silver, max_age 1800 ✗ (exceeds PRM lifetime)
+- Issuing 3600s token without sender-constraining ✗ (violates PRM requirement)<a href="#section-5.6.3-3" class="pilcrow">¶</a></p>
+<p id="section-5.6.3-4">For "service+ai_agent" (PRM: max_lifetime 86400, mTLS, no auth required):
+- Issuing 86400s token with mTLS ✓
+- Issuing 3600s token with mTLS ✓ (stricter lifetime)
+- Issuing 86400s token with mTLS and authentication required ✓ (additional requirement)
+- Issuing 90000s token with mTLS ✗ (exceeds PRM lifetime)<a href="#section-5.6.3-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
 </section>
 </div>
 <div id="relationships">
@@ -3017,10 +3261,6 @@ token issuance.<a href="#section-11.4-2.2.1" class="pilcrow">¶</a></p>
 <a href="#section-13.1" class="section-number selfRef">13.1. </a><a href="#name-normative-references" class="section-name selfRef">Normative References</a>
         </h3>
 <dl class="references">
-<dt id="RFC2119">[RFC2119]</dt>
-        <dd>
-<span class="refAuthor">Bradner, S.</span>, <span class="refTitle">"Key words for use in RFCs to Indicate Requirement Levels"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 2119</span>, <span class="seriesInfo">DOI 10.17487/RFC2119</span>, <time datetime="1997-03" class="refDate">March 1997</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc2119">https://www.rfc-editor.org/info/rfc2119</a>&gt;</span>. </dd>
-<dd class="break"></dd>
 <dt id="RFC4648">[RFC4648]</dt>
         <dd>
 <span class="refAuthor">Josefsson, S.</span>, <span class="refTitle">"The Base16, Base32, and Base64 Data Encodings"</span>, <span class="seriesInfo">RFC 4648</span>, <span class="seriesInfo">DOI 10.17487/RFC4648</span>, <time datetime="2006-10" class="refDate">October 2006</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc4648">https://www.rfc-editor.org/info/rfc4648</a>&gt;</span>. </dd>
@@ -3040,10 +3280,6 @@ token issuance.<a href="#section-11.4-2.2.1" class="pilcrow">¶</a></p>
 <dt id="RFC7662">[RFC7662]</dt>
         <dd>
 <span class="refAuthor">Richer, J., Ed.</span>, <span class="refTitle">"OAuth 2.0 Token Introspection"</span>, <span class="seriesInfo">RFC 7662</span>, <span class="seriesInfo">DOI 10.17487/RFC7662</span>, <time datetime="2015-10" class="refDate">October 2015</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc7662">https://www.rfc-editor.org/info/rfc7662</a>&gt;</span>. </dd>
-<dd class="break"></dd>
-<dt id="RFC8174">[RFC8174]</dt>
-        <dd>
-<span class="refAuthor">Leiba, B.</span>, <span class="refTitle">"Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 8174</span>, <span class="seriesInfo">DOI 10.17487/RFC8174</span>, <time datetime="2017-05" class="refDate">May 2017</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc8174">https://www.rfc-editor.org/info/rfc8174</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="RFC8414">[RFC8414]</dt>
         <dd>
@@ -3074,8 +3310,16 @@ token issuance.<a href="#section-11.4-2.2.1" class="pilcrow">¶</a></p>
 <span class="refAuthor">Fett, D.</span>, <span class="refAuthor">Campbell, B.</span>, <span class="refAuthor">Bradley, J.</span>, <span class="refAuthor">Lodderstedt, T.</span>, <span class="refAuthor">Jones, M.</span>, and <span class="refAuthor">D. Waite</span>, <span class="refTitle">"OAuth 2.0 Demonstrating Proof of Possession (DPoP)"</span>, <span class="seriesInfo">RFC 9449</span>, <span class="seriesInfo">DOI 10.17487/RFC9449</span>, <time datetime="2023-09" class="refDate">September 2023</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc9449">https://www.rfc-editor.org/info/rfc9449</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="RFC9728">[RFC9728]</dt>
-      <dd>
+        <dd>
 <span class="refAuthor">Jones, M.B.</span>, <span class="refAuthor">Hunt, P.</span>, and <span class="refAuthor">A. Parecki</span>, <span class="refTitle">"OAuth 2.0 Protected Resource Metadata"</span>, <span class="seriesInfo">RFC 9728</span>, <span class="seriesInfo">DOI 10.17487/RFC9728</span>, <time datetime="2025-04" class="refDate">April 2025</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc9728">https://www.rfc-editor.org/info/rfc9728</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC2119">[RFC2119]</dt>
+        <dd>
+<span class="refAuthor">Bradner, S.</span>, <span class="refTitle">"Key words for use in RFCs to Indicate Requirement Levels"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 2119</span>, <span class="seriesInfo">DOI 10.17487/RFC2119</span>, <time datetime="1997-03" class="refDate">March 1997</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc2119">https://www.rfc-editor.org/info/rfc2119</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC8174">[RFC8174]</dt>
+      <dd>
+<span class="refAuthor">Leiba, B.</span>, <span class="refTitle">"Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 8174</span>, <span class="seriesInfo">DOI 10.17487/RFC8174</span>, <time datetime="2017-05" class="refDate">May 2017</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc8174">https://www.rfc-editor.org/info/rfc8174</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 </dl>
 </section>
