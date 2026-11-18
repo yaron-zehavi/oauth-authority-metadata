@@ -22,13 +22,11 @@ author:
     email: yaron.zehavi@rbinternational.com
 
 normative:
-  RFC2119:
   RFC4648:
   RFC6234:
   RFC6749:
   RFC7519:
   RFC7662:
-  RFC8174:
   RFC8414:
   RFC8705:
   RFC8707:
@@ -755,6 +753,203 @@ This specification does not prescribe how an authorization server combines the a
 A profile reference describes requirements associated with use of that authority. Where an operation requires multiple authorities, their declared requirements are cumulative; a weaker profile does not negate a stronger requirement.
 
 Where the profiles of multiple authorities list different `sender_constraining_methods`, a single token satisfies them only if it is bound using a mechanism listed by every applicable profile.
+
+## Entity Profile Combinations (MORA Support) {#entity-profiles}
+
+If a profile includes `entity_profiles`, the RS declares support for 
+MORA entity profiles and the minimum access requirements for each 
+entity combination.
+
+`entity_profiles`:
+: OPTIONAL. A JSON object whose keys identify entity profile combinations 
+  and whose values describe minimum access requirements for that combination.
+  
+  Presence of `entity_profiles` indicates this profile follows MORA 
+  entity classification. Absence means the profile applies uniformly 
+  regardless of entity types.
+  
+  Keys use the format:
+  - "client_profile+sub_profile" 
+  - "client_profile+sub_profile+actor_profile"
+  
+  Example keys: "web_app+user", "web_app+user+ai_agent", "service+ai_agent"
+  
+  Entity profile identifiers correspond to values defined in MORA. 
+  Recognized values include: user, device, native_app, web_app, 
+  browser_app, service, ai_agent.
+  
+  Each key maps to a complete access requirement profile object 
+  (containing `token` and/or `authentication` members, with same 
+  structure as top-level profile members).
+
+### Authorization Server Processing
+
+**Preconditions for consulting `entity_profiles`:**
+
+An authorization server supporting MORA MUST consult `entity_profiles` only when:
+- The OAuth token request includes the `resource` parameter 
+- The PRM for that resource defines `entity_profiles`
+
+**Token issuance workflow:**
+
+1. Determine `client_profile`:
+   From client metadata/registry.
+
+2. Discover `sub_profile`:
+   From subject attributes during token processing.
+
+3. Determine `actor_profile` (internal processing only):
+   From subject_token or actor_token in token exchange flow, or null 
+   if no delegation.
+
+4. Construct combination key for PRM lookup:
+   - If actor_profile is not null: "client_profile+sub_profile+actor_profile"
+   - Else: "client_profile+sub_profile"
+
+5. Look up key in PRM `entity_profiles`:
+   - If not found: **MUST FAIL** the token request 
+     (combination not supported by resource)
+
+6. Determine intended token profile per local AS policy:
+   Lifetime, sender-constraining methods, authentication requirements, etc.
+
+7. Validate AS token profile meets PRM minimum requirements:
+   
+   For `token` requirements:
+   - If PRM specifies `max_lifetime`: AS token lifetime MUST be 
+     ≤ PRM max_lifetime
+   - If PRM specifies `sender_constraining_methods`: AS token MUST be 
+     bound using one of the listed methods
+   - If PRM omits sender-constraining: AS can optionally require it
+   
+   For `authentication` requirements:
+   - If PRM specifies `acr_values`: AS authentication MUST satisfy 
+     at least one of the listed values
+   - If PRM specifies `max_age`: AS authentication freshness requirement 
+     MUST be ≤ PRM max_age
+   - If PRM omits these requirements: AS can optionally require them
+   
+   **Principle:** AS may apply stricter (more restrictive) requirements 
+   than PRM minimum. AS MUST NOT apply looser requirements.
+   
+   If PRM requirements cannot be satisfied:
+     **MUST FAIL** the token request
+
+8. Issue token with entity profile claims:
+   - `client_profile`: string value
+   - `sub_profile`: string value
+   
+   Per MORA, only client_profile and sub_profile are included 
+   as token claims. The actor_profile is determined during processing 
+   for PRM lookup but is not persisted in the issued token.
+
+**Non-MORA Authorization Servers:**
+
+Ignore `entity_profiles` and apply only top-level `token` and `authentication`.
+
+### Protected Resource Processing
+
+**Token validation with entity profile claims:**
+
+When a received token includes entity profile claims:
+
+1. Verify the token claims:
+   - `client_profile`: must be present
+   - `sub_profile`: must be present
+   - Note: no `actor_profile` claim will be present
+
+2. Verify the combination key exists in `entity_profiles`:
+   - Construct: "client_profile+sub_profile"
+   - If key not found: **MUST REJECT** the token
+
+3. Validate token presentation meets profile requirements:
+   - If token is claimed as sender-constrained: verify binding and mechanism
+   - If authentication max_age is specified: verify freshness
+   - If acr_values are specified: verify authentication context
+
+The RS accepts tokens that meet or exceed the profile requirements.
+If the token does not meet the profile floor:
+   **MUST REJECT** the token
+
+**Tokens without entity profile claims:**
+
+If a received token has no entity profile claims but the profile 
+defines `entity_profiles`:
+- Treat as issued by non-MORA AS
+- Apply top-level `token`/`authentication` if present
+- Otherwise apply resource-wide policy
+
+### Example
+
+~~~ json
+{
+  "access_requirement_profiles": {
+    "sensitive_access": {
+      "description": "Sensitive operations with MORA support",
+      "token": {
+        "max_lifetime": 7200,
+        "sender_constraining_methods": ["dpop"]
+      },
+      "authentication": {
+        "acr_values": ["bronze"],
+        "max_age": 3600
+      },
+      "entity_profiles": {
+        "web_app+user": {
+          "token": {
+            "max_lifetime": 3600,
+            "sender_constraining_methods": ["dpop"]
+          },
+          "authentication": {
+            "acr_values": ["silver"],
+            "max_age": 1800
+          }
+        },
+        "web_app+user+ai_agent": {
+          "token": {
+            "max_lifetime": 1800,
+            "sender_constraining_methods": ["dpop"]
+          },
+          "authentication": {
+            "acr_values": ["phishing-resistant"],
+            "max_age": 300
+          }
+        },
+        "native_app+user": {
+          "token": {
+            "max_lifetime": 3600,
+            "sender_constraining_methods": ["dpop"]
+          },
+          "authentication": {
+            "acr_values": ["phishing-resistant"],
+            "max_age": 900
+          }
+        },
+        "service+ai_agent": {
+          "token": {
+            "max_lifetime": 86400,
+            "sender_constraining_methods": ["mtls"]
+          }
+        }
+      }
+    }
+  }
+}
+~~~
+
+**Authorization Server Issuance Examples:**
+
+For "web_app+user" (PRM: max_lifetime 3600, ACR silver, max_age 1800):
+- Issuing 3600s token, ACR silver, max_age 1800 ✓
+- Issuing 1800s token, ACR phishing-resistant, max_age 900 ✓ (stricter)
+- Issuing 7200s token, ACR silver, max_age 1800 ✗ (exceeds PRM lifetime)
+- Issuing 3600s token without sender-constraining ✗ (violates PRM requirement)
+
+For "service+ai_agent" (PRM: max_lifetime 86400, mTLS, no auth required):
+- Issuing 86400s token with mTLS ✓
+- Issuing 3600s token with mTLS ✓ (stricter lifetime)
+- Issuing 86400s token with mTLS and authentication required ✓ (additional requirement)
+- Issuing 90000s token with mTLS ✗ (exceeds PRM lifetime)
 
 # Authority Relationships {#relationships}
 
