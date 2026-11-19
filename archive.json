@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-11-17T06:01:57.901151+00:00",
+  "timestamp": "2026-11-19T05:29:22.791493+00:00",
   "repo": "yaron-zehavi/oauth-authority-metadata",
   "labels": [
     {
@@ -54,6 +54,23 @@
       "color": "ffffff"
     }
   ],
-  "issues": [],
+  "issues": [
+    {
+      "number": 1,
+      "id": "I_kwDOVCXJU88AAAABgUXVYQ",
+      "title": "Represent in access_requirement_profiles permitted sub_profile and client_profile",
+      "url": "https://github.com/yaron-zehavi/oauth-authority-metadata/issues/1",
+      "state": "OPEN",
+      "author": "yaron-zehavi",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "From https://datatracker.ietf.org/doc/draft-mora-oauth-entity-profiles/",
+      "createdAt": "2026-11-18T09:13:43Z",
+      "updatedAt": "2026-11-18T09:13:43Z",
+      "closedAt": null,
+      "comments": []
+    }
+  ],
   "pulls": []
 }
